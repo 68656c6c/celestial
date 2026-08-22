@@ -1,0 +1,67 @@
+{
+  config,
+  pkgs,
+  unstable,
+  ...
+}:
+
+{
+  environment.systemPackages = with pkgs; [
+    exfat
+    exfatprogs
+    dosfstools
+    telegram-desktop
+    qbittorrent
+    obsidian
+    mpv
+    remmina
+    unzip
+    p7zip
+    tailscale
+    trayscale
+    anki-bin
+    libreoffice-fresh
+    vesktop
+    arrpc
+    gparted
+    ntfsprogs
+    ntfs3g
+    dosbox-x
+    heroic
+    impression
+    dig
+    nmap
+    qt6.qtwayland
+    kdePackages.qtstyleplugin-kvantum
+    catppuccin-kvantum
+    gruvbox-kvantum
+    nemo-with-extensions
+    nwg-look
+    adw-gtk3
+    rewaita
+    morewaita-icon-theme
+    gnome-keyring
+    parsec-bin
+    hyprpicker
+    glib
+    networkmanagerapplet
+    gpu-screen-recorder
+    gpu-screen-recorder-gtk
+    nh
+    nixfmt
+    fortune
+    zenity
+    xdg-desktop-portal-gtk
+    stremio-linux-shell
+    cachix
+    age
+    sops
+    busybox
+    nurl
+    unstable.nushell
+    unstable.tuigreet
+    unstable.noctalia
+    unstable.bitwarden-desktop
+    unstable.opencode
+  ];
+}

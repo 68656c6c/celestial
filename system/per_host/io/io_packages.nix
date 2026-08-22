@@ -1,0 +1,32 @@
+{
+  config,
+  pkgs,
+  unstable,
+  ...
+}:
+
+{
+  environment.systemPackages = with pkgs; [
+    qemu
+    virt-manager
+    libvirt
+    quickemu
+    quickgui
+    swtpm
+    davinci-resolve
+    openutau
+    spice
+    spice-gtk
+    sherlock
+    cemu
+    krita
+    gimp-with-plugins
+    openshot-qt
+    shotcut
+    audacity
+    blender
+    prismlauncher
+    obs-studio
+    gzdoom
+  ];
+}
