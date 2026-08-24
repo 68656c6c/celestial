@@ -14,4 +14,7 @@ in
   hyprlang = unstablepkgs.hyprlang;
   hyprcursor = unstablepkgs.hyprcursor;
   xdg-desktop-portal-hyprland = unstablepkgs.xdg-desktop-portal-hyprland;
+  nushell = unstablepkgs.nushell;
+  flameshot = unstablepkgs.flameshot;
+  noctalia = unstablepkgs.noctalia;
 }
