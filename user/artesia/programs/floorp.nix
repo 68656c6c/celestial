@@ -35,6 +35,7 @@
           (extension "clearurls" "{74145f27-f039-47ce-a470-a662b129930a}")
           (extension "pywalfox" "pywalfox@frewacom.org")
           (extension "linkwarden" "jordanlinkwarden@gmail.com")
+          (extension "floccus" "floccus@handmadeideas.org")
         ];
 
       SkipTermsOfUse = true;

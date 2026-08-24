@@ -28,5 +28,6 @@
     prismlauncher
     obs-studio
     gzdoom
+    lprint
   ];
 }
