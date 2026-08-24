@@ -113,7 +113,6 @@
     description = "doomly";
   };
 
-<<<<<<< HEAD
   systemd.services.dc01-ca-cert = {
     description = "Install DC01 CA certificate";
     wantedBy = [ "multi-user.target" ];
@@ -125,20 +124,6 @@
       update-ca-certificates
     '';
   };
-=======
-  # systemd.services.dc01-ca-cert = {
-  #   description = "Install DC01 CA certificate";
-  #   wantedBy = [ "multi-user.target" ];
-  #   after = [ "sops-nix.service" ];
-  #   requires = [ "sops-nix.service" ];
-  #   serviceConfig.Type = "oneshot";
-  #   script = ''
-  #     cp ${config.sops.secrets.dc01_ca.path} /etc/ssl/certs/dc01_ca.pem
-  #     update-ca-certificates
-  #   '';
-  # };
->>>>>>> f4f64b3 (idk anymore I messed some stuff up and changed things lmao)
-
   security = {
     pam.services.login.enable = true;
     rtkit.enable = true;
