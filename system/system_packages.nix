@@ -52,7 +52,6 @@
     fortune
     zenity
     xdg-desktop-portal-gtk
-    stremio-linux-shell
     cachix
     age
     sops

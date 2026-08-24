@@ -27,6 +27,11 @@
           position = "4480x0";
           scale = 1;
         }
+        {
+          output = "eDP-1";
+          mode = "1920x1080";
+          scale = 0.75;
+        }
       ];
 
       env = [

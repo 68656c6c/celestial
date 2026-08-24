@@ -29,5 +29,6 @@
     obs-studio
     gzdoom
     lprint
+    stremio-linux-shell
   ];
 }

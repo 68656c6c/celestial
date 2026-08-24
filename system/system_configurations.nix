@@ -8,17 +8,15 @@
 
 {
 
-  sops.age.keyFile = "/etc/sops-age/keys";
-
-  # sops = {
-  #   age.keyFile = "/etc/sops-age/keys";
-  #   secrets = {
-  #     dc01_ca = {
-  #       sopsFile = ../secrets/dc01_ca.pem;
-  #       format = "binary";
-  #     };
-  #   };
-  # };
+  sops = {
+    age.keyFile = "/etc/sops-age/keys";
+    secrets = {
+      dc01_ca = {
+        sopsFile = ../secrets/dc01_ca.pem;
+        format = "binary";
+      };
+    };
+  };
 
   boot = {
     supportedFilesystems = [
