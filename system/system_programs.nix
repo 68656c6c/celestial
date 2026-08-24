@@ -7,7 +7,7 @@
     kdeconnect.enable = true;
     steam = {
       enable = true;
-      package = pkgs.millennium-steam;
+      # package = pkgs.millennium-steam;
       extest.enable = true; # steam input in wayland
     };
     vscode = {

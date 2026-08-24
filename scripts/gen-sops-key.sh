@@ -3,7 +3,7 @@ set -euo pipefail
 
 HOSTNAME="${1:?Usage: $0 <hostname>}"
 KEY_DIR="/etc/sops-age"
-KEY_FILE="$KEY_DIR/keys.txt"
+KEY_FILE="$KEY_DIR/keys"
 
 if [ -f "$KEY_FILE" ]; then
   echo "Error: $KEY_FILE already exists" >&2

@@ -4,6 +4,7 @@
 {
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
     settings = {
       "git.artesia.cloud" = {
         HostName = "git.artesia.cloud";

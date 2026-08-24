@@ -58,9 +58,9 @@
     sops
     busybox
     nurl
-    unstable.nushell
+    nushell
     unstable.tuigreet
-    unstable.noctalia
+    noctalia
     unstable.bitwarden-desktop
     unstable.opencode
   ];

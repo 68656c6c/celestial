@@ -1,9 +1,8 @@
-{ pkgs, unstable, ... }:
+{ pkgs, ... }:
 
 {
   programs.nushell = {
     enable = true;
-    package = unstable.nushell;
     configFile.text = ''
       $env.config = {
         show_banner: false
