@@ -380,6 +380,14 @@
         },
       })
 
+
+
+      hl.window_rule({
+        name = "float bitwarden",
+        match = { class = "floorp", title = "Extension: (Bitwarden Password Manager) - Bitwarden — Ablaze Floorp"},
+        float = true,
+      })
+
       hl.window_rule({
         name = "suppress-maximize-events",
         match = { class = ".*" },

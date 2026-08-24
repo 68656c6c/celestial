@@ -17,7 +17,7 @@
         };
       };
     };
-    printing.enable = false;
+    printing.enable = true;
     rpcbind.enable = true;
     gnome.gnome-keyring.enable = true;
     flatpak.enable = true;
