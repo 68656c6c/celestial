@@ -30,7 +30,7 @@
         {
           output = "eDP-1";
           mode = "1920x1080";
-          scale = 0.75;
+          scale = 1;
         }
       ];
 
