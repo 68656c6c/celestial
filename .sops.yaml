@@ -1,18 +1,35 @@
 keys:
-  - &io age17jq33fydz8gpsel7y7e5txrydyvyzeuwmpuyntn7r293qdld4f6sd083kd
-  - &ganymedes age1_GANYMEDES_HOST_KEY_PLACEHOLDER
-  - &nymphe age1d37zv3299va6q8nmqr2fllzsq33pne78mz7dlr57n25h5g4t4e3s9zddyk
+  - &host_io age17jq33fydz8gpsel7y7e5txrydyvyzeuwmpuyntn7r293qdld4f6sd083kd
+  - &host_ganymedes age1_GANYMEDES_HOST_KEY_PLACEHOLDER
+  - &host_nymphe age1d37zv3299va6q8nmqr2fllzsq33pne78mz7dlr57n25h5g4t4e3s9zddyk
+  - &backup age14yvm0d4eu0m08tgwd5sada2yxcg0vt2pyhyn0lweppdpx5swyarsg3p6a6
+
+recipient_sets:
+  io: &io
+    - *host_io
+    - *backup
+  ganymedes: &ganymedes
+    - *host_ganymedes
+    - *backup
+  nymphe: &nymphe
+    - *host_nymphe
+    - *backup
+  all: &all
+    - *host_io
+    - *host_ganymedes
+    - *host_nymphe
+    - *backup
 
 creation_rules:
-  - path_regex: secrets/vpn\.ovpn$
-    key_groups:
-      - age:
-          - *io
   - path_regex: secrets/dc01_ca\.pem$
     key_groups:
-      - age:
-          - *io
+      - age: *all
   - path_regex: secrets/vpn_io\.ovpn$
     key_groups:
-      - age:
-          - *io
+      - age: *io
+  - path_regex: secrets/vpn_ganymedes\.ovpn$
+    key_groups:
+      - age: *ganymedes
+  - path_regex: secrets/vpn_nymphe\.ovpn$
+    key_groups:
+      - age: *nymphe
