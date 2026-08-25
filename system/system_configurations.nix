@@ -36,10 +36,6 @@
         networkmanager-openvpn
       ];
     };
-    nameservers = [
-      "10.44.4.2"
-      "10.44.4.3"
-    ];
     enableIPv6 = false;
     firewall = {
       enable = true;

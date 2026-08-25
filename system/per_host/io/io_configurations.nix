@@ -7,6 +7,10 @@
 
 {
   networking.hostName = "io";
+  networking.nameservers = [
+    "10.44.4.2"
+    "10.44.4.3"
+  ];
 
   lab_local.vpn = {
     enable = true;
