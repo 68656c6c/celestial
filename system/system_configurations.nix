@@ -135,8 +135,9 @@
   #   ];
   # };
 
+  nixpkgs.config.allowUnfree = true;
+
   nix.settings = {
-    allow-unfree = true;
     experimental-features = [
       "nix-command"
       "flakes"
