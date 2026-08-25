@@ -102,7 +102,7 @@
           ];
 
       packages.x86_64-linux = diy // {
-        inherit (pkgs) millennium-steam;
+        inherit (pkgs) millennium-steam stremio-linux-shell;
       };
     };
 }
