@@ -58,9 +58,9 @@
     busybox
     nurl
     nushell
-    unstable.tuigreet
+    tuigreet
     noctalia
-    unstable.bitwarden-desktop
-    unstable.opencode
+    bitwarden-desktop
+    opencode
   ];
 }

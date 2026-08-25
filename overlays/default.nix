@@ -17,4 +17,7 @@ in
   nushell = unstablepkgs.nushell;
   flameshot = unstablepkgs.flameshot;
   noctalia = unstablepkgs.noctalia;
+  tuigreet = unstablepkgs.tuigreet;
+  bitwarden-desktop = unstablepkgs.bitwarden-desktop;
+  opencode = unstablepkgs.opencode;
 }
