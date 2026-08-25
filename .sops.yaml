@@ -1,6 +1,6 @@
 keys:
   - &host_io age17jq33fydz8gpsel7y7e5txrydyvyzeuwmpuyntn7r293qdld4f6sd083kd
-  - &host_ganymedes age1_GANYMEDES_HOST_KEY_PLACEHOLDER
+  - &host_ganymedes age15rm6xu3q6xe9ymua5xj8ngxgm3w7fe5vh0slrfa57zgv0t8mh4eszk3gsl
   - &host_nymphe age1d37zv3299va6q8nmqr2fllzsq33pne78mz7dlr57n25h5g4t4e3s9zddyk
   - &backup age14yvm0d4eu0m08tgwd5sada2yxcg0vt2pyhyn0lweppdpx5swyarsg3p6a6
 
