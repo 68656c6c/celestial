@@ -72,7 +72,12 @@
 
   i18n = {
     defaultLocale = "en_US.UTF-8";
-    extraLocales = [ "ja_JP.UTF-8/UTF-8" ];
+    extraLocales = [
+      "ja_JP.UTF-8/UTF-8"
+      "ar_LB.UTF-8/UTF-8"
+      "ar_SA.UTF-8/UTF-8"
+      "ar_SY.UTF-8/UTF-8"
+    ];
     extraLocaleSettings = {
       LC_ADDRESS = "nl_NL.UTF-8";
       LC_IDENTIFICATION = "nl_NL.UTF-8";
@@ -91,6 +96,8 @@
     atkinson-hyperlegible-next
     font-awesome
     nerd-fonts.jetbrains-mono
+    noto-fonts
+    amiri
   ];
 
   environment.shells = [ pkgs.nushell ]; # pkexec requires the user shell to be in /etc/shells
