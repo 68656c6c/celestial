@@ -14,9 +14,11 @@
     };
     millennium = {
       url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     spicetify-nix = {
       url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -87,12 +89,16 @@
         ./system/per_host/io
       ];
 
-      nixosConfigurations.ganymedes = mkHost "ganymedes" ./system/per_host/ganymedes/hardware-configuration.ganymedes.nix [
-        ./system/per_host/ganymedes
-      ];
+      nixosConfigurations.ganymedes =
+        mkHost "ganymedes" ./system/per_host/ganymedes/hardware-configuration.ganymedes.nix
+          [
+            ./system/per_host/ganymedes
+          ];
 
-      nixosConfigurations.nymphe = mkHost "nymphe" ./system/per_host/nymphe/hardware-configuration.nymphe.nix [
-        ./system/per_host/nymphe
-      ];
+      nixosConfigurations.nymphe =
+        mkHost "nymphe" ./system/per_host/nymphe/hardware-configuration.nymphe.nix
+          [
+            ./system/per_host/nymphe
+          ];
     };
 }
