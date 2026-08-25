@@ -33,7 +33,7 @@ in
     GTK_THEME = "adw-gtk3-dark";
     QT_STYLE_OVERRIDE = "kvantum-dark";
     KVANTUM_THEME = "Gruvbox-Dark";
-    NH_OS_FLAKE = "~/.dotfiles";
+    NH_OS_FLAKE = "/home/artesia/.dotfiles";
     XCURSOR_SIZE = cursorSize;
   };
 
