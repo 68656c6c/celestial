@@ -29,6 +29,7 @@
     QT_STYLE_OVERRIDE = "kvantum-dark";
     KVANTUM_THEME = "Gruvbox-Dark";
     XCURSOR_SIZE = "48";
+    NH_OS_FLAKE = "~/.dotfiles";
   };
 
   #wayland.windowManager.hyprland = {

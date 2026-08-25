@@ -32,9 +32,6 @@
     networkmanager = {
       enable = true;
       dns = "none";
-      plugins = with pkgs; [
-        networkmanager-openvpn
-      ];
     };
     enableIPv6 = false;
     firewall = {
