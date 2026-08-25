@@ -1,4 +1,13 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  osConfig,
+  ...
+}:
+
+let
+  cursorSize = builtins.toString osConfig.host.cursor.size;
+in
 
 {
   wayland.windowManager.hyprland = {
@@ -38,13 +47,13 @@
         {
           _args = [
             "XCURSOR_SIZE"
-            "24"
+            cursorSize
           ];
         }
         {
           _args = [
             "HYPRCURSOR_SIZE"
-            "24"
+            cursorSize
           ];
         }
       ];

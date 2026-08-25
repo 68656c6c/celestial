@@ -3,8 +3,13 @@
   pkgs,
   lib,
   diy,
+  osConfig,
   ...
 }:
+
+let
+  cursorSize = builtins.toString osConfig.host.cursor.size;
+in
 
 {
   home.username = "artesia";
@@ -16,7 +21,7 @@
     gtk.enable = true;
     x11.enable = true;
     name = "kasane-teto-cursor-linux";
-    size = 38;
+    size = osConfig.host.cursor.size;
   };
 
   services.arrpc.enable = true;
@@ -28,8 +33,8 @@
     GTK_THEME = "adw-gtk3-dark";
     QT_STYLE_OVERRIDE = "kvantum-dark";
     KVANTUM_THEME = "Gruvbox-Dark";
-    XCURSOR_SIZE = "48";
     NH_OS_FLAKE = "~/.dotfiles";
+    XCURSOR_SIZE = cursorSize;
   };
 
   #wayland.windowManager.hyprland = {
