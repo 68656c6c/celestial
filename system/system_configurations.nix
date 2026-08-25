@@ -135,10 +135,18 @@
   #   ];
   # };
 
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
+  nix.settings = {
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    substituters = [
+      "https://celestial.cachix.org"
+    ];
+    trusted-public-keys = [
+      "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
+    ];
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
