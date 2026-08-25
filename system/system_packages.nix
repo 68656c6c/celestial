@@ -62,5 +62,6 @@
     noctalia
     bitwarden-desktop
     opencode
+    stremio-linux-shell
   ];
 }
