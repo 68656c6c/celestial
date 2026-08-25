@@ -100,5 +100,9 @@
           [
             ./system/per_host/nymphe
           ];
+
+      packages.x86_64-linux = diy // {
+        inherit (pkgs) millennium-steam;
+      };
     };
 }
