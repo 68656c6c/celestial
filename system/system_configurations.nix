@@ -136,6 +136,7 @@
   # };
 
   nix.settings = {
+    allow-unfree = true;
     experimental-features = [
       "nix-command"
       "flakes"
