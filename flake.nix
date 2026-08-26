@@ -36,11 +36,15 @@
 
     let
       system = "x86_64-linux";
+      unstablePkgs = import unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
         overlays = [
-          (import ./overlays { inherit unstable system; })
+          (import ./overlays { unstable = unstablePkgs; })
           inputs.millennium.overlays.default
         ];
       };
@@ -53,10 +57,7 @@
 
           specialArgs = {
             inherit inputs;
-            unstable = import unstable {
-              inherit system;
-              config.allowUnfree = true;
-            };
+            unstable = unstablePkgs;
             inherit diy;
           };
 
@@ -71,10 +72,7 @@
                 extraSpecialArgs = {
                   inherit inputs;
                   diy = diy;
-                  unstable = import unstable {
-                    inherit system;
-                    config.allowUnfree = true;
-                  };
+                  unstable = unstablePkgs;
                 };
                 users.artesia = import ./user/artesia;
                 backupFileExtension = "backup";
