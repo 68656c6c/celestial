@@ -39,6 +39,7 @@
       };
     };
     extraConfig = ''
+      ${lib.getExe pkgs.fortune}
       def nwhich [flag: string] { readlink -f (which ... $flag) }
     '';
   };
