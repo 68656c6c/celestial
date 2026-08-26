@@ -1,27 +1,20 @@
-{ pkgs, ... }:
+{ pkgs, osConfig, ... }:
 
 {
   programs.nushell = {
     enable = true;
     configFile.text = ''
-      $env.config = {
-        show_banner: false
-
-        completions: {
+      $env.NIXOS_OZONE_WL = 1
+      $env.NH_OS_FLAKE = '.dotfiles'
+      $env.XCURSOR_SIZE = ${builtins.toString osConfig.host.cursor.size}
+      $env.config.show_banner = false
+      $env.config.buffer_editor = "hx"
+      $env.config.completions = {
           case_sensitive: false
           quick: true
           partial: true
           algorithm: "fuzzy"
         }
-
-        edit_mode: emacs
-
-        hooks: {
-          pre_prompt: [{ ||
-            # Custom prompt hooks can go here
-          }]
-        }
-      }
     '';
     extraConfig = ''
       def nwhich [flag: string] { readlink -f (which ... $flag) }
