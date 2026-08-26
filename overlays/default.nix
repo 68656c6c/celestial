@@ -1,23 +1,19 @@
-{ unstable, system }:
-final: prev:
-let
-  unstablepkgs = unstable.legacyPackages.${system};
-in
-{
-  hyprland = unstablepkgs.hyprland;
-  hyprland-plugins = unstablepkgs.hyprland-plugins;
-  hyprpaper = unstablepkgs.hyprpaper;
-  hypridle = unstablepkgs.hypridle;
-  hyprlock = unstablepkgs.hyprlock;
-  hyprpicker = unstablepkgs.hyprpicker;
-  hyprutils = unstablepkgs.hyprutils;
-  hyprlang = unstablepkgs.hyprlang;
-  hyprcursor = unstablepkgs.hyprcursor;
-  xdg-desktop-portal-hyprland = unstablepkgs.xdg-desktop-portal-hyprland;
-  nushell = unstablepkgs.nushell;
-  flameshot = unstablepkgs.flameshot;
-  noctalia = unstablepkgs.noctalia;
-  tuigreet = unstablepkgs.tuigreet;
-  bitwarden-desktop = unstablepkgs.bitwarden-desktop;
-  opencode = unstablepkgs.opencode;
+{ unstable }:
+final: prev: {
+  hyprland = unstable.hyprland;
+  hyprland-plugins = unstable.hyprland-plugins;
+  hyprpaper = unstable.hyprpaper;
+  hypridle = unstable.hypridle;
+  hyprlock = unstable.hyprlock;
+  hyprpicker = unstable.hyprpicker;
+  hyprutils = unstable.hyprutils;
+  hyprlang = unstable.hyprlang;
+  hyprcursor = unstable.hyprcursor;
+  xdg-desktop-portal-hyprland = unstable.xdg-desktop-portal-hyprland;
+  nushell = unstable.nushell;
+  flameshot = unstable.flameshot;
+  noctalia = unstable.noctalia;
+  tuigreet = unstable.tuigreet;
+  bitwarden-desktop = unstable.bitwarden-desktop;
+  opencode = unstable.opencode;
 }
