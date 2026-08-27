@@ -27,6 +27,9 @@ creation_rules:
   - path_regex: secrets/tsauth\.key$
     key_groups:
       - age: *all
+  - path_regex: secrets/secrets\.yaml$
+    key_groups:
+      - age: *all
   - path_regex: secrets/vpn_io\.ovpn$
     key_groups:
       - age: *io
