@@ -15,6 +15,7 @@
       ls = "eza";
       lt = "eza --tree";
       tree = "eza --tree";
+      nh = "nh os switch";
     };
     environmentVariables = {
       NIXOS_OZONE_WL = 1;
@@ -39,7 +40,6 @@
       };
     };
     extraConfig = ''
-      ${lib.getExe pkgs.fortune}
       def nwhich [flag: string] { readlink -f (which ... $flag) }
     '';
   };
