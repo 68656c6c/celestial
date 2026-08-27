@@ -11,9 +11,9 @@
   sops = {
     age.keyFile = "/etc/sops-age/keys";
     secrets = {
-      gitEmail = {
-        sopsFile = ../secrets/secrets.yaml;
-      };
+      # gitEmail = {
+      #   sopsFile = ../secrets/secrets.yaml;
+      # };
       dc01_ca = {
         sopsFile = ../secrets/dc01_ca.pem;
         format = "binary";
