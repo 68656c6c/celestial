@@ -1,4 +1,11 @@
 {
+  config,
+  pkgs,
+  osConfig,
+  ...
+}:
+
+{
   programs.git = {
     enable = true;
     settings = {
