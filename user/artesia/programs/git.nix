@@ -6,8 +6,8 @@
         defaultBranch = "main";
       };
       alias = {
-        a = "add";
-        c = "commit";
+        a = "add *";
+        c = "commit -m";
         pl = "pull";
         ph = "push";
       };

@@ -15,7 +15,7 @@
       ls = "eza";
       lt = "eza --tree";
       tree = "eza --tree";
-      nh = "nh os switch";
+      nos = "nh os switch";
     };
     environmentVariables = {
       NIXOS_OZONE_WL = 1;
