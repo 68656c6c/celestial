@@ -6,7 +6,7 @@
 }:
 
 let
-  cursorSize = builtins.toString osConfig.host.cursor.size;
+  cursorSize = toString osConfig.host.cursor.size;
   monitorKDL = lib.concatMapStringsSep "\n" (m: ''
     output "${m.output}" {
       ${if m.mode != "" then ''mode "${m.mode}"'' else ""}
@@ -19,7 +19,7 @@ let
         else
           ""
       }
-      ${if m.scale != 1 then "scale ${builtins.toString m.scale}" else ""}
+      ${if m.scale != 1 then "scale ${toString m.scale}" else ""}
     }
   '') osConfig.host.monitors;
 in

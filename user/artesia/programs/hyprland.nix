@@ -1,12 +1,11 @@
 {
-  pkgs,
   lib,
   osConfig,
   ...
 }:
 
 let
-  cursorSize = builtins.toString osConfig.host.cursor.size;
+  cursorSize = toString osConfig.host.cursor.size;
   workspaceRules = lib.concatStrings (
     lib.genList (i: ''
       hl.workspace_rule({ workspace = "${toString (i + 1)}", monitor = "${(builtins.elemAt osConfig.host.monitors i).output}", persistent = true, default = true })
