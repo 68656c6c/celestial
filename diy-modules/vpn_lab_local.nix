@@ -5,12 +5,12 @@
 }:
 
 let
-  cfg = config.lab_local.vpn;
+  cfg = config.vpn.lab_local;
   host = config.networking.hostName;
 in
 
 {
-  options.lab_local.vpn = {
+  options.vpn.lab_local = {
     enable = lib.mkEnableOption "enable vpn";
 
     name = lib.mkOption {

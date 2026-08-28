@@ -7,6 +7,11 @@
 
 let
   cursorSize = builtins.toString osConfig.host.cursor.size;
+  workspaceRules = lib.concatStrings (
+    lib.genList (i: ''
+      hl.workspace_rule({ workspace = "${toString (i + 1)}", monitor = "${(builtins.elemAt osConfig.host.monitors i).output}", persistent = true, default = true })
+    '') (builtins.length osConfig.host.monitors)
+  );
 in
 
 {
@@ -14,34 +19,16 @@ in
     enable = true;
     package = null;
     portalPackage = null;
+    systemd.variables = [ "--all" ];
     configType = "lua";
 
     settings = {
-      monitor = [
-        {
-          output = "HDMI-A-2";
-          mode = "1920x1080";
-          position = "0x0";
-          scale = 1;
-        }
-        {
-          output = "DP-2";
-          mode = "2560x1440@164.96";
-          position = "1920x0";
-          scale = 1;
-        }
-        {
-          output = "DP-1";
-          mode = "1920x1200";
-          position = "4480x0";
-          scale = 1;
-        }
-        {
-          output = "eDP-1";
-          mode = "1920x1080";
-          scale = 1;
-        }
-      ];
+      monitor = map (m: {
+        output = m.output;
+        mode = m.mode;
+        position = m.position;
+        scale = m.scale;
+      }) osConfig.host.monitors;
 
       env = [
         {
@@ -105,7 +92,7 @@ in
         };
 
         cursor = {
-          default_monitor = "DP-2";
+          default_monitor = (builtins.elemAt osConfig.host.monitors 0).output;
         };
 
         input = {
@@ -427,9 +414,7 @@ in
         size = "1080 920",
       })
 
-      hl.workspace_rule({ workspace = "1", monitor = "HDMI-A-2", persistent = true, default = true })
-      hl.workspace_rule({ workspace = "2", monitor = "DP-2", persistent = true, default = true })
-      hl.workspace_rule({ workspace = "3", monitor = "DP-1", persistent = true, default = true })
+      ${workspaceRules}
 
       hl.layer_rule({
         match = { namespace = "^noctalia-(bar-.+|notification|dock|panel|attached-panel|osd|window-switcher)$" },
