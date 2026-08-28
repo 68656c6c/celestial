@@ -12,12 +12,22 @@
       };
     };
     defaultEditor = true;
-    languages.language = [
-      {
-        name = "nix";
-        auto-format = true;
-        formatter.command = lib.getExe pkgs.nixfmt;
-      }
-    ];
+    languages = {
+      language = [
+        {
+          name = "nix";
+          auto-format = true;
+          formatter.command = lib.getExe pkgs.nixfmt;
+          language-servers = [
+            "nil"
+            "nixd"
+          ];
+        }
+      ];
+      language-server = {
+        nil.command = lib.getExe pkgs.nil;
+        nixd.command = lib.getExe pkgs.nixd;
+      };
+    };
   };
 }

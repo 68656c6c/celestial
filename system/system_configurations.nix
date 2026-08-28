@@ -98,12 +98,6 @@
     ];
   };
 
-  users.users.doomly = {
-    enable = false;
-    isNormalUser = true;
-    description = "doomly";
-  };
-
   systemd.services.dc01-ca-cert = {
     description = "Install DC01 CA certificate";
     wantedBy = [ "multi-user.target" ];
