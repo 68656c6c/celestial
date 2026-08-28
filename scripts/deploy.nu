@@ -5,6 +5,9 @@ export def deploy [message: string] {
   print "Formatting Nix files..."
   nixfmt-all
 
+  print "Checking for dead Nix code..."
+  deadnix-all
+
   print "Staging and committing..."
   git add .
   git commit -m $message
