@@ -19,7 +19,7 @@ let
         else
           ""
       }
-      ${if m.scale != 1 then "scale ${toString m.scale}" else ""}
+      scale ${builtins.toJSON m.scale}
     }
   '') osConfig.host.monitors;
 in
@@ -32,9 +32,49 @@ in
       skip-at-startup
     }
 
+    prefer-no-csd
+
     environment {
       XCURSOR_SIZE "${cursorSize}"
       HYPRCURSOR_SIZE "${cursorSize}"
+    }
+
+    input {
+      touchpad {
+        tap
+        natural-scroll
+      }
+    }
+
+    layout {
+      gaps 5
+
+      center-focused-column "never"
+
+      preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+      }
+
+      default-column-width { proportion 0.5; }
+
+      focus-ring {
+        off
+      }
+
+      shadow {
+        on
+        softness 30
+        spread 5
+        offset x=0 y=5
+        color "#0007"
+      }
+    }
+
+    window-rule {
+      geometry-corner-radius 20
+      clip-to-geometry true
     }
 
     ${monitorKDL}
