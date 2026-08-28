@@ -17,8 +17,6 @@
     remmina
     unzip
     p7zip
-    tailscale
-    trayscale
     anki-bin
     libreoffice-fresh
     vesktop
@@ -40,8 +38,6 @@
     adw-gtk3
     rewaita
     morewaita-icon-theme
-    gnome-keyring
-    parsec-bin
     hyprpicker
     glib
     networkmanagerapplet

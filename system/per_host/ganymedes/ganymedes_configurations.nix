@@ -11,10 +11,20 @@
     "1.0.0.1"
   ];
 
-  lab_local.vpn = {
+  host.monitors = [
+    {
+      output = "eDP-1";
+      mode = "1920x1080";
+      scale = 1;
+    }
+  ];
+
+  vpn.lab_local = {
     enable = true;
     updateDns = true;
   };
+
+  vpn.tailscale.enable = true;
 
   security = {
     tpm2.enable = false;

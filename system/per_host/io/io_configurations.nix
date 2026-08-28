@@ -12,10 +12,33 @@
     "10.44.4.3"
   ];
 
-  lab_local.vpn = {
+  host.monitors = [
+    {
+      output = "HDMI-A-2";
+      mode = "1920x1080";
+      position = "0x0";
+      scale = 1;
+    }
+    {
+      output = "DP-2";
+      mode = "2560x1440@164.96";
+      position = "1920x0";
+      scale = 1;
+    }
+    {
+      output = "DP-1";
+      mode = "1920x1200";
+      position = "4480x0";
+      scale = 1;
+    }
+  ];
+
+  vpn.lab_local = {
     enable = true;
     updateDns = true;
   };
+
+  vpn.tailscale.enable = true;
 
   boot.loader.systemd-boot.extraEntries = {
     "Windows11.conf" = ''

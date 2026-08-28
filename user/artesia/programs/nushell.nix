@@ -22,6 +22,7 @@
       NH_OS_FLAKE = "${config.home.homeDirectory}/.dotfiles";
       XCURSOR_SIZE = osConfig.host.cursor.size;
       SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";
+      SOPS_AGE_KEY_FILE = "/etc/sops-age/keys";
     };
     settings = {
       show_banner = false;
@@ -40,7 +41,11 @@
       };
     };
     extraConfig = ''
-      def nwhich [flag: string] { readlink -f (which ... $flag) }
+      def nwhich [flag: string] {
+        let result = (which $flag | get path);
+        if ($result | is-empty) { $"($flag) not found" } else { $result | first | path expand }
+      }
+      fortune
     '';
   };
 

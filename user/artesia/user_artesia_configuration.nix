@@ -26,13 +26,7 @@
   };
 
   services.arrpc.enable = true;
-  services.arrpc.systemdTarget = "graphical.target";
-
-  #wayland.windowManager.hyprland = {
-  #  enable = true;
-  #  package = null;
-  #  portalPackage = null;
-  #};
+  services.arrpc.systemdTarget = "graphical-session.target";
 
   gtk = {
     gtk4.theme = null;
@@ -50,6 +44,8 @@
       size = 11;
     };
   };
+
+  xdg.autostart.enable = true;
 
   xdg.portal = {
     enable = lib.mkDefault true;

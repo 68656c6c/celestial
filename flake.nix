@@ -36,6 +36,7 @@
 
     let
       system = "x86_64-linux";
+      hosts = import ./system/hosts.nix;
       unstablePkgs = import unstable {
         inherit system;
         config.allowUnfree = true;
@@ -83,21 +84,12 @@
         };
     in
     {
-      nixosConfigurations.io = mkHost "io" ./system/per_host/io/hardware-configuration.io.nix [
-        ./system/per_host/io
-      ];
-
-      nixosConfigurations.ganymedes =
-        mkHost "ganymedes" ./system/per_host/ganymedes/hardware-configuration.ganymedes.nix
-          [
-            ./system/per_host/ganymedes
-          ];
-
-      nixosConfigurations.nymphe =
-        mkHost "nymphe" ./system/per_host/nymphe/hardware-configuration.nymphe.nix
-          [
-            ./system/per_host/nymphe
-          ];
+      nixosConfigurations = nixpkgs.lib.mapAttrs' (name: _: {
+        name = name;
+        value = mkHost name ./system/per_host/${name}/hardware-configuration.${name}.nix [
+          ./system/per_host/${name}
+        ];
+      }) hosts;
 
       packages.x86_64-linux = diy // {
         inherit (pkgs)

@@ -1,6 +1,11 @@
 { config, pkgs, ... }:
 {
   programs = {
+    bash.interactiveShellInit = ''
+      if ! [ "$TERM" = "dumb" ] && [ -z "$BASH_EXECUTION_STRING" ]; then
+        exec nu
+      fi
+    '';
     hyprland.enable = true;
     niri.enable = true;
     gpu-screen-recorder.enable = true;
