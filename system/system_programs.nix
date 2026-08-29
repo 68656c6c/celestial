@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 {
   programs = {
     bash.interactiveShellInit = ''
@@ -7,6 +7,8 @@
       fi
     '';
     hyprland.enable = true;
+    hyprland.withUWSM = true;
+
     niri.enable = true;
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
