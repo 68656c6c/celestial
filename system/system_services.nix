@@ -13,7 +13,7 @@
       settings = {
         default_session = {
           user = "greeter";
-          command = lib.getExe' pkgs.tuigreet "tuigreet --time --remember --remember-user-session";
+          command = lib.getExe' pkgs.tuigreet "tuigreet --time --remember --remember-user-session --background doom";
         };
       };
     };
