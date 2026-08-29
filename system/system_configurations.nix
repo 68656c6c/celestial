@@ -113,12 +113,12 @@
     polkit.enable = true;
   };
 
-  environment = {
-    pathsToLink = [
-      "/share/xdg-desktop-portal"
-      "/share/applications"
-    ];
-  };
+  # environment = {
+  #   pathsToLink = [
+  #     "/share/xdg-desktop-portal"
+  #     "/share/applications"
+  #   ];
+  # };
 
   nix = {
     gc = {
