@@ -17,6 +17,30 @@
         User = "git";
         IdentityFile = "~/.ssh/id_rsa";
       };
+      "moxmq1" = {
+        HostName = "moxmq1.artesia.cloud";
+        User = "root";
+      };
+      "moxmq2" = {
+        HostName = "moxmq2.artesia.cloud";
+        User = "root";
+      };
+      "moxmq3" = {
+        HostName = "moxmq3.artesia.cloud";
+        User = "root";
+      };
+      "moxmq4" = {
+        HostName = "moxmq4.artesia.cloud";
+        User = "root";
+      };
+      "moxmq5" = {
+        HostName = "moxmq5.artesia.cloud";
+        User = "root";
+      };
+      "moxmq6" = {
+        HostName = "moxmq6.artesia.cloud";
+        User = "root";
+      };
       "*" = {
         ForwardAgent = false;
         AddKeysToAgent = "no";
