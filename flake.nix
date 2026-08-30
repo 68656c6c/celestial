@@ -24,13 +24,8 @@
 
   outputs =
     inputs@{
-      self,
       nixpkgs,
-      home-manager,
       unstable,
-      sops-nix,
-      millennium,
-      spicetify-nix,
       ...
     }:
 
@@ -52,7 +47,7 @@
       diy = (import ./diy-packages { inherit pkgs; });
 
       mkHost =
-        hostname: hardwareFile: extraModules:
+        _hostname: hardwareFile: extraModules:
         nixpkgs.lib.nixosSystem {
           inherit system pkgs;
 
