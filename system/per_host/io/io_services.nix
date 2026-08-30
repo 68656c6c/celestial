@@ -1,4 +1,4 @@
-{ pkgs, diy, ... }:
+{ diy, ... }:
 
 {
   services = {

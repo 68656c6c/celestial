@@ -1,5 +1,5 @@
 { unstable }:
-final: prev: {
+_final: _prev: {
   hyprland = unstable.hyprland;
   hyprland-plugins = unstable.hyprland-plugins;
   hyprpaper = unstable.hyprpaper;
