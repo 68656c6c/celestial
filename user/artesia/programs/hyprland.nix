@@ -127,7 +127,7 @@ in
         {
           _args = [
             "SUPER + Q"
-            (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"ghostty\")")
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"ghostty +new-window\")")
           ];
         }
         {
