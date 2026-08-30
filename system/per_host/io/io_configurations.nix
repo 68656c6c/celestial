@@ -31,8 +31,8 @@
   ];
 
   vpn.lab_local = {
-    enable = true;
-    updateDns = true;
+    enable = false;
+    updateDns = false;
   };
 
   vpn.tailscale.enable = true;
