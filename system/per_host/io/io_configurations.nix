@@ -35,7 +35,7 @@
     updateDns = false;
   };
 
-  vpn.tailscale.enable = true;
+  vpn.tailscale.enable = false;
 
   boot.loader.systemd-boot.extraEntries = {
     "Windows11.conf" = ''
