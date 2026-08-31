@@ -12,6 +12,7 @@
     niri.enable = true;
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
+    openvpn3.enable = true;
     steam = {
       enable = true;
       package = pkgs.millennium-steam;
