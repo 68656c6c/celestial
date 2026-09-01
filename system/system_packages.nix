@@ -27,8 +27,6 @@
     impression
     dig
     nmap
-    qt6.qtwayland
-    kdePackages.qtstyleplugin-kvantum
     catppuccin-kvantum
     gruvbox-kvantum
     nemo-with-extensions
@@ -57,5 +55,9 @@
     bitwarden-desktop
     opencode
     stremio-linux-shell
+    qt6.qtwayland
+    kdePackages.dolphin
+    kdePackages.dolphin-plugins
+    kdePackages.qtstyleplugin-kvantum
   ];
 }
