@@ -24,8 +24,12 @@
     XCURSOR_SIZE = osConfig.host.cursor.size;
   };
 
-  services.arrpc.enable = true;
-  services.arrpc.systemdTarget = "graphical-session.target";
+  services = {
+    arrpc = {
+      enable = true;
+      systemdTarget = "graphical-session.target";
+    };
+  };
 
   gtk = {
     gtk4.theme = null;
