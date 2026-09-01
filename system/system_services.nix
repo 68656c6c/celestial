@@ -17,7 +17,6 @@
       };
     };
     rpcbind.enable = true;
-    gnome.gnome-keyring.enable = true;
     flatpak.enable = true;
     pipewire = {
       enable = true;
