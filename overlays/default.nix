@@ -16,6 +16,4 @@ _final: _prev: {
   tuigreet = unstable.tuigreet;
   bitwarden-desktop = unstable.bitwarden-desktop;
   opencode = unstable.opencode;
-  kdePackages.dolphin = unstable.kdePackages.dolphin;
-  kdePackages.dolphin-plugins = unstable.kdePackages.dolphin-plugins;
 }
