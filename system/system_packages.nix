@@ -54,6 +54,7 @@
     bitwarden-desktop
     opencode
     stremio-linux-shell
+    attic-client
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
