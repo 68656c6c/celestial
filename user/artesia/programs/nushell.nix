@@ -21,6 +21,8 @@
       NH_OS_FLAKE = "${config.home.homeDirectory}/.dotfiles";
       XCURSOR_SIZE = osConfig.host.cursor.size;
       SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";
+      QT_QPA_PLATFORM = "wayland";
+      QT_QPA_PLATFORMTHEME = "qt6ct";
       SOPS_AGE_KEY_FILE = "/etc/sops-age/keys";
     };
     settings = {
