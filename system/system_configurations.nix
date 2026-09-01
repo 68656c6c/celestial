@@ -137,9 +137,11 @@
       ];
       substituters = [
         "https://celestial.cachix.org"
+        "http://10.0.120.19:8080/celestial"
       ];
       trusted-public-keys = [
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
+        "celestial:cMNY8U+9ved6wSo9B2p9NUTD74Z16mLJHjqoykWfk1o="
       ];
       auto-optimise-store = true;
     };
