@@ -59,5 +59,6 @@
     kdePackages.dolphin
     kdePackages.dolphin-plugins
     kdePackages.qtstyleplugin-kvantum
+    kdePackages.qt6ct
   ];
 }
