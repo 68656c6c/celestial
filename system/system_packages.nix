@@ -12,7 +12,6 @@
     qbittorrent
     obsidian
     mpv
-    remmina
     unzip
     p7zip
     anki-bin
