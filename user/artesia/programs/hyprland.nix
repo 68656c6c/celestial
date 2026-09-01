@@ -42,6 +42,24 @@ in
             cursorSize
           ];
         }
+        {
+          _args = [
+            "NIXOS_OZONE_WL"
+            1
+          ];
+        }
+        {
+          _args = [
+            "QT_QPA_PLATFORM"
+            "wayland"
+          ];
+        }
+        {
+          _args = [
+            "QT_QPA_PLATFORMTHEME"
+            "qt6ct"
+          ];
+        }
       ];
 
       config = {
