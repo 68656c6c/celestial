@@ -19,7 +19,7 @@
 
   host.cursor.size = 28;
   vpn.lab_local = {
-    enable = false;
+    enable = true;
     updateDns = true;
   };
 
