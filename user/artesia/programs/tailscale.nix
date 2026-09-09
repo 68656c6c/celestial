@@ -1,5 +1,5 @@
 { ... }:
 
 {
-  services.tailscale-systray.enable = false;
+  services.tailscale-systray.enable = true;
 }
