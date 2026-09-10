@@ -1,0 +1,99 @@
+]8;;file:///home/artesia/.dotfiles\.]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/diy-modules\diy-modules]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-modules/default.nix\default.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-modules/host_cursor.nix\host_cursor.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-modules/host_monitors.nix\host_monitors.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-modules/secrets.nix\secrets.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-modules/vpn_lab_local.nix\vpn_lab_local.nix]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/diy-modules/vpn_tailscale.nix\vpn_tailscale.nix]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/diy-packages\diy-packages]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-packages/assets\assets]8;;\
+│   │   └── ]8;;file:///home/artesia/.dotfiles/diy-packages/assets/cursors\cursors]8;;\
+│   │       ├── ]8;;file:///home/artesia/.dotfiles/diy-packages/assets/cursors/kasane-teto-cursor-linux.tar.xz\kasane-teto-cursor-linux.tar.xz]8;;\
+│   │       └── ]8;;file:///home/artesia/.dotfiles/diy-packages/assets/cursors/miku-cursor-linux.tar.xz\miku-cursor-linux.tar.xz]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-packages/cups-citizen-ctzcls.nix\cups-citizen-ctzcls.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-packages/cups-citizen-ctzcls_1.1.0-2_amd64.deb\cups-citizen-ctzcls_1.1.0-2_amd64.deb]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-packages/default.nix\default.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/diy-packages/kasane-teto-cursor-linux.nix\kasane-teto-cursor-linux.nix]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/diy-packages/miku-cursor-linux.nix\miku-cursor-linux.nix]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/imports\imports]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/imports/default.nix\default.nix]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/overlays\overlays]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/overlays/default.nix\default.nix]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/scripts\scripts]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/scripts/deploy.nu\deploy.nu]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/scripts/nixfmt.nu\nixfmt.nu]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/scripts/setup-host.sh\setup-host.sh]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/secrets\secrets]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/secrets/dc01_ca.pem\dc01_ca.pem]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/secrets/secrets.yaml\secrets.yaml]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/secrets/tsauth.key\tsauth.key]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/secrets/vpn_ganymedes.ovpn\vpn_ganymedes.ovpn]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/secrets/vpn_io.ovpn\vpn_io.ovpn]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/secrets/vpn_nymphe.ovpn\vpn_nymphe.ovpn]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/system\system]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host\per_host]8;;\
+│   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/aphrodite\aphrodite]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/aphrodite/aphrodite_configurations.nix\aphrodite_configurations.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/aphrodite/aphrodite_packages.nix\aphrodite_packages.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/aphrodite/aphrodite_programs.nix\aphrodite_programs.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/aphrodite/aphrodite_services.nix\aphrodite_services.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/aphrodite/default.nix\default.nix]8;;\
+│   │   │   └── ]8;;file:///home/artesia/.dotfiles/system/per_host/aphrodite/hardware-configuration.aphrodite.nix\hardware-configuration.aphrodite.nix]8;;\
+│   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/ganymedes\ganymedes]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/ganymedes/default.nix\default.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/ganymedes/ganymedes_configurations.nix\ganymedes_configurations.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/ganymedes/ganymedes_packages.nix\ganymedes_packages.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/ganymedes/ganymedes_programs.nix\ganymedes_programs.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/ganymedes/ganymedes_services.nix\ganymedes_services.nix]8;;\
+│   │   │   └── ]8;;file:///home/artesia/.dotfiles/system/per_host/ganymedes/hardware-configuration.ganymedes.nix\hardware-configuration.ganymedes.nix]8;;\
+│   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/io\io]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/io/default.nix\default.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/io/hardware-configuration.io.nix\hardware-configuration.io.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/io/io_configurations.nix\io_configurations.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/io/io_packages.nix\io_packages.nix]8;;\
+│   │   │   ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/io/io_programs.nix\io_programs.nix]8;;\
+│   │   │   └── ]8;;file:///home/artesia/.dotfiles/system/per_host/io/io_services.nix\io_services.nix]8;;\
+│   │   └── ]8;;file:///home/artesia/.dotfiles/system/per_host/nymphe\nymphe]8;;\
+│   │       ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/nymphe/default.nix\default.nix]8;;\
+│   │       ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/nymphe/hardware-configuration.nymphe.nix\hardware-configuration.nymphe.nix]8;;\
+│   │       ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/nymphe/nymphe_configurations.nix\nymphe_configurations.nix]8;;\
+│   │       ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/nymphe/nymphe_packages.nix\nymphe_packages.nix]8;;\
+│   │       ├── ]8;;file:///home/artesia/.dotfiles/system/per_host/nymphe/nymphe_programs.nix\nymphe_programs.nix]8;;\
+│   │       └── ]8;;file:///home/artesia/.dotfiles/system/per_host/nymphe/nymphe_services.nix\nymphe_services.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/system/default.nix\default.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/system/hosts.nix\hosts.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/system/system_configurations.nix\system_configurations.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/system/system_packages.nix\system_packages.nix]8;;\
+│   ├── ]8;;file:///home/artesia/.dotfiles/system/system_programs.nix\system_programs.nix]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/system/system_services.nix\system_services.nix]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/user\user]8;;\
+│   └── ]8;;file:///home/artesia/.dotfiles/user/artesia\artesia]8;;\
+│       ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/imports\imports]8;;\
+│       │   └── ]8;;file:///home/artesia/.dotfiles/user/artesia/imports/default.nix\default.nix]8;;\
+│       ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs\programs]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/default.nix\default.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/eza.nix\eza.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/flameshot.nix\flameshot.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/floorp.nix\floorp.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/ghostty.nix\ghostty.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/git.nix\git.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/helix.nix\helix.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/hyprland.nix\hyprland.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/keepassxc.nix\keepassxc.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/lsps.nix\lsps.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/niri.nix\niri.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/noctalia.nix\noctalia.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/nushell.nix\nushell.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/remmina.nix\remmina.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/spicetify.nix\spicetify.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/ssh.nix\ssh.nix]8;;\
+│       │   ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/starship.nix\starship.nix]8;;\
+│       │   └── ]8;;file:///home/artesia/.dotfiles/user/artesia/programs/tailscale.nix\tailscale.nix]8;;\
+│       ├── ]8;;file:///home/artesia/.dotfiles/user/artesia/default.nix\default.nix]8;;\
+│       └── ]8;;file:///home/artesia/.dotfiles/user/artesia/user_artesia_configuration.nix\user_artesia_configuration.nix]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/README.md\README.md]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/flake.lock\flake.lock]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/flake.nix\flake.nix]8;;\
+├── ]8;;file:///home/artesia/.dotfiles/tree.txt\tree.txt]8;;\
+└── ]8;;file:///nix/store/f6qlkk5mcl4ys1nidvs3kkibfyag753g-kasane-teto-cursor-linux-1.0\result]8;;\ -> /nix/store/f6qlkk5mcl4ys1nidvs3kkibfyag753g-kasane-teto-cursor-linux-1.0
