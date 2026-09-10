@@ -57,7 +57,7 @@
         default = [
           "hyprland"
           "gtk"
-          "gnome"
+          # "gnome"
         ];
         "org.freedesktop.appearance" = {
           color-scheme = "prefer-dark";
@@ -67,7 +67,7 @@
         default = [
           "hyprland"
           "gtk"
-          "gnome"
+          # "gnome"
         ];
         "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
       };
@@ -75,7 +75,7 @@
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
       xdg-desktop-portal-gtk
-      xdg-desktop-portal-gnome
+      # xdg-desktop-portal-gnome
     ];
   };
 
