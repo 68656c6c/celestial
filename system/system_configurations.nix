@@ -85,8 +85,12 @@
     amiri
   ];
 
-  environment.shells = [ pkgs.nushell ]; # pkexec requires the user shell to be in /etc/shells
-
+  environment = {
+    shells = [ pkgs.nushell ]; # pkexec requires the user shell to be in /etc/shells
+    # Fix open with
+    etc."xdg/menus/applications.menu".source =
+      "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
+  };
   users.users.artesia = {
     isNormalUser = true;
     description = "artesia";
@@ -137,11 +141,11 @@
       ];
       substituters = [
         "https://celestial.cachix.org"
-        "http://10.0.120.19:8080/celestial"
+        # "http://10.0.120.19:8080/celestial"
       ];
       trusted-public-keys = [
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
-        "celestial:cMNY8U+9ved6wSo9B2p9NUTD74Z16mLJHjqoykWfk1o="
+        # "celestial:cMNY8U+9ved6wSo9B2p9NUTD74Z16mLJHjqoykWfk1o="
       ];
       auto-optimise-store = true;
     };
