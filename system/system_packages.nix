@@ -28,7 +28,6 @@
     nmap
     catppuccin-kvantum
     gruvbox-kvantum
-    nemo-with-extensions
     nwg-look
     adw-gtk3
     rewaita
@@ -55,6 +54,7 @@
     opencode
     stremio-linux-shell
     attic-client
+    qimgv
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
