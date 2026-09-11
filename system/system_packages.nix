@@ -55,6 +55,7 @@
     stremio-linux-shell
     attic-client
     qimgv
+    legcord
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
