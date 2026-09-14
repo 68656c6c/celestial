@@ -2,6 +2,7 @@
 
 {
   services = {
+    tailscale.enable = true;
     printing = {
       enable = true;
       drivers = [ diy.cups-citizen-ctzcls ];
