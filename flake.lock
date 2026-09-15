@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788642154,
-        "narHash": "sha256-sPpQFVaFTDqO/4vvCAhuAhqTgqN/ygu+9eJcs5eB0js=",
+        "lastModified": 1789267039,
+        "narHash": "sha256-LWiBv9yAYFi2LPbUhDGHPGKYskJQjj2fw12OlyO1uQo=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "fd0956c99c41ae3c13a73a638f1f7e963aebc4ab",
+        "rev": "ec172013fa62135f58fb58dd17ae9651e8f39727",
         "type": "github"
       },
       "original": {
@@ -30,11 +30,11 @@
       },
       "locked": {
         "dir": "packages/nix",
-        "lastModified": 1788565178,
-        "narHash": "sha256-bjItIyGxVAUqaSpr2tdN/YTd8BP2DY+wAmun136LrZs=",
+        "lastModified": 1789326337,
+        "narHash": "sha256-FWRCpoKQ8TywKkcCFleTSZRQhbL12JmbFdisaeIRIJU=",
         "owner": "SteamClientHomebrew",
         "repo": "Millennium",
-        "rev": "5cbebb86628767f365de987c451a2839afe153bc",
+        "rev": "41f7356df31043e8c1429382dda95445530da987",
         "type": "github"
       },
       "original": {
@@ -63,11 +63,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1788921488,
-        "narHash": "sha256-JLopN/XSodSsJIZ7v7tEjpPZ+QXc883s3HoUIxHD8Io=",
-        "rev": "6aefcda9401be8acc2b74244fb3b37520ea1f0a8",
+        "lastModified": 1789344334,
+        "narHash": "sha256-it+7kNGnOOHBCEnl4SfZ7QtfGziH3EryzHqwvJpjAfg=",
+        "rev": "c3eea5b2156db11c7eeeada3dc737711255b253e",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.9440.6aefcda9401b/nixexprs.tar.zst"
+        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.9729.c3eea5b2156d/nixexprs.tar.zst"
       },
       "original": {
         "type": "tarball",
@@ -112,11 +112,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1788683578,
-        "narHash": "sha256-bERpuakmPAC2b36zgXy6OXh+SkZUjbaV+vV2sPmm6p8=",
+        "lastModified": 1789291406,
+        "narHash": "sha256-lfZ7yAaTZMuAzOSLjJ7ivrKIFk0E11koWTVgkWSXwuE=",
         "owner": "Gerg-L",
         "repo": "spicetify-nix",
-        "rev": "a4ef43fb13e3615f36e5a0935aabe8cc29363dc9",
+        "rev": "09eed5c95105aada9ffabd4c7eb6b345dc4ba66f",
         "type": "github"
       },
       "original": {
@@ -142,11 +142,11 @@
     },
     "unstable": {
       "locked": {
-        "lastModified": 1788881743,
-        "narHash": "sha256-151taSq/21cxagiIu7hyMVl68+FbHfwBP4lh6TB6KOM=",
-        "rev": "d6524aaca2ff07876657ae2b323f24be4874944b",
+        "lastModified": 1789286504,
+        "narHash": "sha256-3i80JnZ9pZ7tWReb/Sqpc32cfzffCu8TWLnbnH0hN9c=",
+        "rev": "ef34387ddd751e1ab8857adf4676492d32eb24ec",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1069856.d6524aaca2ff/nixexprs.tar.zst"
+        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1073009.ef34387ddd75/nixexprs.tar.zst"
       },
       "original": {
         "type": "tarball",
