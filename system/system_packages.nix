@@ -57,6 +57,7 @@
     attic-client
     qimgv
     legcord
+    pwvucontrol
     diy.helium
     qt6.qtwayland
     kdePackages.dolphin
