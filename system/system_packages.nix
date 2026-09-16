@@ -1,5 +1,6 @@
 {
   pkgs,
+  diy,
   ...
 }:
 
@@ -56,6 +57,7 @@
     attic-client
     qimgv
     legcord
+    diy.helium
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
