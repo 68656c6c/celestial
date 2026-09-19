@@ -2,7 +2,11 @@
 
 {
   services = {
-    xserver.desktopManager.lxqt.enable = true;
+    xserver = {
+      enable = true;
+      desktopManager.xfce.enable = true;
+    };
+
     tailscale.enable = true;
     printing = {
       enable = true;
