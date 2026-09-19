@@ -91,6 +91,7 @@
     etc."xdg/menus/applications.menu".source =
       "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
   };
+
   users.users.artesia = {
     isNormalUser = true;
     description = "artesia";

@@ -1,4 +1,5 @@
 {
+  pkgs,
   ...
 }:
 
@@ -6,7 +7,7 @@
   networking.hostName = "io";
   networking.nameservers = [
     "10.44.4.2"
-    "10.44.4.3"
+    "192.168.44.3"
   ];
 
   host.monitors = [
@@ -36,6 +37,14 @@
   };
 
   vpn.tailscale.enable = false;
+
+  hardware.amdgpu.opencl.enable = true;
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      mesa.opencl
+    ];
+  };
 
   boot.loader.systemd-boot.extraEntries = {
     "Windows11.conf" = ''
