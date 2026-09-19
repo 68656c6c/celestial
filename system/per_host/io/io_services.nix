@@ -2,6 +2,7 @@
 
 {
   services = {
+    xserver.desktopManager.lxqt.enable = true;
     tailscale.enable = true;
     printing = {
       enable = true;
