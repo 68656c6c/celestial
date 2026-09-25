@@ -10,7 +10,7 @@ appimageTools.wrapType2 rec {
 
   src = fetchurl {
     url = "https://github.com/imputnet/helium-linux/releases/download/${version}/${pname}-${version}-x86_64.AppImage";
-    sha256 = "sha256-kFXb8vu5U4OwmfOa2ClFnoLQAuRnbtqsuG74gUdROb4=";
+    sha256 = "sha256-0eG5k9+/7gbp+Q6KKc1Y6HpHUZewT8BIdQYifDOFacs=";
   };
 
   extraInstallCommands =
