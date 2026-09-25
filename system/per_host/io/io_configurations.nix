@@ -6,8 +6,8 @@
 {
   networking.hostName = "io";
   networking.nameservers = [
+    "192.168.44.2"
     "10.44.4.2"
-    "192.168.44.3"
   ];
 
   host.monitors = [

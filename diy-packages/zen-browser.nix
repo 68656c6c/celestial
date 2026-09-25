@@ -5,12 +5,12 @@
 }:
 
 appimageTools.wrapType2 rec {
-  pname = "helium";
-  version = "0.18.1";
+  pname = "zen";
+  version = "1.22.3b";
 
   src = fetchurl {
-    url = "https://github.com/imputnet/helium-linux/releases/download/${version}/${pname}-${version}-x86_64.AppImage";
-    sha256 = "sha256-DtZU8JIOVod9O4rvBBOh3a+1i/CidJerYaCbQLezZyM=";
+    url = "https://github.com/zen-browser/desktop/releases/download/${version}/${pname}-x86_64.AppImage";
+    sha256 = "sha256-JvwkTIHBVjGL7/6+FM7fuZMv3WpJxCjq5ddDRHgdso8=";
   };
 
   extraInstallCommands =
@@ -25,9 +25,9 @@ appimageTools.wrapType2 rec {
     '';
 
   meta = with lib; {
-    description = "Private, fast and honest web browser";
-    homepage = "https://github.com/imputnet/helium-linux";
-    license = licenses.gpl3;
+    description = "Welcome to a calmer internet";
+    homepage = "https://github.com/zen-browser/desktop";
+    license = licenses.mpl20;
     platforms = platforms.linux;
     sourceProvenance = with sourceTypes; [ binaryNativeCode ];
   };
