@@ -21,9 +21,6 @@ recipient_sets:
     - *backup
 
 creation_rules:
-  - path_regex: secrets/dc01_ca\.pem$
-    key_groups:
-      - age: *all
   - path_regex: secrets/tsauth\.key$
     key_groups:
       - age: *all

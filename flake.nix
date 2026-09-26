@@ -20,6 +20,10 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    trusted-certificates = {
+      url = "git+ssh://git@git.artesia.cloud/artesia.technology/trusted-certificates.git";
+      flake = false;
+    };
   };
 
   outputs =
