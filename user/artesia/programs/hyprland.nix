@@ -398,11 +398,15 @@ in
         },
       })
 
-
+      hl.window_rule({
+        name = "float bitwarden",
+        match = { class = "zen", title = "Extension: (Bitwarden Password Manager) - Bitwarden" },
+        float = true,
+      })
 
       hl.window_rule({
         name = "float bitwarden",
-        match = { class = "floorp", title = "Extension: (Bitwarden Password Manager) - Bitwarden — Ablaze Floorp"},
+        match = { class = "helium", title = "Extension: (Bitwarden Password Manager) - Bitwarden" },
         float = true,
       })
 

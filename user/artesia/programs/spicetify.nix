@@ -11,12 +11,12 @@ in
     enable = true;
     enabledExtensions = with spicePkgs.extensions; [
       shuffle
+      hidePodcasts
       fullAlbumDate
       goToSong
-      listPlaylistsWithSong
-      betterGenres
-      hidePodcasts
+      sideHide
+      romajiConvert
     ];
-    theme = spicePkgs.themes.text;
+    theme = spicePkgs.themes.sleek;
   };
 }

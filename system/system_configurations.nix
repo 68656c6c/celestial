@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   ...
 }:
@@ -101,17 +100,6 @@
     ];
   };
 
-  systemd.services.dc01-ca-cert = {
-    description = "Install DC01 CA certificate";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "sops-nix.service" ];
-    requires = [ "sops-nix.service" ];
-    serviceConfig.Type = "oneshot";
-    script = ''
-      cp ${config.sops.secrets.dc01_ca.path} /etc/ssl/certs/dc01_ca.pem
-      update-ca-certificates
-    '';
-  };
   security = {
     pam.services.login.enable = true;
     rtkit.enable = true;

@@ -28,9 +28,9 @@ PUBKEY=$(sudo age-keygen -y /etc/sops-age/keys)
 
 echo "==> Adding $HOSTNAME to system/hosts.nix..."
 sed -i "s/^}$/  $HOSTNAME = { };\n}/" "$HOSTS_FILE"
-sed -i "/^- &backup /i\\  - &host_$HOSTNAME $PUBKEY" "$SOPS_FILE"
+sed -i "/^  - &backup /i\\  - &host_$HOSTNAME $PUBKEY" "$SOPS_FILE"
 sed -i "/^  all: &all$/i\\  $HOSTNAME: &$HOSTNAME\n    - *host_$HOSTNAME\n    - *backup" "$SOPS_FILE"
-sed -i "s/    - \*backup$/    - *host_$HOSTNAME\n    - *backup/" "$SOPS_FILE"
+sed -i "/^  all: &all$/a\\    - *host_$HOSTNAME" "$SOPS_FILE"
 
 cat >> "$SOPS_FILE" << EOF
   - path_regex: secrets/vpn_$HOSTNAME\.ovpn$
@@ -43,15 +43,15 @@ cat > "$HOST_DIR/default.nix" << EOF
 
 {
   imports = [
-    ./$HOSTNAME\_packages.nix
-    ./$HOSTNAME\_configurations.nix
-    ./$HOSTNAME\_programs.nix
-    ./$HOSTNAME\_services.nix
+    ./${HOSTNAME}_packages.nix
+    ./${HOSTNAME}_configurations.nix
+    ./${HOSTNAME}_programs.nix
+    ./${HOSTNAME}_services.nix
   ];
 }
 EOF
 
-cat > "$HOST_DIR/$HOSTNAME\_configurations.nix" << EOF
+cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
 {
   config,
   pkgs,
@@ -75,7 +75,7 @@ cat > "$HOST_DIR/$HOSTNAME\_configurations.nix" << EOF
 }
 EOF
 
-cat > "$HOST_DIR/$HOSTNAME\_packages.nix" << EOF
+cat > "$HOST_DIR/${HOSTNAME}_packages.nix" << EOF
 {
   config,
   pkgs,
@@ -88,7 +88,7 @@ cat > "$HOST_DIR/$HOSTNAME\_packages.nix" << EOF
 }
 EOF
 
-cat > "$HOST_DIR/$HOSTNAME\_programs.nix" << EOF
+cat > "$HOST_DIR/${HOSTNAME}_programs.nix" << EOF
 { ... }:
 
 {
@@ -97,7 +97,7 @@ cat > "$HOST_DIR/$HOSTNAME\_programs.nix" << EOF
 }
 EOF
 
-cat > "$HOST_DIR/$HOSTNAME\_services.nix" << EOF
+cat > "$HOST_DIR/${HOSTNAME}_services.nix" << EOF
 { ... }:
 
 {
@@ -107,5 +107,5 @@ cat > "$HOST_DIR/$HOSTNAME\_services.nix" << EOF
 EOF
 
 echo "public key: $PUBKEY"
-echo "1. dns, monitor and vpn settings in $HOST_DIR/$HOSTNAME\_configurations.nix"
+echo "1. dns, monitor and vpn settings in $HOST_DIR/${HOSTNAME}_configurations.nix"
 echo "2. re-encrypt secrets with: sops updatekeys secrets/"

@@ -53,12 +53,15 @@
     noctalia
     bitwarden-desktop
     opencode
+    opencode-claude-auth
+    claude-code
     stremio-linux-shell
     attic-client
     qimgv
     legcord
     pwvucontrol
     diy.helium
+    diy.zen-browser
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
