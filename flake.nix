@@ -21,7 +21,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     trusted-certificates = {
-      url = "git+ssh://git@git.artesia.cloud/artesia.technology/trusted-certificates.git";
+      url = "git+ssh://git@git.artesia.cloud/artesia.technology/trusted-certificates.git?rev=d1b78f35e93f7196d82dbef0ece02485646d259b";
       flake = false;
     };
   };

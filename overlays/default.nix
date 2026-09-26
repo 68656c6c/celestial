@@ -11,6 +11,7 @@ _final: _prev: {
   hyprcursor = unstable.hyprcursor;
   xdg-desktop-portal-hyprland = unstable.xdg-desktop-portal-hyprland;
   nushell = unstable.nushell;
+  atuin = unstable.atuin;
   flameshot = unstable.flameshot;
   noctalia = unstable.noctalia;
   tuigreet = unstable.tuigreet;

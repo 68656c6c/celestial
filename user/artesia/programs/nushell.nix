@@ -47,24 +47,6 @@
         if ($result | is-empty) { $"($flag) not found" } else { $result | first | path expand }
       }
       fortune
-
-      # Deduplicate keybindings by name (keeps first occurrence)
-      $env.config.keybindings = (
-        $env.config.keybindings
-        | reduce . as $kb (
-          {seen: {}, result: []};
-          let name = ($kb | get -i name)
-          if ($name == null or $name == "") or ($in.seen | get -i $name | is-empty) {
-            {
-              seen: (if ($name == null or $name == "") { $in.seen } else { $in.seen | insert $name true }),
-              result: ($in.result | append $kb)
-            }
-          } else {
-            $in
-          }
-        )
-        | .result
-      )
     '';
   };
 
