@@ -18,5 +18,8 @@ export def deploy [message: string] {
   print "Switching..."
   nh os switch
 
+  print "Pushing to attic..."
+  attic push celestial /run/current-system
+
   print "Done."
 }

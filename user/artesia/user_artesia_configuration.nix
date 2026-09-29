@@ -59,7 +59,7 @@
           "gtk"
           # "gnome"
         ];
-        "org.freedesktop.impl.portal.Secret" = [ "kwallet" ];
+        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
       hyprland = {
         default = [
@@ -68,13 +68,13 @@
           # "gnome"
         ];
         "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
-        "org.freedesktop.impl.portal.Secret" = [ "kwallet" ];
+        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
     };
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
       xdg-desktop-portal-gtk
-      kdePackages.kwallet
+      gnome-keyring
       # xdg-desktop-portal-gnome
     ];
   };

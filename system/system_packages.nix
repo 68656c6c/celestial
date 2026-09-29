@@ -65,6 +65,8 @@
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
+    kdePackages.kio-extras
+    kdePackages.breeze-icons
     kdePackages.kwallet
     kdePackages.qtstyleplugin-kvantum
     kdePackages.qt6ct

@@ -105,39 +105,12 @@
   };
 
   security = {
-    pam.services = {
-      login.enable = true;
-      login.kwallet = {
-        enable = true;
-        forceRun = true;
-      };
-      ly.kwallet = {
-        enable = true;
-        forceRun = true;
-      };
-    };
+    pam.services.login.enable = true;
     rtkit.enable = true;
     polkit.enable = true;
   };
 
-  systemd.user.services.plasma-kwallet-pam = {
-    description = "Unlock kwallet from pam credentials";
-    partOf = [ "graphical-session.target" ];
-    wantedBy = [ "graphical-session.target" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.kdePackages.kwallet-pam}/libexec/pam_kwallet_init";
-      Type = "simple";
-      Slice = "background.slice";
-      Restart = "no";
-    };
-  };
-
-  # environment = {
-  #   pathsToLink = [
-  #     "/share/xdg-desktop-portal"
-  #     "/share/applications"
-  #   ];
-  # };
+  qt.enable = true;
 
   nix = {
     gc = {

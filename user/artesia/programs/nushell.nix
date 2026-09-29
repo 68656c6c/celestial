@@ -14,7 +14,6 @@
       ls = "eza";
       lt = "eza --tree";
       tree = "eza --tree";
-      nos = "nh os switch";
     };
     environmentVariables = {
       NIXOS_OZONE_WL = 1;
@@ -42,6 +41,14 @@
       };
     };
     extraConfig = ''
+      def nos [...args] {
+        nh os switch ...$args
+        if (which attic | is-not-empty) {
+          print "Pushing system closure to attic..."
+          attic push celestial /run/current-system
+        }
+      }
+
       def nwhich [flag: string] {
         let result = (which $flag | get path);
         if ($result | is-empty) { $"($flag) not found" } else { $result | first | path expand }
