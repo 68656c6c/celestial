@@ -1,5 +1,6 @@
 {
   lib,
+  pkgs,
   osConfig,
   ...
 }:
@@ -17,7 +18,7 @@ in
   wayland.windowManager.hyprland = {
     enable = true;
     package = null;
-    portalPackage = null;
+    portalPackage = pkgs.xdg-desktop-portal-hyprland;
     systemd.variables = [ "--all" ];
     configType = "lua";
 

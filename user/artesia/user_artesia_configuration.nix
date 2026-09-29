@@ -59,9 +59,7 @@
           "gtk"
           # "gnome"
         ];
-        "org.freedesktop.appearance" = {
-          color-scheme = "prefer-dark";
-        };
+        "org.freedesktop.impl.portal.Secret" = [ "kwallet" ];
       };
       hyprland = {
         default = [
@@ -70,14 +68,18 @@
           # "gnome"
         ];
         "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.Secret" = [ "kwallet" ];
       };
     };
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
       xdg-desktop-portal-gtk
+      kdePackages.kwallet
       # xdg-desktop-portal-gnome
     ];
   };
+
+  dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
 
   home.stateVersion = "25.05"; # Have you read da comment?
 }

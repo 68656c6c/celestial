@@ -89,6 +89,10 @@
     # Fix open with
     etc."xdg/menus/applications.menu".source =
       "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
+    pathsToLink = [
+      "/share/xdg-desktop-portal"
+      "/share/applications"
+    ];
   };
 
   users.users.artesia = {
@@ -114,17 +118,6 @@
     };
     rtkit.enable = true;
     polkit.enable = true;
-  };
-
-  xdg.portal = {
-    extraPortals = [ pkgs.kdePackages.kwallet ];
-    config.common = {
-      default = [
-        "hyprland"
-        "gtk"
-      ];
-      "org.freedesktop.impl.portal.Secret" = [ "kwallet" ];
-    };
   };
 
   systemd.user.services.plasma-kwallet-pam = {
