@@ -101,9 +101,42 @@
   };
 
   security = {
-    pam.services.login.enable = true;
+    pam.services = {
+      login.enable = true;
+      login.kwallet = {
+        enable = true;
+        forceRun = true;
+      };
+      ly.kwallet = {
+        enable = true;
+        forceRun = true;
+      };
+    };
     rtkit.enable = true;
     polkit.enable = true;
+  };
+
+  xdg.portal = {
+    extraPortals = [ pkgs.kdePackages.kwallet ];
+    config.common = {
+      default = [
+        "hyprland"
+        "gtk"
+      ];
+      "org.freedesktop.impl.portal.Secret" = [ "kwallet" ];
+    };
+  };
+
+  systemd.user.services.plasma-kwallet-pam = {
+    description = "Unlock kwallet from pam credentials";
+    partOf = [ "graphical-session.target" ];
+    wantedBy = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.kdePackages.kwallet-pam}/libexec/pam_kwallet_init";
+      Type = "simple";
+      Slice = "background.slice";
+      Restart = "no";
+    };
   };
 
   # environment = {

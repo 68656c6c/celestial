@@ -65,6 +65,7 @@
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
+    kdePackages.kwallet
     kdePackages.qtstyleplugin-kvantum
     kdePackages.qt6ct
   ];
