@@ -1,13 +1,7 @@
 { unstable }:
 _final: _prev: {
   hyprland = unstable.hyprland;
-  hyprland-plugins = unstable.hyprland-plugins;
-  hyprpaper = unstable.hyprpaper;
-  hypridle = unstable.hypridle;
-  hyprlock = unstable.hyprlock;
   hyprpicker = unstable.hyprpicker;
-  hyprutils = unstable.hyprutils;
-  hyprlang = unstable.hyprlang;
   hyprcursor = unstable.hyprcursor;
   xdg-desktop-portal-hyprland = unstable.xdg-desktop-portal-hyprland;
   nushell = unstable.nushell;
