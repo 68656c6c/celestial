@@ -2,96 +2,92 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+FORCE=0
 
-update_zen() {
-  echo "Checking zen-browser latest release..."
+# Usage: update_pkg <name> <github owner/repo> <nix file> <asset filename template>
+#   The template may contain {tag}, which is replaced with the release tag.
+update_pkg() {
+  local name="$1" repo="$2" nix_file="$3" asset_tpl="$4"
+
+  echo "Checking $name latest release..."
   local latest_tag
-  latest_tag=$(curl -s "https://api.github.com/repos/zen-browser/desktop/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+' | head -1)
+  latest_tag=$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" | jq -r '.tag_name // empty')
 
   if [ -z "$latest_tag" ]; then
-    echo "Failed to fetch zen-browser latest release"
+    echo "Failed to fetch $name latest release"
     return 1
   fi
 
   local current_version
-  current_version=$(grep -oP 'version = "\K[^"]+' "$REPO_ROOT/diy-packages/zen-browser.nix")
+  current_version=$(grep -oP 'version = "\K[^"]+' "$nix_file" | head -1)
 
-  if [ "$latest_tag" = "$current_version" ]; then
-    echo "zen-browser already up to date ($current_version)"
+  if [ "$latest_tag" = "$current_version" ] && [ "$FORCE" -eq 0 ]; then
+    echo "$name already up to date ($current_version)"
     return 0
   fi
 
-  echo "Updating zen-browser from $current_version to $latest_tag"
+  echo "Updating $name from $current_version to $latest_tag"
 
-  local download_url="https://github.com/zen-browser/desktop/releases/download/${latest_tag}/zen-x86_64.AppImage"
+  local asset="${asset_tpl//\{tag\}/$latest_tag}"
+  local download_url="https://github.com/${repo}/releases/download/${latest_tag}/${asset}"
   echo "Fetching hash for: $download_url"
 
-  local new_hash
-  new_hash=$(nurl "$download_url" 2>&1 | grep -oP 'sha256-\K[A-Za-z0-9+/=]+' | head -1)
+  # Download the actual file and get its SRI hash (sha256-...)
+  local sri_hash
+  sri_hash=$(nix --extra-experimental-features nix-command \
+    store prefetch-file --json "$download_url" | jq -r '.hash // empty')
 
-  if [ -z "$new_hash" ]; then
-    echo "Failed to compute hash"
+  if [[ ! "$sri_hash" =~ ^sha256-[A-Za-z0-9+/]+=*$ ]]; then
+    echo "Failed to compute hash (got: '${sri_hash}')"
     return 1
   fi
 
-  sed -i "s/version = \"[^\"]*\"/version = \"$latest_tag\"/" "$REPO_ROOT/diy-packages/zen-browser.nix"
-  sed -i "s/sha256 = \"sha256-[^\"]*\"/sha256 = \"sha256-$new_hash\"/" "$REPO_ROOT/diy-packages/zen-browser.nix"
+  sed -i "s|sha256 = \"sha256-[^\"]*\"|sha256 = \"${sri_hash}\"|" "$nix_file"
+  sed -i "0,/version = \"[^\"]*\"/s||version = \"${latest_tag}\"|" "$nix_file"
 
-  echo "Updated zen-browser to $latest_tag"
+  if ! grep -qF "sha256 = \"${sri_hash}\"" "$nix_file"; then
+    echo "Hash was not written to $nix_file (does it use 'sha256 = \"sha256-...\"'?)"
+    return 1
+  fi
+  if ! grep -qF "version = \"${latest_tag}\"" "$nix_file"; then
+    echo "Version was not written to $nix_file"
+    return 1
+  fi
+
+  echo "Updated $name to $latest_tag"
+}
+
+update_zen() {
+  update_pkg "zen-browser" "zen-browser/desktop" \
+    "$REPO_ROOT/diy-packages/zen-browser.nix" \
+    "zen-x86_64.AppImage"
 }
 
 update_helium() {
-  echo "Checking helium latest release..."
-  local latest_tag
-  latest_tag=$(curl -s "https://api.github.com/repos/imputnet/helium-linux/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+' | head -1)
-
-  if [ -z "$latest_tag" ]; then
-    echo "Failed to fetch helium latest release"
-    return 1
-  fi
-
-  local current_version
-  current_version=$(grep -oP 'version = "\K[^"]+' "$REPO_ROOT/diy-packages/helium.nix")
-
-  if [ "$latest_tag" = "$current_version" ]; then
-    echo "helium already up to date ($current_version)"
-    return 0
-  fi
-
-  echo "Updating helium from $current_version to $latest_tag"
-
-  local download_url="https://github.com/imputnet/helium-linux/releases/download/${latest_tag}/helium-${latest_tag}-x86_64.AppImage"
-  echo "Fetching hash for: $download_url"
-
-  local new_hash
-  new_hash=$(nurl "$download_url" 2>&1 | grep -oP 'sha256-\K[A-Za-z0-9+/=]+' | head -1)
-
-  if [ -z "$new_hash" ]; then
-    echo "Failed to compute hash"
-    return 1
-  fi
-
-  sed -i "s/version = \"[^\"]*\"/version = \"$latest_tag\"/" "$REPO_ROOT/diy-packages/helium.nix"
-  sed -i "s/sha256 = \"sha256-[^\"]*\"/sha256 = \"sha256-$new_hash\"/" "$REPO_ROOT/diy-packages/helium.nix"
-
-  echo "Updated helium to $latest_tag"
+  update_pkg "helium" "imputnet/helium-linux" \
+    "$REPO_ROOT/diy-packages/helium.nix" \
+    "helium-{tag}-x86_64.AppImage"
 }
 
-case "${1:-all}" in
-  zen)
-    update_zen
-    ;;
-  helium)
-    update_helium
-    ;;
-  all)
-    update_zen
-    update_helium
-    ;;
-  *)
-    echo "Usage: $0 [zen|helium|all]"
-    exit 1
-    ;;
+usage() {
+  echo "Usage: $0 [-f|--force] [zen|helium|all]"
+  echo "  -f, --force   Re-fetch the hash"
+}
+
+target="all"
+for arg in "$@"; do
+  case "$arg" in
+    -f|--force) FORCE=1 ;;
+    zen|helium|all) target="$arg" ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage; exit 1 ;;
+  esac
+done
+
+case "$target" in
+  zen)    update_zen ;;
+  helium) update_helium ;;
+  all)    update_zen; update_helium ;;
 esac
 
 echo "Done."
