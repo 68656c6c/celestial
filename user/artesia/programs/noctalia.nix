@@ -89,7 +89,7 @@ let
     };
 
     wallpaper = {
-      directory = "/home/artesia/Pictures/wallpapers";
+      directory = "/home/artesia/.dotfiles/wallpapers/";
       transition_on_startup = true;
       automation = {
         enabled = true;
