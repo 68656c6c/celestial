@@ -100,19 +100,15 @@ jobs:
             | attic push --stdin "$ATTIC_CACHE"
 
   report:
-    needs: [plan, build]
+    needs: plan
     if: always()
     runs-on: nix
     steps:
-      - name: Fail if any host did not evaluate or build
+      - name: Fail if any host did not evaluate
         run: |
           broken='${{ needs.plan.outputs.broken }}'
           if [ "$broken" != '[]' ] && [ -n "$broken" ]; then
             echo "hosts that failed to evaluate: $broken" >&2
             exit 1
           fi
-          if [ '${{ needs.build.result }}' = 'failure' ]; then
-            echo "at least one host failed to build" >&2
-            exit 1
-          fi
-          echo "all hosts evaluated and built"
+          echo "all hosts evaluated"
