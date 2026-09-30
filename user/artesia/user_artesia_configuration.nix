@@ -34,6 +34,12 @@
   gtk = {
     gtk4.theme = null;
     enable = true;
+    gtk3.extraCss = ''
+      @import url("noctalia.css");
+    '';
+    gtk4.extraCss = ''
+      @import url("noctalia.css");
+    '';
     theme = {
       package = pkgs.adw-gtk3;
       name = "adw-gtk3-dark";
