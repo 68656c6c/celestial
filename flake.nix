@@ -83,6 +83,8 @@
         };
     in
     {
+      packages.${system}.runner-image = diy.runner-image;
+
       nixosConfigurations = nixpkgs.lib.mapAttrs' (name: _: {
         name = name;
         value = mkHost name ./system/per_host/${name}/hardware-configuration.${name}.nix [

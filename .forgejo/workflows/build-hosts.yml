@@ -1,0 +1,118 @@
+name: build-hosts
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  ATTIC_CACHE: celestial
+  ATTIC_SERVER: https://attic.artesia.cloud
+  ATTIC_CACHE_URL: https://attic.artesia.cloud/celestial
+
+jobs:
+  plan:
+    runs-on: nix
+    outputs:
+      hosts: ${{ steps.plan.outputs.hosts }}
+      broken: ${{ steps.plan.outputs.broken }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authorize private flake inputs
+        env:
+          FLAKE_TOKEN: ${{ secrets.FLAKE_TOKEN }}
+        run: |
+          git config --global \
+            "url.https://68656c6c:$FLAKE_TOKEN@git.artesia.cloud/.insteadOf" \
+            "ssh://git@git.artesia.cloud/"
+
+      - name: Decide which hosts need building
+        id: plan
+        run: |
+          set -euo pipefail
+          hosts=$(nix eval --raw '.#nixosConfigurations' \
+            --apply 'ns: builtins.concatStringsSep " " (builtins.attrNames ns)')
+
+          need='[]'
+          broken='[]'
+          for host in $hosts; do
+            if ! out=$(nix eval --raw ".#nixosConfigurations.$host.config.system.build.toplevel.outPath"); then
+              echo "::warning::$host does not evaluate, excluding from this run"
+              broken=$(printf '%s' "$broken" | jq -c --arg h "$host" '. + [$h]')
+              continue
+            fi
+
+            hash=${out#/nix/store/}
+            hash=${hash%%-*}
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "$ATTIC_CACHE_URL/$hash.narinfo" || echo 000)
+
+            if [ "$code" = 200 ]; then
+              echo "$host: $out already cached, skipping"
+            else
+              echo "$host: $out missing (HTTP $code), queueing"
+              need=$(printf '%s' "$need" | jq -c --arg h "$host" '. + [$h]')
+            fi
+          done
+
+          echo "hosts=$need" >> "$GITHUB_OUTPUT"
+          echo "broken=$broken" >> "$GITHUB_OUTPUT"
+          echo "plan: build=$need broken=$broken"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.hosts != '[]'
+    runs-on: nix
+    strategy:
+      fail-fast: false
+      matrix:
+        host: ${{ fromJSON(needs.plan.outputs.hosts) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authorize private flake inputs
+        env:
+          FLAKE_TOKEN: ${{ secrets.FLAKE_TOKEN }}
+        run: |
+          git config --global \
+            "url.https://68656c6c:$FLAKE_TOKEN@git.artesia.cloud/.insteadOf" \
+            "ssh://git@git.artesia.cloud/"
+
+      - name: Log in to attic
+        run: |
+          attic login "$ATTIC_CACHE" "$ATTIC_SERVER" "${{ secrets.ATTIC_TOKEN }}"
+
+      - name: Build ${{ matrix.host }}
+        id: build
+        run: |
+          set -euo pipefail
+          attr=".#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel"
+          out=$(nix eval --raw "$attr.outPath")
+          nix build --no-link --print-build-logs "$attr"
+          echo "out=$out" >> "$GITHUB_OUTPUT"
+          echo "drv=$(nix path-info --derivation "$attr")" >> "$GITHUB_OUTPUT"
+
+      - name: Push ${{ matrix.host }} to attic
+        run: |
+          set -euo pipefail
+          nix-store --query --requisites --include-outputs "${{ steps.build.outputs.drv }}" \
+            | grep -v '\.drv$' \
+            | attic push --stdin "$ATTIC_CACHE"
+
+  report:
+    needs: [plan, build]
+    if: always()
+    runs-on: nix
+    steps:
+      - name: Fail if any host did not evaluate or build
+        run: |
+          broken='${{ needs.plan.outputs.broken }}'
+          if [ "$broken" != '[]' ] && [ -n "$broken" ]; then
+            echo "hosts that failed to evaluate: $broken" >&2
+            exit 1
+          fi
+          if [ '${{ needs.build.result }}' = 'failure' ]; then
+            echo "at least one host failed to build" >&2
+            exit 1
+          fi
+          echo "all hosts evaluated and built"
