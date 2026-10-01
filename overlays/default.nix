@@ -11,4 +11,5 @@ _final: _prev: {
   tuigreet = unstable.tuigreet;
   bitwarden-desktop = unstable.bitwarden-desktop;
   opencode = unstable.opencode;
+  claude-code = unstable.claude-code;
 }

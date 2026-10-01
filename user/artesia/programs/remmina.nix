@@ -3,11 +3,6 @@
 {
   services.remmina = {
     enable = true;
-    systemdService = {
-      enable = true;
-      # startupFlags = {
-
-      # };
-    };
+    systemdService.enable = false;
   };
 }

@@ -1,4 +1,5 @@
 {
+  lib,
   dockerTools,
   writeTextDir,
   nix,
@@ -25,11 +26,23 @@
 }:
 
 let
+  buildUsers = lib.genList (i: i + 1) 16;
+
+  nss = dockerTools.fakeNss.override {
+    extraPasswdLines = map (
+      i:
+      "nixbld${toString i}:x:${toString (30000 + i)}:30000:Nix build user ${toString i}:/var/empty:/bin/sh"
+    ) buildUsers;
+    extraGroupLines = [
+      "nixbld:x:30000:${lib.concatMapStringsSep "," (i: "nixbld${toString i}") buildUsers}"
+    ];
+  };
+
   nixConf = writeTextDir "etc/nix/nix.conf" ''
     experimental-features = nix-command flakes
     sandbox = false
     filter-syscalls = false
-    build-users-group =
+    build-users-group = nixbld
     trusted-users = root
     substituters = ${atticCacheUrl} https://cache.nixos.org/
     trusted-public-keys = ${atticPublicKey} cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
@@ -42,7 +55,7 @@ dockerTools.buildLayeredImageWithNixDb {
 
   contents = [
     nixConf
-    dockerTools.fakeNss
+    nss
     dockerTools.binSh
     dockerTools.usrBinEnv
     dockerTools.caCertificates

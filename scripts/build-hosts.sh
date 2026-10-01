@@ -10,9 +10,8 @@ usage() {
   cat >&2 <<EOF
 Usage: $0 [host...]
 
-Builds each host's system closure and pushes it to the attic cache along with
-its build-time dependencies, skipping hosts whose toplevel is already present.
-With no arguments, does every host in flake.nix.
+Builds each host's system closure and pushes it to the attic cache, skipping
+hosts whose toplevel is already present. With no arguments, does every host.
 
 Environment:
   ATTIC_CACHE      cache name for attic push   (default: celestial)
@@ -69,14 +68,7 @@ for host in "${hosts[@]}"; do
 
   if [ "$DO_PUSH" = 1 ]; then
     echo "==> $host: pushing"
-    if ! drv="$(nix path-info --derivation "$attr")"; then
-      echo "    could not resolve derivation" >&2
-      failed+=("$host")
-      continue
-    fi
-    if ! nix-store --query --requisites --include-outputs "$drv" \
-      | grep -v '\.drv$' \
-      | attic push --stdin "$CACHE_NAME"; then
+    if ! attic push "$CACHE_NAME" "$out"; then
       echo "    push failed" >&2
       failed+=("$host")
       continue

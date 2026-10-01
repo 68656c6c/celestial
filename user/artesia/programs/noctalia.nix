@@ -57,7 +57,7 @@ let
     };
 
     theme = {
-      source = "wallpaper";
+      palette_source = "wallpaper";
       wallpaper_scheme = "vibrant";
       templates = {
         builtin_ids = [
