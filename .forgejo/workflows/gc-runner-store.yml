@@ -1,0 +1,34 @@
+name: gc-runner-store
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+jobs:
+  gc:
+    runs-on: nix
+    steps:
+      # Only running processes count as roots in here, so without this the
+      # sweep takes the image's own node, attic and git with it and the next
+      # job cannot start.
+      - name: Root the runner toolchain
+        run: |
+          mkdir -p /nix/var/nix/gcroots/runner
+          for link in /bin/* /usr/bin/*; do
+            target="$(readlink -f "$link")" || continue
+            case "$target" in
+              /nix/store/*) ;;
+              *) continue ;;
+            esac
+            rest="${target#/nix/store/}"
+            path="/nix/store/${rest%%/*}"
+            ln -sfn "$path" "/nix/var/nix/gcroots/runner/${path##*/}"
+          done
+          echo "rooted $(ls /nix/var/nix/gcroots/runner | wc -l) store paths"
+
+      - name: Collect garbage
+        run: |
+          df -h /nix
+          nix-collect-garbage -d
+          df -h /nix
