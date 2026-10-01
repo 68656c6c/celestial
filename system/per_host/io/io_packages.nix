@@ -11,7 +11,6 @@
     quickemu
     quickgui
     swtpm
-    davinci-resolve
     openutau
     spice
     spice-gtk
