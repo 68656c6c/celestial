@@ -17,6 +17,12 @@ jobs:
       hosts: ${{ steps.plan.outputs.hosts }}
       broken: ${{ steps.plan.outputs.broken }}
     steps:
+      - name: Use a per-job HOME
+        run: |
+          mkdir -p "$RUNNER_TEMP/home"
+          echo "HOME=$RUNNER_TEMP/home" >> "$GITHUB_ENV"
+          rm -rf /homeless-shelter 2>/dev/null || true
+
       - uses: actions/checkout@v4
 
       - name: Authorize private flake inputs
@@ -68,6 +74,12 @@ jobs:
       matrix:
         host: ${{ fromJSON(needs.plan.outputs.hosts) }}
     steps:
+      - name: Use a per-job HOME
+        run: |
+          mkdir -p "$RUNNER_TEMP/home"
+          echo "HOME=$RUNNER_TEMP/home" >> "$GITHUB_ENV"
+          rm -rf /homeless-shelter 2>/dev/null || true
+
       - uses: actions/checkout@v4
 
       - name: Authorize private flake inputs
