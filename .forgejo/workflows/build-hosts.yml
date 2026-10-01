@@ -9,6 +9,7 @@ env:
   ATTIC_CACHE: celestial
   ATTIC_SERVER: https://attic.artesia.cloud
   ATTIC_CACHE_URL: https://attic.artesia.cloud/celestial
+  NIX_CONFIG: experimental-features = nix-command flakes
 
 jobs:
   plan:
@@ -67,12 +68,12 @@ jobs:
 
   build:
     needs: plan
-    if: needs.plan.outputs.hosts != '[]'
+    if: needs.plan.result == 'success' && needs.plan.outputs.hosts != '[]' && needs.plan.outputs.hosts != ''
     runs-on: nix
     strategy:
       fail-fast: false
       matrix:
-        host: ${{ fromJSON(needs.plan.outputs.hosts) }}
+        host: ${{ fromJSON(needs.plan.outputs.hosts || '["none"]') }}
     steps:
       - name: Use a per-job HOME
         run: |
