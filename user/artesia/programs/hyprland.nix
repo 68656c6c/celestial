@@ -135,13 +135,6 @@ in
         }
       ];
 
-      device = [
-        {
-          name = "epic-mouse-v1";
-          sensitivity = -0.5;
-        }
-      ];
-
       bind = [
         {
           _args = [
@@ -164,7 +157,7 @@ in
         {
           _args = [
             "SUPER + E"
-            (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"nemo\")")
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"dolphin\")")
           ];
         }
         {

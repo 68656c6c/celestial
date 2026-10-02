@@ -46,10 +46,11 @@
     cachix
     age
     sops
-    busybox
     nurl
     nushell
-    tuigreet
+    xwayland-satellite
+    brightnessctl
+    playerctl
     noctalia
     bitwarden-desktop
     opencode

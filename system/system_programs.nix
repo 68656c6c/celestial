@@ -10,7 +10,7 @@
     hyprland.enable = true;
     hyprland.withUWSM = true;
 
-    niri.enable = false;
+    niri.enable = true;
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
     openvpn3.enable = true;

@@ -1,5 +1,5 @@
 {
-  pkgs,
+  config,
   lib,
   osConfig,
   ...
@@ -7,21 +7,54 @@
 
 let
   cursorSize = toString osConfig.host.cursor.size;
-  monitorKDL = lib.concatMapStringsSep "\n" (m: ''
-    output "${m.output}" {
-      ${if m.mode != "" then ''mode "${m.mode}"'' else ""}
-      ${
-        if m.position != "" then
-          let
-            parts = lib.splitString "x" m.position;
-          in
-          "position x=${builtins.elemAt parts 0} y=${builtins.elemAt parts 1}"
-        else
-          ""
+
+  niriMode =
+    mode:
+    let
+      parts = lib.splitString "@" mode;
+      rate = lib.splitString "." (builtins.elemAt parts 1);
+      frac = if builtins.length rate > 1 then builtins.elemAt rate 1 else "";
+    in
+    if builtins.length parts < 2 then
+      mode
+    else
+      "${builtins.head parts}@${builtins.head rate}.${frac}${
+        lib.fixedWidthString (3 - lib.stringLength frac) "0" ""
+      }";
+
+  outputs = lib.concatMapStringsSep "\n" (
+    m:
+    let
+      pos = lib.splitString "x" m.position;
+    in
+    ''
+      output "${m.output}" {
+        ${lib.optionalString (m.mode != "") ''mode "${niriMode m.mode}"''}
+        ${lib.optionalString (
+          m.position != ""
+        ) "position x=${builtins.elemAt pos 0} y=${builtins.elemAt pos 1}"}
+        scale ${builtins.toJSON m.scale}
       }
-      scale ${builtins.toJSON m.scale}
+    ''
+  ) osConfig.host.monitors;
+
+  workspaceBinds = lib.concatMapStrings (
+    i:
+    let
+      key = toString (lib.mod i 10);
+    in
+    ''
+      Mod+${key} { focus-workspace ${toString i}; }
+      Mod+Shift+${key} { move-window-to-workspace ${toString i}; }
+    ''
+  ) (lib.range 1 10);
+
+  bitwardenRule = app: ''
+    window-rule {
+      match app-id="^${app}$" title=r#"^Extension: \(Bitwarden Password Manager\) - Bitwarden"#
+      open-floating true
     }
-  '') osConfig.host.monitors;
+  '';
 in
 
 {
@@ -35,29 +68,40 @@ in
     prefer-no-csd
 
     environment {
-      XCURSOR_SIZE "${cursorSize}"
-      HYPRCURSOR_SIZE "${cursorSize}"
+      NIXOS_OZONE_WL "1"
+      QT_QPA_PLATFORM "wayland"
+      QT_QPA_PLATFORMTHEME "qt6ct"
+    }
+
+    cursor {
+      xcursor-theme "${config.home.pointerCursor.name}"
+      xcursor-size ${cursorSize}
     }
 
     input {
+      keyboard {
+        xkb {
+          layout "us"
+        }
+      }
       touchpad {
         tap
-        natural-scroll
       }
+      focus-follows-mouse
     }
+
+    ${outputs}
 
     layout {
       gaps 5
-
       center-focused-column "never"
+      default-column-width { proportion 0.5; }
 
       preset-column-widths {
         proportion 0.33333
         proportion 0.5
         proportion 0.66667
       }
-
-      default-column-width { proportion 0.5; }
 
       focus-ring {
         off
@@ -77,49 +121,61 @@ in
       clip-to-geometry true
     }
 
-    ${monitorKDL}
+    ${bitwardenRule "zen"}
+    ${bitwardenRule "helium"}
+
+    window-rule {
+      match app-id=r#"^dev\.noctalia\.Noctalia$"#
+      open-floating true
+      default-column-width { fixed 1080; }
+      default-window-height { fixed 920; }
+    }
 
     binds {
-      Mod+Q { spawn "${pkgs.ghostty}/bin/ghostty"; }
-      Mod+E { spawn "${pkgs.nemo}/bin/nemo"; }
+      Mod+Q { spawn "ghostty" "+new-window"; }
+      Mod+E { spawn "dolphin"; }
       Mod+C { close-window; }
-      Mod+M { quit; }
+      Mod+M { quit skip-confirmation=true; }
       Mod+V { toggle-window-floating; }
       Mod+F { maximize-column; }
       Mod+Shift+F { fullscreen-window; }
+      Mod+R { switch-preset-column-width; }
+      Mod+Comma { consume-or-expel-window-left; }
+      Mod+Period { consume-or-expel-window-right; }
+      Mod+O { toggle-overview; }
+      Mod+Shift+Slash { show-hotkey-overlay; }
 
-      Mod+Left { focus-column-left; }
-      Mod+Right { focus-column-right; }
-      Mod+Up { focus-window-up; }
-      Mod+Down { focus-window-down; }
+      Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+      Mod+L { spawn "noctalia" "msg" "session" "lock"; }
 
-      Mod+Shift+Left { move-column-left; }
-      Mod+Shift+Right { move-column-right; }
+      Mod+Left { focus-column-or-monitor-left; }
+      Mod+Right { focus-column-or-monitor-right; }
+      Mod+Up { focus-window-or-monitor-up; }
+      Mod+Down { focus-window-or-monitor-down; }
+
+      Mod+Shift+Left { move-column-left-or-to-monitor-left; }
+      Mod+Shift+Right { move-column-right-or-to-monitor-right; }
       Mod+Shift+Up { move-window-up; }
       Mod+Shift+Down { move-window-down; }
 
-      Mod+1 { focus-workspace 1; }
-      Mod+2 { focus-workspace 2; }
-      Mod+3 { focus-workspace 3; }
-      Mod+4 { focus-workspace 4; }
-      Mod+5 { focus-workspace 5; }
-      Mod+6 { focus-workspace 6; }
-      Mod+7 { focus-workspace 7; }
-      Mod+8 { focus-workspace 8; }
-      Mod+9 { focus-workspace 9; }
+    ${workspaceBinds}
 
-      Mod+Shift+1 { move-column-to-workspace 1; }
-      Mod+Shift+2 { move-column-to-workspace 2; }
-      Mod+Shift+3 { move-column-to-workspace 3; }
-      Mod+Shift+4 { move-column-to-workspace 4; }
-      Mod+Shift+5 { move-column-to-workspace 5; }
-      Mod+Shift+6 { move-column-to-workspace 6; }
-      Mod+Shift+7 { move-column-to-workspace 7; }
-      Mod+Shift+8 { move-column-to-workspace 8; }
-      Mod+Shift+9 { move-column-to-workspace 9; }
+      Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
+      Mod+WheelScrollUp cooldown-ms=150 { focus-workspace-up; }
 
-      Mod+Space { spawn "${pkgs.noctalia}/bin/noctalia" "msg" "panel-toggle" "launcher"; }
-      Mod+L { spawn "${pkgs.noctalia}/bin/noctalia" "msg" "session" "lock"; }
+      XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "-l" "1" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+      XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+      XF86AudioMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+      XF86AudioMicMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+      XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "-e4" "-n2" "set" "5%+"; }
+      XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "-e4" "-n2" "set" "5%-"; }
+
+      XF86AudioNext allow-when-locked=true repeat=false { spawn "playerctl" "next"; }
+      XF86AudioPause allow-when-locked=true repeat=false { spawn "playerctl" "play-pause"; }
+      XF86AudioPlay allow-when-locked=true repeat=false { spawn "playerctl" "play-pause"; }
+      XF86AudioPrev allow-when-locked=true repeat=false { spawn "playerctl" "previous"; }
     }
+
+    include optional=true "noctalia.kdl"
   '';
 }
