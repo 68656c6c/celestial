@@ -28,8 +28,6 @@
     dig
     nmap
     catppuccin-kvantum
-    fuzzel
-    swaybg
     gruvbox-kvantum
     nwg-look
     adw-gtk3
@@ -53,7 +51,6 @@
     xwayland-satellite
     brightnessctl
     playerctl
-    noctalia
     bitwarden-desktop
     opencode
     opencode-claude-auth

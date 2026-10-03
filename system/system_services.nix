@@ -26,13 +26,6 @@
         };
       };
     };
-    xserver = {
-      enable = true;
-      desktopManager = {
-        lxqt.enable = true;
-        xfce.enable = true;
-      };
-    };
     gnome.gnome-keyring.enable = true;
     rpcbind.enable = true;
     flatpak.enable = true;

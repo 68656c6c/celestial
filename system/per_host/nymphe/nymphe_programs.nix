@@ -2,5 +2,6 @@
 
 {
   programs = {
+    sway.enable = true;
   };
 }
