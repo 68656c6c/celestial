@@ -125,20 +125,7 @@ lib.mkIf osConfig.programs.sway.enable {
 
   programs.i3status.enable = true;
 
-  systemd.user.services.mako = {
-    Unit = {
-      Description = "Mako notification daemon";
-      PartOf = [ "graphical-session.target" ];
-      After = [ "graphical-session.target" ];
-      ConditionEnvironment = "XDG_CURRENT_DESKTOP=sway";
-    };
-    Service = {
-      Type = "dbus";
-      BusName = "org.freedesktop.Notifications";
-      ExecStart = lib.getExe pkgs.mako;
-    };
-    Install.WantedBy = [ "graphical-session.target" ];
-  };
+  services.mako.enable = true;
 
   xdg.portal = {
     config.sway = {

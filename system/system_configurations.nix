@@ -50,26 +50,6 @@
         where = "/mnt/nas";
       }
     ];
-    user.services = {
-      noctalia = {
-        unitConfig.ConditionEnvironment = [
-          "|XDG_CURRENT_DESKTOP=niri"
-          "|XDG_CURRENT_DESKTOP=Hyprland"
-        ];
-        serviceConfig = {
-          Type = "dbus";
-          BusName = "org.freedesktop.Notifications";
-        };
-      };
-      "app-@autostart" = {
-        overrideStrategy = "asDropin";
-        enableDefaultPath = false;
-        after = [
-          "noctalia.service"
-          "mako.service"
-        ];
-      };
-    };
   };
 
   time.timeZone = "Europe/Amsterdam";

@@ -19,7 +19,6 @@
     noctalia = {
       enable = true;
       recommendedServices.enable = true;
-      systemd.enable = true;
     };
     sway = {
       enable = true;
