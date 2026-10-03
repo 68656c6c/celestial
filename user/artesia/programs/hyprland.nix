@@ -111,6 +111,9 @@ in
 
         cursor = {
           default_monitor = (builtins.elemAt osConfig.host.monitors 0).output;
+        }
+        // lib.optionalAttrs (lib.elem "nvidia" osConfig.services.xserver.videoDrivers) {
+          no_hardware_cursors = true;
         };
 
         input = {
