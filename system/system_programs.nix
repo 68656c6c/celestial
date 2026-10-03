@@ -16,6 +16,10 @@
     hyprland.withUWSM = true;
 
     niri.enable = true;
+    noctalia = {
+      enable = true;
+      recommendedServices.enable = true;
+    };
     sway = {
       enable = true;
       wrapperFeatures.gtk = true;
