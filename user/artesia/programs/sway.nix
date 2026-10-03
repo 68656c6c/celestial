@@ -62,6 +62,7 @@ lib.mkIf osConfig.programs.sway.enable {
 
       startup = [
         { command = "nm-applet --indicator"; }
+        { command = lib.getExe pkgs.mako; }
       ];
 
       keybindings = {
@@ -124,8 +125,6 @@ lib.mkIf osConfig.programs.sway.enable {
   };
 
   programs.i3status.enable = true;
-
-  services.mako.enable = true;
 
   xdg.portal = {
     config.sway = {
