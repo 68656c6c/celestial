@@ -19,7 +19,7 @@
     }
     {
       output = "DP-2";
-      mode = "2560x1440@164.96";
+      mode = "2560x1440@144";
       position = "1920x0";
       scale = 1.0;
     }
@@ -38,13 +38,8 @@
 
   vpn.tailscale.enable = false;
 
-  hardware.amdgpu.opencl.enable = true;
-  hardware.graphics = {
-    enable = true;
-    extraPackages = with pkgs; [
-      mesa.opencl
-    ];
-  };
+  hardware.graphics.enable = true;
+  hardware.nvidia.modesetting.enable = true;
 
   boot.loader.systemd-boot.extraEntries = {
     "Windows11.conf" = ''
