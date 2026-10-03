@@ -28,6 +28,8 @@
     dig
     nmap
     catppuccin-kvantum
+    fuzzel
+    swaybg
     gruvbox-kvantum
     nwg-look
     adw-gtk3

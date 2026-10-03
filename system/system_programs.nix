@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   programs = {
     # Apparently because it can mess with login shell, but I kinda want to go back to just nushell, we'll see later
@@ -11,6 +16,17 @@
     hyprland.withUWSM = true;
 
     niri.enable = true;
+    sway = {
+      enable = true;
+      wrapperFeatures.gtk = true;
+      # sway refuses to start on the proprietary nvidia driver without this
+      extraOptions = lib.optional (lib.elem "nvidia" config.services.xserver.videoDrivers) "--unsupported-gpu";
+      extraSessionCommands = ''
+        export NIXOS_OZONE_WL=1
+        export QT_QPA_PLATFORM=wayland
+        export QT_QPA_PLATFORMTHEME=qt6ct
+      '';
+    };
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
     openvpn3.enable = true;
