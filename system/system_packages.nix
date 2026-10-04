@@ -60,11 +60,8 @@
     qimgv
     legcord
     pwvucontrol
-<<<<<<< HEAD
     pavucontrol
-=======
     pangolin-cli
->>>>>>> refs/remotes/origin/main
     diy.helium
     diy.zen-browser
     qt6.qtwayland
