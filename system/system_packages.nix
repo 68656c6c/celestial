@@ -61,6 +61,7 @@
     qimgv
     legcord
     pwvucontrol
+    pavucontrol
     diy.helium
     diy.zen-browser
     qt6.qtwayland
