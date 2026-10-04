@@ -60,6 +60,7 @@
     qimgv
     legcord
     pwvucontrol
+    pangolin-cli
     diy.helium
     diy.zen-browser
     qt6.qtwayland
