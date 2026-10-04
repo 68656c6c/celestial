@@ -21,6 +21,7 @@
   home.sessionVariables = {
     NIXOS_OZONE_WL = 1;
     NH_OS_FLAKE = "/home/artesia/.dotfiles";
+    WLR_NO_HARDWARE_CURSORS = 1;
     XCURSOR_SIZE = osConfig.host.cursor.size;
   };
 

@@ -17,6 +17,7 @@
     };
     environmentVariables = {
       NIXOS_OZONE_WL = 1;
+      WLR_NO_HARDWARE_CURSORS = 1;
       NH_OS_FLAKE = "${config.home.homeDirectory}/.dotfiles";
       XCURSOR_SIZE = osConfig.host.cursor.size;
       SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";

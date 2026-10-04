@@ -10,7 +10,15 @@
     hyprland.enable = true;
     hyprland.withUWSM = true;
 
-    niri.enable = true;
+    noctalia.recommendedServices.enable = true;
+    sway = {
+      wrapperFeatures.gtk = true;
+      extraSessionCommands = ''
+        export NIXOS_OZONE_WL=1
+        export QT_QPA_PLATFORM=wayland
+        export QT_QPA_PLATFORMTHEME=qt6ct
+      '';
+    };
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
     openvpn3.enable = true;

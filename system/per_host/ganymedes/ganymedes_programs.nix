@@ -2,9 +2,8 @@
 
 {
   programs = {
-    noctalia = {
-      enable = true;
-      recommendedServices.enable = true;
-    };
+    sway.enable = true;
+    niri.enable = true;
+    noctalia.enable = true;
   };
 }
