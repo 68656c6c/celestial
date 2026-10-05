@@ -6,7 +6,7 @@
 {
   networking.hostName = "io";
   networking.nameservers = [
-    "192.168.44.2"
+    "192.168.1.1"
     "10.44.4.2"
   ];
 
