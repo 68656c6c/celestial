@@ -40,7 +40,11 @@
 
   home-manager.users.artesia = {
     services.arrpc.enable = lib.mkForce false;
-    systemd.user.services.attic-watch-store.Install.WantedBy = lib.mkForce [ ];
+    systemd.user.services = {
+      attic-watch-store.Install.WantedBy = lib.mkForce [ ];
+      flameshot.Install.WantedBy = lib.mkForce [ ];
+      tailscale-systray.Install.WantedBy = lib.mkForce [ ];
+    };
   };
 
   fileSystems."/boot".options = [
