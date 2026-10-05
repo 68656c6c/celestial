@@ -42,19 +42,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    sops.secrets.tsauth_key = {
-      sopsFile = ../secrets/tsauth.key;
-      format = "binary";
-    };
-
     services.tailscale = {
       enable = true;
-      authKeyFile = config.sops.secrets.tsauth_key.path;
       useRoutingFeatures = cfg.useRoutingFeatures;
       openFirewall = cfg.openFirewall;
       permitCertUid = cfg.user;
-      extraUpFlags = lib.optional cfg.ssh "--ssh";
-      extraSetFlags = [ "--operator=${cfg.user}" ];
+      extraSetFlags = [ "--operator=${cfg.user}" ] ++ lib.optional cfg.ssh "--ssh";
     };
   };
 }
