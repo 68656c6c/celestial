@@ -20,6 +20,7 @@ lib.mkIf osConfig.programs.sway.enable {
       modifier = mod;
       terminal = "ghostty +new-window";
       menu = "fuzzel";
+      defaultWorkspace = "workspace number 1";
 
       output =
         lib.listToAttrs (
