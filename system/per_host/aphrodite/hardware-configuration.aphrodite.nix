@@ -29,11 +29,6 @@
     fsType = "ext4";
   };
 
-  fileSystems."/mnt/nas" = {
-    device = "systemd-1";
-    fsType = "autofs";
-  };
-
   fileSystems."/boot" = {
     device = "/dev/disk/by-uuid/0DC5-4AC2";
     fsType = "vfat";

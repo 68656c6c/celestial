@@ -10,9 +10,6 @@
   };
 
   boot = {
-    supportedFilesystems = [
-      "nfs"
-    ];
     loader = {
       efi.canTouchEfiVariables = true;
       systemd-boot.enable = true;
@@ -28,28 +25,6 @@
     firewall = {
       enable = true;
     };
-  };
-
-  systemd = {
-    mounts = [
-      {
-        type = "nfs";
-        mountConfig = {
-          Options = "defaults,noatime,noexec,sec=krb5p";
-        };
-        what = "nas.lab.local:/mnt/local-data/SMB";
-        where = "/mnt/nas";
-      }
-    ];
-    automounts = [
-      {
-        wantedBy = [ "multi-user.target" ];
-        automountConfig = {
-          TimeoutIdleSec = "600";
-        };
-        where = "/mnt/nas";
-      }
-    ];
   };
 
   time.timeZone = "Europe/Amsterdam";

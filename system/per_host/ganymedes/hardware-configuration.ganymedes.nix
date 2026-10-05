@@ -35,11 +35,6 @@
     options = [ "subvol=nix" ];
   };
 
-  fileSystems."/mnt/nas" = {
-    device = "systemd-1";
-    fsType = "autofs";
-  };
-
   fileSystems."/home" = {
     device = "/dev/disk/by-uuid/ff831c8c-4b3d-4100-8ad9-cc85f10a5178";
     fsType = "btrfs";
