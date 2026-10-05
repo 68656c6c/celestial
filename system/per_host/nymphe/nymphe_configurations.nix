@@ -1,4 +1,5 @@
 {
+  lib,
   ...
 }:
 
@@ -33,6 +34,14 @@
   system.etc.overlay.enable = true;
 
   sops.useSystemdActivation = true;
+
+  systemd.services.nix-gc.unitConfig.ConditionACPower = true;
+  systemd.services.nix-optimise.unitConfig.ConditionACPower = true;
+
+  home-manager.users.artesia = {
+    services.arrpc.enable = lib.mkForce false;
+    systemd.user.services.attic-watch-store.Install.WantedBy = lib.mkForce [ ];
+  };
 
   fileSystems."/boot".options = [
     "noauto"
