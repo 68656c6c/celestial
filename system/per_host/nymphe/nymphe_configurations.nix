@@ -24,4 +24,11 @@
   };
 
   vpn.tailscale.enable = true;
+
+  boot.loader.timeout = 0;
+
+  fileSystems."/boot".options = [
+    "noauto"
+    "x-systemd.automount"
+  ];
 }
