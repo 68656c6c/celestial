@@ -27,6 +27,13 @@
 
   boot.loader.timeout = 0;
 
+  home-manager.startAsUserService = true;
+
+  system.nixos-init.enable = true;
+  system.etc.overlay.enable = true;
+
+  sops.useSystemdActivation = true;
+
   fileSystems."/boot".options = [
     "noauto"
     "x-systemd.automount"
