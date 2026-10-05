@@ -49,5 +49,10 @@ in
       permitCertUid = cfg.user;
       extraSetFlags = [ "--operator=${cfg.user}" ] ++ lib.optional cfg.ssh "--ssh";
     };
+
+    systemd.services = {
+      tailscaled.wantedBy = lib.mkForce [ ];
+      tailscaled-set.wantedBy = lib.mkForce [ "tailscaled.service" ];
+    };
   };
 }

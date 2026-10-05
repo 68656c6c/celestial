@@ -32,7 +32,7 @@ in
     };
 
     services.openvpn.servers.${cfg.name} = {
-      autoStart = true;
+      autoStart = false;
       updateResolvConf = cfg.updateDns;
       config = "config ${config.sops.secrets.vpn-config.path}";
     };
