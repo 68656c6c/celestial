@@ -54,14 +54,10 @@ lib.mkIf osConfig.programs.sway.enable {
         border = 2;
       };
 
-      bars = [
-        {
-          position = "bottom";
-          statusCommand = "i3status";
-        }
-      ];
+      bars = [ ];
 
       startup = [
+        { command = "waybar"; }
         { command = "nm-applet --indicator"; }
         { command = lib.getExe pkgs.mako; }
       ];
@@ -125,7 +121,149 @@ lib.mkIf osConfig.programs.sway.enable {
     '';
   };
 
-  programs.i3status.enable = true;
+  programs.waybar = {
+    enable = true;
+    settings.main = {
+      layer = "top";
+      position = "bottom";
+      height = 28;
+      modules-left = [
+        "custom/launcher"
+        "sway/workspaces"
+      ];
+      modules-center = [ "clock" ];
+      modules-right = [
+        "tray"
+        "wireplumber"
+        "backlight"
+        "custom/nightlight"
+        "power-profiles-daemon"
+        "battery"
+      ];
+
+      "custom/launcher" = {
+        format = "󰀻";
+        tooltip = false;
+        on-click = "fuzzel";
+      };
+
+      clock = {
+        format = "{:%a %d %b  %H:%M}";
+        tooltip-format = "<tt>{calendar}</tt>";
+      };
+
+      tray.spacing = 8;
+
+      wireplumber = {
+        format = "{icon} {volume}%";
+        format-muted = "󰝟 muted";
+        format-icons = [
+          "󰕿"
+          "󰖀"
+          "󰕾"
+        ];
+        on-click = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
+        on-click-right = "pavucontrol";
+      };
+
+      backlight = {
+        format = "{icon} {percent}%";
+        format-icons = [
+          "󰃞"
+          "󰃟"
+          "󰃠"
+        ];
+        on-scroll-up = "brightnessctl -e4 -n2 set 5%+";
+        on-scroll-down = "brightnessctl -e4 -n2 set 5%-";
+      };
+
+      "custom/nightlight" = {
+        format = "󰖔 {}";
+        tooltip = false;
+        exec = "${lib.getExe pkgs.wl-gammarelay-rs} watch {t}K";
+        on-click = "busctl --user set-property rs.wl-gammarelay / rs.wl.gammarelay Temperature q $([ \"$(busctl --user get-property rs.wl-gammarelay / rs.wl.gammarelay Temperature)\" = 'q 6500' ] && echo 3100 || echo 6500)";
+        on-scroll-up = "busctl --user -- call rs.wl-gammarelay / rs.wl.gammarelay UpdateTemperature n +100";
+        on-scroll-down = "busctl --user -- call rs.wl-gammarelay / rs.wl.gammarelay UpdateTemperature n -100";
+      };
+
+      power-profiles-daemon = {
+        format = "{icon}";
+        tooltip-format = "{profile}";
+        format-icons = {
+          performance = "󰓅";
+          balanced = "󰾅";
+          power-saver = "󰾆";
+        };
+      };
+
+      battery = {
+        format = "{icon} {capacity}%";
+        format-charging = "󰂄 {capacity}%";
+        format-icons = [
+          "󰁺"
+          "󰁼"
+          "󰁾"
+          "󰂀"
+          "󰁹"
+        ];
+        states = {
+          warning = 20;
+          critical = 10;
+        };
+      };
+    };
+    style = ''
+      * {
+        font-family: "JetBrainsMono Nerd Font";
+        font-size: 13px;
+        border: none;
+        border-radius: 0;
+        min-height: 0;
+      }
+
+      window#waybar {
+        background: rgba(0, 0, 0, 0.85);
+        color: #ffe4e1;
+      }
+
+      #workspaces button {
+        padding: 0 8px;
+        color: #ffe4e1;
+      }
+
+      #workspaces button.focused {
+        background: #c8102e;
+      }
+
+      #workspaces button.urgent {
+        background: #ff5a36;
+      }
+
+      #custom-launcher {
+        padding: 0 12px;
+        font-size: 16px;
+        color: #ff5a36;
+      }
+
+      #clock,
+      #tray,
+      #wireplumber,
+      #backlight,
+      #custom-nightlight,
+      #power-profiles-daemon,
+      #battery {
+        padding: 0 10px;
+      }
+
+      #battery.warning {
+        color: #ffb347;
+      }
+
+      #battery.critical {
+        color: #e0303a;
+      }
+    '';
+  };
 
   xdg.portal = {
     config.sway = {

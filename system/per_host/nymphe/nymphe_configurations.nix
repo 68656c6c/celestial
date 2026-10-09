@@ -47,8 +47,28 @@
   systemd.services.nix-gc.unitConfig.ConditionACPower = true;
   systemd.services.nix-optimise.unitConfig.ConditionACPower = true;
 
+  zramSwap.enable = true;
+
   home-manager.users.artesia = {
     services.arrpc.enable = lib.mkForce false;
+    programs.ghostty.systemd.enable = lib.mkForce false;
+    programs.foot = {
+      enable = true;
+      settings = {
+        main.font = "JetBrainsMono Nerd Font:size=12";
+        colors-dark = {
+          background = "000000";
+          foreground = "ffe4e1";
+        };
+      };
+    };
+    wayland.windowManager.sway = {
+      xwayland = false;
+      config = {
+        terminal = lib.mkForce "foot";
+        keybindings."Mod4+q" = lib.mkForce "exec foot";
+      };
+    };
     programs.fuzzel = {
       enable = true;
       settings.colors = {

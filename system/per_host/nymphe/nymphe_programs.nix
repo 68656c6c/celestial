@@ -1,7 +1,11 @@
-{ ... }:
+{ lib, ... }:
 
 {
   programs = {
-    sway.enable = true;
+    sway = {
+      enable = true;
+      xwayland.enable = false;
+    };
+    hyprland.enable = lib.mkForce false;
   };
 }
