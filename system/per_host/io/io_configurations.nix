@@ -11,12 +11,12 @@
   ];
 
   host.monitors = [
-    # {
-    #   output = "HDMI-A-1";
-    #   mode = "1920x1080";
-    #   position = "0x0";
-    #   scale = 1.0;
-    # }
+    {
+      output = "HDMI-A-1";
+      mode = "1920x1080";
+      position = "0x0";
+      scale = 1.0;
+    }
     {
       output = "DP-1";
       mode = "2560x1440@143.973";
@@ -24,7 +24,7 @@
       scale = 1.0;
     }
     {
-      output = "HDMI-A-1";
+      output = "DVI-I-1";
       mode = "1920x1200";
       position = "4480x0";
       scale = 1.0;
