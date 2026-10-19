@@ -17,6 +17,10 @@
       nssmdns4 = true;
       openFirewall = true;
     };
+    sunshine = {
+      enable = true;
+      openFirewall = true;
+    };
   };
 
   hardware.printers = {

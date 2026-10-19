@@ -28,6 +28,5 @@
     lprint
     android-tools
     edl
-    sunshine
   ];
 }
