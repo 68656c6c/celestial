@@ -19,7 +19,6 @@
   networking = {
     networkmanager = {
       enable = true;
-      dns = "none";
     };
     enableIPv6 = false;
     firewall = {
