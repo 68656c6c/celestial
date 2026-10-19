@@ -20,6 +20,9 @@
     sunshine = {
       enable = true;
       openFirewall = true;
+      settings = {
+        csrf_allowed_origins = "https://10.2.50.36:47990";
+      };
     };
   };
 

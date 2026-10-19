@@ -62,6 +62,7 @@
     pwvucontrol
     pavucontrol
     pangolin-cli
+    pantheon.pantheon-agent-polkit
     diy.helium
     diy.zen-browser
     qt6.qtwayland
