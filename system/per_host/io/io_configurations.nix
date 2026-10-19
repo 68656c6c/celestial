@@ -5,10 +5,10 @@
 
 {
   networking.hostName = "io";
-  networking.nameservers = [
-    "192.168.1.1"
-    "10.44.4.2"
-  ];
+  # networking.nameservers = [
+  #   "10.2.50.1"
+  #   "10.44.4.2"
+  # ];
 
   host.monitors = [
     {

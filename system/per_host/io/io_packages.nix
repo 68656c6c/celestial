@@ -26,5 +26,8 @@
     obs-studio
     gzdoom
     lprint
+    android-tools
+    edl
+    sunshine
   ];
 }
