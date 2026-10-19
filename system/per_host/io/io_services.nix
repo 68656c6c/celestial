@@ -22,7 +22,7 @@
       openFirewall = true;
       settings = {
         bind_address = "10.2.50.36";
-        csrf_allowed_origins = "https://10.2.50.36:47990";
+        csrf_allowed_origins = "https://10.2.50.36:47990,https://io.cl2.artesia.cloud:47990";
       };
     };
   };
