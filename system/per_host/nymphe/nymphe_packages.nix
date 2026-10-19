@@ -8,5 +8,6 @@
     fuzzel
     swaybg
     android-tools
+    moonlight-qt
   ];
 }
