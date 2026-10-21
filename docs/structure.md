@@ -1,106 +1,130 @@
 # Structure
 
-## How a host is built
+This repo is the complete configuration for my Linux machines. Each machine runs NixOS, a Linux distribution where the whole system is described in code: installed software, services, users, desktop settings and dotfiles. Applying the repo to a machine builds that description and switches to it, so every machine can be rebuilt from scratch to the same state, and every change is a git commit that can be rolled back.
 
-`flake.nix` reads `system/hosts.nix` and calls `mkHost` once per entry. Every host gets the same shared stack; the only per-host inputs are its hardware file and its `per_host/<name>` directory.
+## Terms used in this document
+
+| Term | What it is |
+|---|---|
+| Nix | The package manager and configuration language everything here is written in. Files end in `.nix`. |
+| nixpkgs | The official Nix package collection. "Stable" is the twice-yearly release (26.05 here), "unstable" is the rolling branch with newer versions. |
+| Module | A `.nix` file that sets configuration values, or defines new settings other files can set. NixOS merges all modules into one system configuration. |
+| Flake | The entry point of a Nix project (`flake.nix`). Declares external dependencies with pinned versions (`flake.lock`) and what the project builds. |
+| home-manager | A Nix tool for the user's own settings and dotfiles (shell, editor, terminal), as opposed to system-wide settings. |
+| Overlay | A rule that replaces packages in the package set, for example "use the unstable version of this app instead of the stable one". |
+| sops / age | Encryption for secrets stored in git. Each machine has its own private key and can only decrypt the files it is allowed to. |
+| attic | A self-hosted binary cache. Machines download finished builds from it instead of compiling locally. |
+| Forgejo | The self-hosted git server this repo lives on, with GitHub Actions-style CI. |
+| Wayland compositor | The component that draws windows and handles input on a modern Linux desktop. Hyprland, niri and sway are three different ones, each with its own way of tiling windows. |
+| noctalia | The desktop shell on top of the compositor: status bar, app launcher, notifications. |
+
+## How a machine is built
+
+`flake.nix` reads the list of machines in `system/hosts.nix` and builds each one with the same recipe (`mkHost`). Every machine gets the same shared layers; the only things that differ are its hardware file and its own folder under `system/per_host/`.
 
 ```mermaid
 flowchart TD
-    flake[flake.nix]
-    hosts[system/hosts.nix<br/>io, ganymedes, nymphe]
-    mkHost{{mkHost name}}
+    flake["flake.nix<br/>entry point"]
+    hosts["system/hosts.nix<br/>list of machines: io, ganymedes, nymphe"]
+    mkHost{{"mkHost<br/>build recipe, once per machine"}}
 
     flake --> hosts --> mkHost
 
-    subgraph pkgset[pkgs]
-        nixpkgs[nixpkgs 26.05]
-        overlays[overlays/<br/>pulls hyprland, nushell, claude-code etc. from unstable]
-        millennium[millennium overlay]
+    subgraph pkgset["Package set"]
+        nixpkgs["nixpkgs stable 26.05"]
+        overlays["overlays/<br/>newer versions of selected apps"]
+        millennium["Millennium overlay<br/>Steam plugin loader"]
         nixpkgs --> overlays --> millennium
     end
 
-    diypkgs[diy-packages/<br/>cursors, helium, zen, cups-citizen, runner-image]
+    diypkgs["diy-packages/<br/>software not in nixpkgs"]
 
     flake --> pkgset
     pkgset --> diypkgs
     pkgset --> mkHost
-    diypkgs -->|"specialArgs.diy"| mkHost
+    diypkgs -->|"available as diy"| mkHost
 
-    subgraph nixos[NixOS modules]
-        system[system/<br/>system_configurations, _packages, _programs, _services]
-        imports[imports/<br/>home-manager, sops-nix, noctalia module]
-        diymods[diy-modules/<br/>host.monitors, host.cursor, vpn.*, ca certs]
-        hw[per_host/name/hardware-configuration.name.nix]
-        perhost[per_host/name/<br/>name_configurations, _packages, _programs, _services]
+    subgraph nixos["System configuration"]
+        system["system/<br/>baseline for every machine"]
+        imports["imports/<br/>third-party modules"]
+        diymods["diy-modules/<br/>custom settings"]
+        hw["hardware file<br/>disks, drivers, generated"]
+        perhost["system/per_host/name/<br/>what makes this machine different"]
         imports --> diymods
     end
 
     mkHost --> system & imports & hw & perhost
 
-    subgraph hm[home-manager: users.artesia]
-        user[user/artesia/]
-        uimports[imports/<br/>spicetify]
-        programs[programs/<br/>auto-imports every .nix<br/>hyprland, niri, sway, nushell, helix, ghostty...]
-        ucfg[user_artesia_configuration.nix]
+    subgraph hm["User configuration via home-manager"]
+        user["user/artesia/"]
+        uimports["imports/<br/>third-party user modules"]
+        programs["programs/<br/>one file per application"]
+        ucfg["user_artesia_configuration.nix<br/>cursor, session settings"]
         user --> uimports & programs & ucfg
     end
 
     mkHost --> hm
-    perhost -.->|"sets host.monitors / host.cursor"| diymods
+    perhost -.->|"sets monitor layout and cursor size"| diymods
     diymods -.->|"read by"| programs
 ```
 
-`diy-modules/` and `user/artesia/programs/` both import every `.nix` in their directory, so dropping a file in is enough. `system/` and `per_host/<name>/` use explicit import lists.
+`diy-modules/` and `user/artesia/programs/` load every `.nix` file in their folder automatically, so adding a file is enough. `system/` and `system/per_host/<name>/` list their files explicitly.
 
 ## What each layer is for
 
-The rule of thumb: shared layers say what every machine has, the per-host layer says what makes this machine different, and the module layers define the knobs the per-host layer turns.
+The short version: the shared layers describe what every machine has, the per-machine layer describes what makes one machine different, and the custom modules define the settings the per-machine layer fills in.
 
-### system/
+### system/: the baseline
 
-The baseline every host gets: boot loader, NetworkManager, firewall, locale and timezone, the `artesia` user, pipewire, the display manager, Steam, fonts, nix GC and the attic substituter. Split into four files by kind (`configurations`, `packages`, `programs`, `services`) so you always know which file to open.
+What every machine gets regardless of hardware: boot loader, networking and firewall, timezone and language, the `artesia` user account, audio, Bluetooth, the login screen, Steam, fonts, automatic cleanup of old builds, and the address of the binary cache.
 
-### system/per_host/\<name\>/
+It is split into four files by kind so it is always clear where something lives: `configurations` (general system settings), `packages` (installed software), `programs` (applications that need system integration, such as Steam or a compositor) and `services` (background daemons).
 
-The shared layer can't know what hardware a machine has or what it is used for, so each host gets its own directory with the same four-file split, plus its generated hardware file. What lives here today:
+### system/per_host/\<name\>/: per machine
 
-| Host | Role | What makes it different |
+The baseline cannot know what hardware a machine has or what it is used for, so each machine has its own folder with the same four-file split. This is where a desktop and a laptop diverge:
+
+| Machine | Type | What makes it different |
 |---|---|---|
-| io | desktop | NVIDIA card on the legacy 580 driver with a VRAM cap for niri, three monitors, Sunshine streaming bound to its LAN IP, the Citizen label printer, VM and creative tooling (qemu, Blender, Krita) |
-| ganymedes | laptop | single eDP panel, sway + niri, lab VPN and Tailscale on, Cloudflare DNS |
-| nymphe | laptop | 1.25 scaling and a smaller cursor, battery work (tlp, thermald, GC only on AC power), hyprland forced off in favour of sway, login password from sops, foot instead of ghostty |
+| io | desktop | NVIDIA graphics card with a driver tweak to limit video memory use, three monitors, Sunshine (a remote desktop and game streaming server) reachable on its LAN address, a USB label printer, virtual machine tools, 3D and image editing software |
+| ganymedes | laptop | single built-in screen, uses the lab VPN and Tailscale (a mesh VPN), fixed public DNS servers |
+| nymphe | laptop | screen scaled to 125%, smaller mouse cursor, battery and thermal management, cleanup tasks only run on mains power, login password stored as an encrypted secret, a lighter terminal and compositor than the other machines |
 
-Per-host files can also override the shared layer (`lib.mkForce`, as nymphe does with hyprland) and reach into home-manager through `home-manager.users.artesia`, which is how nymphe swaps terminals without touching `user/`.
+A per-machine file can also override the baseline. nymphe, for example, turns off the Hyprland compositor that the baseline enables and changes its user's terminal, without touching the shared files.
 
-`hardware-configuration.<name>.nix` is the output of `nixos-generate-config`: disks, filesystems, kernel modules. It is regenerated, not edited.
+Each folder also holds `hardware-configuration.<name>.nix`. It is generated by the NixOS installer and describes disks, filesystems and kernel drivers. It gets regenerated, not edited by hand.
 
-### diy-modules/
+### diy-modules/: custom settings
 
-Custom NixOS options. Without them, a per-host fact like "this laptop has one 1080p panel at 1.25 scale" would have to be repeated in every program that cares, or the shared config would need `if hostname == ...` branches. There are three kinds:
+NixOS comes with thousands of settings, but none for facts like "this laptop has one 1080p screen at 125% scale". Without a place to record that, every application that cares about screens would need its own per-machine copy of it, or the shared files would fill up with "if machine is X" checks. These modules add the missing settings. There are three kinds:
 
-**Data options** (`host.monitors`, `host.cursor`) do nothing on their own. They give the per-host layer a typed place to state a fact, and home-manager reads it back through `osConfig`. This is the only bridge between `per_host/` and `user/`.
+**Machine facts** (`host.monitors`, `host.cursor`) do nothing by themselves. They give each machine a single, validated place to state a fact, and the user configuration reads it back. This is the only link between the per-machine layer and the user layer.
 
-**Toggle wrappers** (`vpn.lab_local`, `vpn.tailscale`) bundle several settings behind one `enable`. `vpn.lab_local.enable = true` decrypts `secrets/vpn_<host>.ovpn` with sops and defines an OpenVPN server that uses it. `vpn.tailscale.enable = true` sets up Tailscale with SSH and the operator user, without starting it at boot.
+**Feature switches** (`vpn.lab_local`, `vpn.tailscale`) bundle several related settings behind one on/off switch. Turning on `vpn.lab_local` decrypts that machine's VPN profile and sets up an OpenVPN connection that uses it. Turning on `vpn.tailscale` installs Tailscale with SSH access and user permissions configured, but does not start it at boot.
 
-**Always-on** (`ca_certificates.nix`) has no option; it trusts every `.pem`/`.crt` in the private `trusted-certificates` repo on every host.
+**Always on** (`ca_certificates.nix`) has no switch. It makes every machine trust the internal certificate authorities kept in a separate private repo, so internal HTTPS services work without browser warnings.
 
-Example, end to end: `io_configurations.nix` sets three entries in `host.monitors`. `user/artesia/programs/hyprland.nix` loops over that list and pins workspace 1 to `HDMI-A-1`, 2 to `DP-1`, 3 to `DVI-I-1`. nymphe sets one entry and gets one workspace rule, with no hyprland code changed.
+An example from start to finish: io's per-machine file lists three monitors. The Hyprland config in `user/artesia/programs/` reads that list and assigns workspace 1 to the first monitor, 2 to the second and 3 to the third. nymphe lists one monitor and gets one workspace. The Hyprland file is the same on both.
 
-### imports/
+### imports/: third-party modules
 
-Third-party NixOS modules: home-manager, sops-nix, and noctalia's module taken from unstable, plus `diy-modules/`. Kept apart from `system/` because these files add options while `system/` only sets them.
+Modules written by other projects: home-manager (user configuration), sops-nix (secret decryption) and the noctalia desktop shell module. It also loads `diy-modules/`. Kept apart from `system/` because these files define new settings, while `system/` only fills settings in.
 
-### diy-packages/
+### diy-packages/: software not in nixpkgs
 
-Packages that aren't in nixpkgs or need repackaging: the Miku and Teto cursors, Helium and Zen browsers, the Citizen CUPS driver from a `.deb`, and the Forgejo runner image. They reach modules as the `diy` argument, e.g. `drivers = [ diy.cups-citizen-ctzcls ]` in io's services. `runner-image` is also a flake output so the CI runner can build it.
+Applications that the official package collection does not have, or not in a usable form: two custom mouse cursor themes, the Helium and Zen web browsers, a printer driver for the Citizen label printer repackaged from the vendor's `.deb`, and a container image for the CI runner. Configuration files refer to them as `diy.<name>`, for example io's printer setup uses `diy.cups-citizen-ctzcls`.
 
-### overlays/
+### overlays/: newer versions of selected apps
 
-Swaps specific packages in `pkgs` for their unstable version: hyprland and its portal, nushell, atuin, noctalia, claude-code and a few others. Because it changes `pkgs` itself, every reference to `pkgs.hyprland` anywhere in the repo gets the unstable build. For a one-off unstable package, use the `unstable` argument instead of growing this list.
+The machines run the stable package collection, which only gets security and bug fixes between releases. For a few applications that move fast or where newer features matter, this overlay swaps in the version from the unstable branch instead. Because it replaces the package for the whole system, every place that refers to it gets the newer version, with no changes needed elsewhere.
 
-### user/artesia/
+Currently swapped: the Hyprland compositor and its related tools, the nushell shell, atuin (shell history sync), flameshot (screenshots), the noctalia desktop shell, the Bitwarden password manager, two AI coding assistants (Claude Code and opencode) and the Pangolin tunnel client.
 
-home-manager: one file per program under `programs/` (shell, editor, compositors, terminal, git, ssh), the spicetify module under `imports/`, and session-level settings like cursor theme in `user_artesia_configuration.nix`. It is identical on every host; anything host-specific comes in through `osConfig.host.*` or a per-host override.
+For a single application that only one config file uses, refer to it as `unstable.<name>` in that file instead of adding it here.
+
+### user/artesia/: the user's own settings
+
+Everything home-manager manages for the `artesia` user: one file per application under `programs/` (shell, text editor, terminal, compositors, git, SSH), the Spotify theming module under `imports/`, and the mouse cursor theme in `user_artesia_configuration.nix`. This layer is the same on every machine. Machine-specific values come in through the custom settings above, or through an override in the machine's own folder.
 
 ### Where does a change go?
 
@@ -108,34 +132,38 @@ home-manager: one file per program under `programs/` (shell, editor, compositors
 |---|---|
 | Something every machine should have | `system/system_<kind>.nix` |
 | Something only one machine needs | `system/per_host/<name>/<name>_<kind>.nix` |
-| A per-host fact that user config needs to read | new option in `diy-modules/host_*.nix`, set it in `per_host`, read via `osConfig` |
-| A feature some hosts turn on with several moving parts | toggle wrapper in `diy-modules/` |
-| A program's own settings | `user/artesia/programs/<program>.nix` |
-| A package nixpkgs doesn't have | `diy-packages/` + entry in its `default.nix` |
-| A newer version of a package everywhere | `overlays/default.nix` |
+| A machine fact the user configuration needs | new setting in `diy-modules/host_*.nix`, set it per machine, read it in `user/` |
+| A feature some machines switch on, with several parts | feature switch in `diy-modules/` |
+| An application's own settings | `user/artesia/programs/<application>.nix` |
+| Software the official collection lacks | `diy-packages/`, plus a line in its `default.nix` |
+| A newer version of an app on every machine | `overlays/default.nix` |
 
 ## Secrets and delivery
 
 ```mermaid
 flowchart LR
-    subgraph repo[repo]
-        sopscfg[.sops.yaml<br/>age key per host + backup]
-        secrets[secrets/<br/>secrets.yaml: all hosts<br/>vpn_name.ovpn: that host only]
+    subgraph repo["Repo"]
+        sopscfg[".sops.yaml<br/>which machine key can decrypt what"]
+        secrets["secrets/<br/>secrets.yaml: every machine<br/>vpn_name.ovpn: that machine only"]
         sopscfg --> secrets
     end
 
-    setup[scripts/setup-host.sh] -->|"hardware config, age key,<br/>hosts.nix + .sops.yaml entries"| repo
+    setup["scripts/setup-host.sh<br/>onboard a new machine"] -->|"hardware file, encryption key,<br/>machine list and key entries"| repo
 
-    deploy[scripts/deploy.nu<br/>nixfmt, deadnix, commit, push] --> main[(main on Forgejo)]
-    deploy -->|"nh os switch"| local[current host]
-    local -->|"attic push"| attic[(attic: celestial)]
+    deploy["scripts/deploy.nu<br/>format, lint, commit, push"] --> main[("main branch on Forgejo")]
+    deploy -->|"apply config"| local["current machine"]
+    local -->|"upload build"| attic[("attic binary cache")]
 
-    main -->|"push"| ci[build-hosts.yml<br/>runs-on: nix]
-    ci -->|"scripts/build-hosts.sh<br/>skips toplevels already cached"| attic
-    gc[gc-runner-store.yml<br/>Sundays 04:00] -.->|"nix-collect-garbage"| runner[runner store]
+    main -->|"on push"| ci["CI: build-hosts.yml"]
+    ci -->|"build every machine,<br/>skip what is already cached"| attic
+    gc["CI: gc-runner-store.yml<br/>Sundays 04:00"] -.->|"delete old builds"| runner["CI runner disk"]
 
-    attic -->|"substituter"| hostsbox[io / ganymedes / nymphe]
-    secrets -->|"sops-nix decrypts at activation<br/>with /etc/sops-age/keys"| hostsbox
+    attic -->|"download prebuilt"| hostsbox["io / ganymedes / nymphe"]
+    secrets -->|"decrypted when the config is applied<br/>with the machine's own key"| hostsbox
 ```
 
-The `trusted-certificates` input is a private repo on `git.artesia.cloud`, which is why CI rewrites the SSH URL to HTTPS with `FLAKE_TOKEN` and switches to the lab resolver before checkout.
+Secrets are stored encrypted in git. `.sops.yaml` lists each machine's public key and which secret files it may read: the shared `secrets.yaml` is readable by every machine, each VPN profile only by its own machine. A backup key can read everything, so secrets survive a lost machine.
+
+A normal change goes through `deploy.nu`: format and check the Nix files, commit, push, apply the new configuration to the current machine and upload the result to the cache. The push also triggers CI, which builds every machine's configuration and uploads anything not yet cached. When another machine updates, it downloads those builds instead of compiling them itself.
+
+The certificate repo (`trusted-certificates`) is private and only reachable on the lab network, which is why CI first switches to the lab's DNS server and uses an access token to fetch it.
