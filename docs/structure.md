@@ -24,7 +24,7 @@ flowchart TD
     flake --> pkgset
     pkgset --> diypkgs
     pkgset --> mkHost
-    diypkgs -- specialArgs.diy --> mkHost
+    diypkgs -->|"specialArgs.diy"| mkHost
 
     subgraph nixos[NixOS modules]
         system[system/<br/>system_configurations, _packages, _programs, _services]
@@ -46,8 +46,8 @@ flowchart TD
     end
 
     mkHost --> hm
-    perhost -. sets host.monitors / host.cursor .-> diymods
-    diymods -. read by .-> programs
+    perhost -.->|"sets host.monitors / host.cursor"| diymods
+    diymods -.->|"read by"| programs
 ```
 
 `diy-modules/` and `user/artesia/programs/` both import every `.nix` in their directory, so dropping a file in is enough. `system/` and `per_host/<name>/` use explicit import lists.
@@ -62,18 +62,18 @@ flowchart LR
         sopscfg --> secrets
     end
 
-    setup[scripts/setup-host.sh] -- hardware config, age key,<br/>hosts.nix + .sops.yaml entries --> repo
+    setup[scripts/setup-host.sh] -->|"hardware config, age key,<br/>hosts.nix + .sops.yaml entries"| repo
 
     deploy[scripts/deploy.nu<br/>nixfmt, deadnix, commit, push] --> main[(main on Forgejo)]
-    deploy -- nh os switch --> local[current host]
-    local -- attic push --> attic[(attic: celestial)]
+    deploy -->|"nh os switch"| local[current host]
+    local -->|"attic push"| attic[(attic: celestial)]
 
-    main -- push --> ci[build-hosts.yml<br/>runs-on: nix]
-    ci -- scripts/build-hosts.sh<br/>skips toplevels already cached --> attic
-    gc[gc-runner-store.yml<br/>Sundays 04:00] -. nix-collect-garbage .-> runner[runner store]
+    main -->|"push"| ci[build-hosts.yml<br/>runs-on: nix]
+    ci -->|"scripts/build-hosts.sh<br/>skips toplevels already cached"| attic
+    gc[gc-runner-store.yml<br/>Sundays 04:00] -.->|"nix-collect-garbage"| runner[runner store]
 
-    attic -- substituter --> hostsbox[io / ganymedes / nymphe]
-    secrets -- sops-nix decrypts at activation<br/>with /etc/sops-age/keys --> hostsbox
+    attic -->|"substituter"| hostsbox[io / ganymedes / nymphe]
+    secrets -->|"sops-nix decrypts at activation<br/>with /etc/sops-age/keys"| hostsbox
 ```
 
 The `trusted-certificates` input is a private repo on `git.artesia.cloud`, which is why CI rewrites the SSH URL to HTTPS with `FLAKE_TOKEN` and switches to the lab resolver before checkout.
