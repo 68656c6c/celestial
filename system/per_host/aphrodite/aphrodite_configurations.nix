@@ -18,6 +18,10 @@
   ];
 
   host.cursor.size = 32;
+  host.laptop = {
+    enable = true;
+    thermald = false; # AMD
+  };
   vpn.lab_local = {
     enable = false;
     updateDns = true;

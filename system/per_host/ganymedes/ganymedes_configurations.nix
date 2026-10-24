@@ -17,6 +17,8 @@
     }
   ];
 
+  host.laptop.enable = true;
+
   vpn.lab_local = {
     enable = true;
     updateDns = true;

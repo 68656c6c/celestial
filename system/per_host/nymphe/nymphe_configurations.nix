@@ -20,6 +20,7 @@
   ];
 
   host.cursor.size = 28;
+  host.laptop.enable = true;
   vpn.lab_local = {
     enable = true;
     updateDns = true;
@@ -43,11 +44,6 @@
   };
 
   users.users.artesia.hashedPasswordFile = config.sops.secrets.artesia-password.path;
-
-  systemd.services.nix-gc.unitConfig.ConditionACPower = true;
-  systemd.services.nix-optimise.unitConfig.ConditionACPower = true;
-
-  zramSwap.enable = true;
 
   home-manager.users.artesia = {
     services.arrpc.enable = lib.mkForce false;

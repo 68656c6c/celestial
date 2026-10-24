@@ -64,6 +64,8 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
   host.monitors = [
   ];
 
+  host.laptop.enable = false;
+
   vpn.lab_local = {
     enable = true;
     updateDns = true;
