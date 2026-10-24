@@ -26,6 +26,8 @@ nh os switch       # apply to the current machine
 ```
 `scripts/deploy.nu` does all of that plus commit, push and a push to the attic cache.
 
+Inputs are bumped by CI: every Monday `update-flake.yml` runs `nix flake update`, builds every host into the cache and opens a pull request with the changes. Merge it and the next switch is a download.
+
 ## Adding a host
 1. Install git and nh and clone the repo to `~/.dotfiles`
 2. Delete `/etc/nixos/configuration.nix`

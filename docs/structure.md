@@ -158,6 +158,8 @@ flowchart LR
     main -->|"on push"| ci["CI: build-hosts.yml<br/>lint, then build"]
     ci -->|"build every machine,<br/>skip what is already cached"| attic
     gc["CI: gc-runner-store.yml<br/>Sundays 04:00"] -.->|"delete old builds"| runner["CI runner disk"]
+    upd["CI: update-flake.yml<br/>Mondays 05:00"] -->|"nix flake update,<br/>build every machine"| attic
+    upd -->|"pull request with the new lock"| main
 
     attic -->|"download prebuilt"| hostsbox["io / ganymedes / nymphe / aphrodite"]
     secrets -->|"decrypted when the config is applied<br/>with /var/lib/sops-nix/key"| hostsbox
@@ -166,5 +168,7 @@ flowchart LR
 Secrets are stored encrypted in git. `.sops.yaml` lists each machine's public key; the single secrets file is readable by every machine, and a backup key can read everything so secrets survive a lost machine. Every machine keeps its private key at `/var/lib/sops-nix/key`. Only nymphe currently uses a secret (its login password), the other machines decrypt nothing, but they all have a key so a secret can be added without onboarding work. aphrodite's key still needs adding to `.sops.yaml`.
 
 A normal change goes through `deploy.nu`: `nix fmt` formats, `nix flake check` runs deadnix and a format check, then commit, push, apply the new configuration to the current machine and upload the result to the cache. The push also triggers CI, which runs the same check and then builds every machine's configuration and uploads anything not yet cached. When another machine updates, it downloads those builds instead of compiling them itself.
+
+Dependency updates are CI's job too. Every Monday `update-flake.yml` runs `nix flake update`, lints, builds every machine and uploads the results, then opens a pull request on the `update/flake-lock` branch with the list of changed inputs. If the build fails there is no pull request, only a red run. Merging the pull request is the whole upgrade; the machines download what CI already built.
 
 The certificate repo (`trusted-certificates`) is private and only reachable on the lab network, which is why CI first switches to the lab's DNS server and uses an access token to fetch it.
