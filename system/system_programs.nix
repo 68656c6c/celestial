@@ -7,9 +7,6 @@
         exec nu
       fi
     '';
-    hyprland.enable = true;
-    hyprland.withUWSM = true;
-
     noctalia.recommendedServices.enable = true;
     sway = {
       wrapperFeatures.gtk = true;

@@ -65,7 +65,6 @@ let
           "gtk4"
           "ghostty"
           "helix"
-          "hyprland"
           "kcolorscheme"
           "niri"
           "qt"

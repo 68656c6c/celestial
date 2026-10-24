@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ ... }:
 
 {
   programs = {
@@ -6,6 +6,5 @@
       enable = true;
       xwayland.enable = false;
     };
-    hyprland.enable = lib.mkForce false;
   };
 }

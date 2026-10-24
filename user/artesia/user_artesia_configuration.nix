@@ -11,7 +11,6 @@
   home.pointerCursor = {
     enable = true;
     package = pkgs.diy.kasane-teto-cursor-linux;
-    hyprcursor.enable = true;
     gtk.enable = true;
     x11.enable = true;
     name = "kasane-teto-cursor-linux";
@@ -60,20 +59,7 @@
     enable = lib.mkDefault true;
     config = {
       common = {
-        default = [
-          "hyprland"
-          "gtk"
-          # "gnome"
-        ];
-        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
-      };
-      hyprland = {
-        default = [
-          "hyprland"
-          "gtk"
-          # "gnome"
-        ];
-        "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+        default = [ "gtk" ];
         "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
       niri = {
@@ -85,11 +71,9 @@
       };
     };
     extraPortals = with pkgs; [
-      xdg-desktop-portal-hyprland
       xdg-desktop-portal-gnome
       xdg-desktop-portal-gtk
       gnome-keyring
-      # xdg-desktop-portal-gnome
     ];
   };
 

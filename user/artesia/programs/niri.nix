@@ -58,7 +58,7 @@ let
   '';
 in
 
-{
+lib.mkIf osConfig.programs.niri.enable {
   xdg.configFile."niri/config.kdl".text = ''
     spawn-at-startup "noctalia"
     spawn-at-startup "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit"
