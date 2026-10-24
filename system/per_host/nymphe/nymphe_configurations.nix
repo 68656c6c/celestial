@@ -14,7 +14,8 @@
   host.monitors = [
     {
       output = "eDP-1";
-      mode = "1920x1080";
+      width = 1920;
+      height = 1080;
       scale = 1.25;
     }
   ];

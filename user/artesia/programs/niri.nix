@@ -9,35 +9,27 @@
 let
   cursorSize = toString osConfig.host.cursor.size;
 
-  niriMode =
-    mode:
+  # 143.973 -> "143.973", 60.0 -> "60.000"
+  fmtRefresh =
+    r:
     let
-      parts = lib.splitString "@" mode;
-      rate = lib.splitString "." (builtins.elemAt parts 1);
-      frac = if builtins.length rate > 1 then builtins.elemAt rate 1 else "";
+      whole = builtins.floor r;
+      milli = builtins.floor ((r - whole) * 1000 + 0.5);
     in
-    if builtins.length parts < 2 then
-      mode
+    if milli == 1000 then
+      "${toString (whole + 1)}.000"
     else
-      "${builtins.head parts}@${builtins.head rate}.${frac}${
-        lib.fixedWidthString (3 - lib.stringLength frac) "0" ""
-      }";
+      "${toString whole}.${lib.fixedWidthNumber 3 milli}";
 
-  outputs = lib.concatMapStringsSep "\n" (
-    m:
-    let
-      pos = lib.splitString "x" m.position;
-    in
-    ''
-      output "${m.output}" {
-        ${lib.optionalString (m.mode != "") ''mode "${niriMode m.mode}"''}
-        ${lib.optionalString (
-          m.position != ""
-        ) "position x=${builtins.elemAt pos 0} y=${builtins.elemAt pos 1}"}
-        scale ${builtins.toJSON m.scale}
-      }
-    ''
-  ) osConfig.host.monitors;
+  resolution = m: "${toString m.width}x${toString m.height}";
+
+  outputs = lib.concatMapStringsSep "\n" (m: ''
+    output "${m.output}" {
+      mode "${resolution m}${lib.optionalString (m.refresh != null) "@${fmtRefresh m.refresh}"}"
+      ${lib.optionalString (m.x != null) "position x=${toString m.x} y=${toString m.y}"}
+      scale ${builtins.toJSON m.scale}
+    }
+  '') osConfig.host.monitors;
 
   workspaceBinds = lib.concatMapStrings (
     i:

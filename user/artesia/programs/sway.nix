@@ -8,6 +8,20 @@
 
 let
   mod = "Mod4";
+
+  # 143.973 -> "143.973", 60.0 -> "60.000"
+  fmtRefresh =
+    r:
+    let
+      whole = builtins.floor r;
+      milli = builtins.floor ((r - whole) * 1000 + 0.5);
+    in
+    if milli == 1000 then
+      "${toString (whole + 1)}.000"
+    else
+      "${toString whole}.${lib.fixedWidthNumber 3 milli}";
+
+  resolution = m: "${toString m.width}x${toString m.height}";
 in
 
 lib.mkIf osConfig.programs.sway.enable {
@@ -28,11 +42,9 @@ lib.mkIf osConfig.programs.sway.enable {
             name = m.output;
             value = {
               scale = toString m.scale;
+              mode = "${resolution m}${lib.optionalString (m.refresh != null) "@${fmtRefresh m.refresh}Hz"}";
             }
-            // lib.optionalAttrs (m.mode != "") { mode = m.mode; }
-            // lib.optionalAttrs (m.position != "") {
-              position = lib.replaceStrings [ "x" ] [ " " ] m.position;
-            };
+            // lib.optionalAttrs (m.x != null) { position = "${toString m.x} ${toString m.y}"; };
           }) osConfig.host.monitors
         )
         // {

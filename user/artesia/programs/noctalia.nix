@@ -11,14 +11,8 @@ let
     if osConfig.host.monitors == [ ] then null else builtins.head osConfig.host.monitors;
 
   primaryOutput = if primaryMonitor == null then "eDP-1" else primaryMonitor.output;
-
-  rawMode =
-    if primaryMonitor == null || primaryMonitor.mode == "" then "1920x1080" else primaryMonitor.mode;
-
-  modeParts = lib.splitString "x" (builtins.head (lib.splitString "@" rawMode));
-
-  screenWidth = lib.toInt (builtins.elemAt modeParts 0);
-  screenHeight = lib.toInt (builtins.elemAt modeParts 1);
+  screenWidth = if primaryMonitor == null then 1920 else primaryMonitor.width;
+  screenHeight = if primaryMonitor == null then 1080 else primaryMonitor.height;
 
   centerX = screenWidth / 2;
   centerY = screenHeight / 2;
