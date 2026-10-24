@@ -123,6 +123,22 @@ lib.mkIf osConfig.programs.niri.enable {
       clip-to-geometry true
     }
 
+    // flameshot opens its capture overlay as a fullscreen toplevel, which niri
+    // would tile into a column. Float it over the whole screen instead, without
+    // the rounded corners and shadow every other window gets. The pinned
+    // screenshots have the title "flameshot-pin" and keep the defaults.
+    window-rule {
+      match app-id=r#"^flameshot$"# title=r#"^flameshot$"#
+      open-floating true
+      open-fullscreen false
+      default-floating-position x=0 y=0
+      geometry-corner-radius 0
+      clip-to-geometry false
+      shadow {
+        off
+      }
+    }
+
     ${bitwardenRule "zen"}
     ${bitwardenRule "helium"}
 
@@ -149,6 +165,7 @@ lib.mkIf osConfig.programs.niri.enable {
 
       Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
       Mod+L { spawn "noctalia" "msg" "session" "lock"; }
+      Print { spawn "flameshot" "gui"; }
 
       Mod+Left { focus-column-or-monitor-left; }
       Mod+Right { focus-column-or-monitor-right; }

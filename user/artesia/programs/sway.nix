@@ -72,6 +72,7 @@ lib.mkIf osConfig.programs.sway.enable {
         "${mod}+f" = "fullscreen toggle";
         "${mod}+space" = "exec fuzzel";
         "${mod}+l" = "exec swaylock -f";
+        "Print" = "exec flameshot gui";
 
         "${mod}+Left" = "focus left";
         "${mod}+Right" = "focus right";
@@ -118,7 +119,24 @@ lib.mkIf osConfig.programs.sway.enable {
       bindgesture swipe:3:left workspace next
       bindgesture swipe:3:right workspace prev
       for_window [app_id="^(zen|helium)$" title="^Extension: \(Bitwarden Password Manager\) - Bitwarden"] floating enable
+      # flameshot's capture overlay must float at the origin to cover the screen instead of tiling (flameshot docs)
+      for_window [app_id="flameshot"] border pixel 0, floating enable, fullscreen disable, move absolute position 0 0
     '';
+  };
+
+  programs.fuzzel = {
+    enable = true;
+    settings.colors = {
+      background = "000000ee";
+      text = "ffe4e1ff";
+      prompt = "ff5a36ff";
+      input = "ffe4e1ff";
+      match = "ff5a36ff";
+      selection = "c8102eff";
+      selection-text = "ffe4e1ff";
+      selection-match = "ffb347ff";
+      border = "e0303aff";
+    };
   };
 
   programs.waybar = {
