@@ -6,7 +6,7 @@
 {
 
   sops = {
-    age.keyFile = "/etc/sops-age/keys";
+    age.keyFile = "/var/lib/sops-nix/key";
   };
 
   boot = {

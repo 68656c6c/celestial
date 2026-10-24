@@ -31,13 +31,6 @@
     }
   ];
 
-  vpn.lab_local = {
-    enable = false;
-    updateDns = false;
-  };
-
-  vpn.tailscale.enable = false;
-
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
   hardware.nvidia = {

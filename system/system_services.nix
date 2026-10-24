@@ -27,6 +27,17 @@
     };
     gnome.gnome-keyring.enable = true;
     flatpak.enable = true;
+    # Daemon up on every host, never connected on its own: `tailscale up` is a manual step
+    tailscale = {
+      enable = true;
+      openFirewall = true;
+      useRoutingFeatures = "client";
+      permitCertUid = "artesia";
+      extraSetFlags = [
+        "--operator=artesia"
+        "--ssh"
+      ];
+    };
     pipewire = {
       enable = true;
       alsa.enable = true;

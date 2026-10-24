@@ -22,10 +22,4 @@
     enable = true;
     thermald = false; # AMD
   };
-  vpn.lab_local = {
-    enable = false;
-    updateDns = true;
-  };
-
-  vpn.tailscale.enable = true;
 }

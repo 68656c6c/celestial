@@ -20,21 +20,14 @@ mv "$TMP_DIR/hardware-configuration.nix" "$HOST_DIR/hardware-configuration.$HOST
 sudo chown "$(id -u):$(id -g)" "$HOST_DIR/hardware-configuration.$HOSTNAME.nix"
 
 echo "==> Generating sops age key..."
-sudo mkdir -p /etc/sops-age
-sudo age-keygen -o /etc/sops-age/keys 2>/dev/null
-sudo chmod 600 /etc/sops-age/keys
-PUBKEY=$(sudo age-keygen -y /etc/sops-age/keys)
+sudo mkdir -p /var/lib/sops-nix
+sudo age-keygen -o /var/lib/sops-nix/key 2>/dev/null
+sudo chmod 600 /var/lib/sops-nix/key
+PUBKEY=$(sudo age-keygen -y /var/lib/sops-nix/key)
 
 echo "==> Adding $HOSTNAME to .sops.yaml..."
 sed -i "/^  - &backup /i\\  - &host_$HOSTNAME $PUBKEY" "$SOPS_FILE"
-sed -i "/^  all: &all$/i\\  $HOSTNAME: &$HOSTNAME\n    - *host_$HOSTNAME\n    - *backup" "$SOPS_FILE"
 sed -i "/^  all: &all$/a\\    - *host_$HOSTNAME" "$SOPS_FILE"
-
-cat >> "$SOPS_FILE" << EOF
-  - path_regex: secrets/vpn_$HOSTNAME\.ovpn$
-    key_groups:
-      - age: *$HOSTNAME
-EOF
 
 cat > "$HOST_DIR/default.nix" << EOF
 { ... }:
@@ -65,13 +58,6 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
   ];
 
   host.laptop.enable = false;
-
-  vpn.lab_local = {
-    enable = true;
-    updateDns = true;
-  };
-
-  vpn.tailscale.enable = true;
 }
 EOF
 
@@ -107,5 +93,6 @@ cat > "$HOST_DIR/${HOSTNAME}_services.nix" << EOF
 EOF
 
 echo "public key: $PUBKEY"
-echo "1. dns, monitor and vpn settings in $HOST_DIR/${HOSTNAME}_configurations.nix"
-echo "2. re-encrypt secrets with: sops updatekeys secrets/"
+echo "1. dns, monitors and host.laptop in $HOST_DIR/${HOSTNAME}_configurations.nix"
+echo "2. re-encrypt secrets with: sops updatekeys secrets/secrets.yaml"
+echo "3. after the first switch, join the tailnet by hand: sudo tailscale up"

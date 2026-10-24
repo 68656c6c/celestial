@@ -7,7 +7,6 @@
       desktopManager.xfce.enable = true;
     };
 
-    tailscale.enable = true;
     printing = {
       enable = true;
       drivers = [ pkgs.diy.cups-citizen-ctzcls ];

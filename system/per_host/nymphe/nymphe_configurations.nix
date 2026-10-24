@@ -21,12 +21,6 @@
 
   host.cursor.size = 28;
   host.laptop.enable = true;
-  vpn.lab_local = {
-    enable = true;
-    updateDns = true;
-  };
-
-  vpn.tailscale.enable = true;
 
   boot.loader.timeout = 0;
 
@@ -35,12 +29,9 @@
   system.nixos-init.enable = true;
   system.etc.overlay.enable = true;
 
-  sops = {
-    age.keyFile = lib.mkForce "/var/lib/sops-nix/key";
-    secrets.artesia-password = {
-      sopsFile = ../../../secrets/secrets.yaml;
-      neededForUsers = true;
-    };
+  sops.secrets.artesia-password = {
+    sopsFile = ../../../secrets/secrets.yaml;
+    neededForUsers = true;
   };
 
   users.users.artesia.hashedPasswordFile = config.sops.secrets.artesia-password.path;
@@ -68,7 +59,6 @@
     systemd.user.services = {
       attic-watch-store.Install.WantedBy = lib.mkForce [ ];
       flameshot.Install.WantedBy = lib.mkForce [ ];
-      tailscale-systray.Install.WantedBy = lib.mkForce [ ];
     };
   };
 
