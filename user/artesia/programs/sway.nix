@@ -36,7 +36,7 @@ lib.mkIf osConfig.programs.sway.enable {
           }) osConfig.host.monitors
         )
         // {
-          "*".bg = "/home/artesia/.dotfiles/wallpapers/1721870130513827.png fill";
+          "*".bg = "${config.home.homeDirectory}/.dotfiles/wallpapers/1721870130513827.png fill";
         };
 
       input = {

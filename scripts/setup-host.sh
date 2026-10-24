@@ -11,6 +11,9 @@ if [ -d "$HOST_DIR" ]; then
   exit 1
 fi
 
+RELEASE="$(nixos-version 2>/dev/null | cut -d. -f1-2)"
+: "${RELEASE:=26.05}"
+
 echo "==> Generating hardware config..."
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -58,6 +61,10 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
   ];
 
   host.laptop.enable = false;
+
+  # Release this machine was first installed with. Leave it alone.
+  system.stateVersion = "$RELEASE";
+  home-manager.users.artesia.home.stateVersion = "$RELEASE";
 }
 EOF
 

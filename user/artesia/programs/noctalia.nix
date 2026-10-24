@@ -48,7 +48,7 @@ let
     nightlight.temperature_night = 3100;
 
     shell = {
-      avatar_path = "/home/artesia/Pictures/20260415_193158.jpg";
+      avatar_path = "${config.home.homeDirectory}/Pictures/20260415_193158.jpg";
       font_family = "Atkinson Hyperlegible Next";
       panel = {
         clipboard_placement = "attached";
@@ -88,7 +88,7 @@ let
     };
 
     wallpaper = {
-      directory = "/home/artesia/.dotfiles/wallpapers/";
+      directory = "${config.home.homeDirectory}/.dotfiles/wallpapers/";
       transition_on_startup = true;
       automation = {
         enabled = true;

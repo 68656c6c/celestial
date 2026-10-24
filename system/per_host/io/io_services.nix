@@ -2,11 +2,6 @@
 
 {
   services = {
-    xserver = {
-      enable = true;
-      desktopManager.xfce.enable = true;
-    };
-
     printing = {
       enable = true;
       drivers = [ pkgs.diy.cups-citizen-ctzcls ];

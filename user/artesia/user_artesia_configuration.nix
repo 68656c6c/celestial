@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   lib,
   osConfig,
@@ -18,7 +19,7 @@
   };
   home.sessionVariables = {
     NIXOS_OZONE_WL = 1;
-    NH_OS_FLAKE = "/home/artesia/.dotfiles";
+    NH_OS_FLAKE = "${config.home.homeDirectory}/.dotfiles";
     WLR_NO_HARDWARE_CURSORS = 1;
     XCURSOR_SIZE = osConfig.host.cursor.size;
   };
@@ -78,6 +79,4 @@
   };
 
   dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
-
-  home.stateVersion = "25.05"; # Have you read da comment?
 }

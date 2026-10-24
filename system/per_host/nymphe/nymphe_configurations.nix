@@ -37,6 +37,7 @@
   users.users.artesia.hashedPasswordFile = config.sops.secrets.artesia-password.path;
 
   home-manager.users.artesia = {
+    home.stateVersion = "25.05";
     services.arrpc.enable = lib.mkForce false;
     programs.ghostty.systemd.enable = lib.mkForce false;
     programs.foot = {
@@ -66,4 +67,7 @@
     "noauto"
     "x-systemd.automount"
   ];
+
+  # Release this machine was first installed with. Leave it alone.
+  system.stateVersion = "25.05";
 }

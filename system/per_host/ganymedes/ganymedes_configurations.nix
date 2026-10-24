@@ -22,4 +22,8 @@
   security = {
     tpm2.enable = false;
   };
+
+  # Release this machine was first installed with. Leave it alone.
+  system.stateVersion = "25.05";
+  home-manager.users.artesia.home.stateVersion = "25.05";
 }
