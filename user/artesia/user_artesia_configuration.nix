@@ -1,7 +1,6 @@
 {
   pkgs,
   lib,
-  diy,
   osConfig,
   ...
 }:
@@ -11,7 +10,7 @@
   home.homeDirectory = "/home/artesia";
   home.pointerCursor = {
     enable = true;
-    package = diy.kasane-teto-cursor-linux;
+    package = pkgs.diy.kasane-teto-cursor-linux;
     hyprcursor.enable = true;
     gtk.enable = true;
     x11.enable = true;

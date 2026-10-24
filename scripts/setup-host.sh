@@ -4,7 +4,6 @@ set -euo pipefail
 HOSTNAME="${1:?Usage: $0 <hostname>}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST_DIR="$REPO_ROOT/system/per_host/$HOSTNAME"
-HOSTS_FILE="$REPO_ROOT/system/hosts.nix"
 SOPS_FILE="$REPO_ROOT/.sops.yaml"
 
 if [ -d "$HOST_DIR" ]; then
@@ -26,8 +25,7 @@ sudo age-keygen -o /etc/sops-age/keys 2>/dev/null
 sudo chmod 600 /etc/sops-age/keys
 PUBKEY=$(sudo age-keygen -y /etc/sops-age/keys)
 
-echo "==> Adding $HOSTNAME to system/hosts.nix..."
-sed -i "s/^}$/  $HOSTNAME = { };\n}/" "$HOSTS_FILE"
+echo "==> Adding $HOSTNAME to .sops.yaml..."
 sed -i "/^  - &backup /i\\  - &host_$HOSTNAME $PUBKEY" "$SOPS_FILE"
 sed -i "/^  all: &all$/i\\  $HOSTNAME: &$HOSTNAME\n    - *host_$HOSTNAME\n    - *backup" "$SOPS_FILE"
 sed -i "/^  all: &all$/a\\    - *host_$HOSTNAME" "$SOPS_FILE"
