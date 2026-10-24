@@ -61,6 +61,7 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
   ];
 
   host.laptop.enable = false;
+  host.fastboot.enable = false;
 
   # Release this machine was first installed with. Leave it alone.
   system.stateVersion = "$RELEASE";

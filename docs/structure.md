@@ -85,7 +85,7 @@ The baseline cannot know what hardware a machine has or what it is used for, so 
 |---|---|---|---|
 | io | desktop | niri | NVIDIA graphics card with a driver tweak to limit video memory use, three monitors, Sunshine (a remote desktop and game streaming server) reachable on its LAN address, a USB label printer, virtual machine tools, 3D and image editing software, a Windows boot entry |
 | ganymedes | laptop | niri and sway | single built-in screen, laptop power management, fixed public DNS servers |
-| nymphe | laptop | sway only | built to run on very little: no xwayland, foot instead of ghostty, waybar and fuzzel instead of noctalia, no Discord presence or cache uploader in the background, fast boot (nixos-init, `/etc` overlay, userborn, zero boot menu timeout), screen scaled to 125%, smaller cursor, login password from an encrypted secret, laptop power management |
+| nymphe | laptop | sway only | built to run on very little: no xwayland, foot instead of ghostty, waybar and fuzzel instead of noctalia, no Discord presence or cache uploader in the background, `host.fastboot`, screen scaled to 125%, smaller cursor, login password from an encrypted secret, laptop power management |
 | aphrodite | laptop | niri | single built-in screen, AMD so no thermald, laptop power management |
 
 A per-machine file can also override the baseline. nymphe, for example, swaps its user's terminal and turns off a few user services, without touching the shared files.
@@ -98,7 +98,7 @@ NixOS comes with thousands of settings, but none for facts like "this laptop has
 
 **Machine facts** (`host.monitors`, `host.cursor`) do nothing by themselves. They give each machine a single, validated place to state a fact, and the user configuration reads it back. This is the main link between the per-machine layer and the user layer.
 
-**Feature switches** (`host.laptop`) bundle several related settings behind one on/off switch. Turning on `host.laptop` enables TLP for battery life, zram swap, and makes the weekly store cleanup and optimisation wait for mains power. TLP's `tlp-pd` provides the power-profiles-daemon interface, so the power profile widgets in noctalia and waybar keep working and the real power-profiles-daemon is turned off. `host.laptop.thermald` is on by default and off on AMD machines.
+**Feature switches** (`host.laptop`, `host.fastboot`) bundle several related settings behind one on/off switch. Turning on `host.laptop` enables TLP for battery life, zram swap, and makes the weekly store cleanup and optimisation wait for mains power. TLP's `tlp-pd` provides the power-profiles-daemon interface, so the power profile widgets in noctalia and waybar keep working and the real power-profiles-daemon is turned off. `host.laptop.thermald` is on by default and off on AMD machines. `host.fastboot` trades the classic boot path for the newer one: nixos-init instead of the perl activation script, an immutable `/etc` built in the initrd, userborn for user accounts, no boot menu delay and the boot partition mounted on demand. nymphe runs it; the other laptops can follow once it has proven itself there.
 
 **Always on** (`ca_certificates.nix`) has no switch. It makes every machine trust the internal certificate authorities kept in a separate private repo, so internal HTTPS services work without browser warnings.
 

@@ -22,13 +22,9 @@
 
   host.cursor.size = 28;
   host.laptop.enable = true;
-
-  boot.loader.timeout = 0;
+  host.fastboot.enable = true;
 
   home-manager.startAsUserService = true;
-
-  system.nixos-init.enable = true;
-  system.etc.overlay.enable = true;
 
   sops.secrets.artesia-password = {
     sopsFile = ../../../secrets/secrets.yaml;
@@ -63,11 +59,6 @@
       flameshot.Install.WantedBy = lib.mkForce [ ];
     };
   };
-
-  fileSystems."/boot".options = [
-    "noauto"
-    "x-systemd.automount"
-  ];
 
   # Release this machine was first installed with. Leave it alone.
   system.stateVersion = "25.05";
