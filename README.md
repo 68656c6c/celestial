@@ -6,8 +6,10 @@ My NixOS stack: one flake, home-manager, niri or sway with noctalia, four machin
 ```
   diy-modules     - custom options (host facts, laptop switch, lab CA trust)
   diy-packages    - software not in nixpkgs, used as pkgs.diy.<name>
+  disko           - the one disk layout every host uses (ESP, swap, root)
   docs            - how the repo fits together
   imports         - third-party modules every host loads
+  installer       - bootable image that installs a host unattended
   overlays        - unstable versions of a few apps, and the diy package set
   scripts         - setup, deploy and update helpers
   secrets         - sops-encrypted, only readable by my machines
@@ -31,13 +33,17 @@ GitHub Actions builds every host on each push to `main` and pushes the closures 
 
 Repository secrets: `ATTIC_TOKEN` (attic token with push rights), `PANGOLIN_ACCESS_TOKEN_ID` and `PANGOLIN_ACCESS_TOKEN` (a shareable link on the attic resource). Optional variable `ATTIC_PUBLIC_URL`, default `https://attic.artesia.cloud`.
 
+## Reinstalling a host
+Download `celestial-installer.iso` from the latest `installer` workflow run, `dd` it to a stick, boot it with ethernet plugged in. It matches the machine to a host by DMI product name (`host.dmi`), shows the disk it is about to wipe, counts down 15 seconds, then partitions with disko and installs. If a second stick labelled `CELESTIAL_KEYS` holds `keys/<host>.key`, that becomes the host's age key and the login password comes from the secrets; otherwise a key is generated, you set a password once, and the printed public key goes into `.sops.yaml`.
+
+Machines installed before disko mount by UUID. Run `sudo scripts/label-disk.sh` on them once, before switching to a configuration from this point on; it only writes GPT partition labels.
+
 ## Adding a host
-1. Install git and nh and clone the repo to `~/.dotfiles`
-2. Delete `/etc/nixos/configuration.nix`
-3. Run `scripts/setup-host.sh <hostname>`. It generates the hardware file, the age key at `/var/lib/sops-nix/key`, the per-host folder and the `.sops.yaml` entries
-4. Fill in monitors, DNS and `host.laptop.enable` in `system/per_host/<hostname>/<hostname>_configurations.nix`
-5. `sops updatekeys secrets/secrets.yaml`, then `nh os switch .#<hostname>`
-6. `sudo tailscale up` once if the machine should be on the tailnet
+1. Boot any NixOS installer, install git and nh, clone the repo to `~/.dotfiles`
+2. Run `scripts/setup-host.sh <hostname>`. It generates the hardware file (no filesystems, disko owns those), the age key at `/var/lib/sops-nix/key`, the per-host folder with the machine's DMI name, and the `.sops.yaml` entries
+3. Fill in monitors, DNS, `host.disk.layout` and `host.laptop.enable` in `system/per_host/<hostname>/<hostname>_configurations.nix`
+4. `sops updatekeys secrets/secrets.yaml`, commit, then reinstall from the stick or `nh os switch .#<hostname>` after `scripts/label-disk.sh`
+5. `sudo tailscale up` once if the machine should be on the tailnet
 
 Hosts are discovered from the folders under `system/per_host/`, there is no list to maintain.
 
