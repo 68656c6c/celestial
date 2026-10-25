@@ -98,7 +98,6 @@
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",
-        "trusted-certificates": "trusted-certificates",
         "unstable": "unstable"
       }
     },
@@ -156,23 +155,6 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
-      }
-    },
-    "trusted-certificates": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1790448083,
-        "narHash": "sha256-jxN74CenrvBAmWFZaB1z45K3vtYgwtAgRRTkt1n0zWg=",
-        "ref": "refs/heads/main",
-        "rev": "d1b78f35e93f7196d82dbef0ece02485646d259b",
-        "revCount": 3,
-        "type": "git",
-        "url": "ssh://git@git.artesia.cloud/artesia.technology/trusted-certificates.git"
-      },
-      "original": {
-        "rev": "d1b78f35e93f7196d82dbef0ece02485646d259b",
-        "type": "git",
-        "url": "ssh://git@git.artesia.cloud/artesia.technology/trusted-certificates.git"
       }
     },
     "unstable": {

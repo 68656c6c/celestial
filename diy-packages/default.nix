@@ -5,5 +5,4 @@
   cups-citizen-ctzcls = pkgs.callPackage ./cups-citizen-ctzcls.nix { };
   helium = pkgs.callPackage ./helium.nix { };
   zen-browser = pkgs.callPackage ./zen-browser.nix { };
-  runner-image = pkgs.callPackage ./runner-image.nix { };
 }
