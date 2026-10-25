@@ -87,6 +87,8 @@ lib.mkIf osConfig.programs.niri.enable {
     ${outputs}
 
     layout {
+      // niri's own backdrop, visible until noctalia has drawn the wallpaper
+      background-color "#000000"
       gaps 5
       center-focused-column "never"
       default-column-width { proportion 0.5; }
