@@ -21,11 +21,6 @@
     substituters = [ "https://nyx-cache.chaotic.cx/" ];
     trusted-public-keys = [ "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=" ];
   };
-  # networking.nameservers = [
-  #   "10.2.50.1"
-  #   "10.44.4.2"
-  # ];
-
   host.monitors = [
     {
       output = "HDMI-A-1";

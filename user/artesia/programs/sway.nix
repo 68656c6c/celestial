@@ -130,7 +130,9 @@ lib.mkIf osConfig.programs.sway.enable {
     extraConfig = ''
       bindgesture swipe:3:left workspace next
       bindgesture swipe:3:right workspace prev
-      for_window [app_id="^(zen|helium)$" title="^Extension: \(Bitwarden Password Manager\) - Bitwarden"] floating enable
+      # Bitwarden popouts: Firefox-based browsers prefix extension windows, Chromium-based ones carry the bare page title
+      for_window [app_id="^zen$" title="^Extension: \(Bitwarden Password Manager\)"] floating enable
+      for_window [app_id="^helium$" title="^Bitwarden( Password Manager)?$"] floating enable
       # flameshot's capture overlay must float at the origin to cover the screen instead of tiling (flameshot docs)
       for_window [app_id="flameshot"] border pixel 0, floating enable, fullscreen disable, move absolute position 0 0
     '';

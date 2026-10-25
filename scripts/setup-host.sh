@@ -48,11 +48,7 @@ cat > "$HOST_DIR/default.nix" << EOF
 EOF
 
 cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
-{
-  config,
-  pkgs,
-  ...
-}:
+{ ... }:
 
 {
   networking.hostName = "$HOSTNAME";
@@ -75,11 +71,7 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
 EOF
 
 cat > "$HOST_DIR/${HOSTNAME}_packages.nix" << EOF
-{
-  config,
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
 
 {
   environment.systemPackages = with pkgs; [

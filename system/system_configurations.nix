@@ -9,16 +9,18 @@ let
   # sops leaves key names in clear, so the pull token wiring switches itself on
   # once `attic-netrc` has been added to secrets.yaml
   haveAtticNetrc = lib.hasInfix "attic-netrc:" (builtins.readFile ../secrets/secrets.yaml);
+  # A host whose key is not in .sops.yaml yet cannot decrypt anything, and a
+  # secret that fails to decrypt fails activation. Until the key is added the
+  # password set at install time stays (mutable users).
+  haveHostKey = lib.hasInfix "&host_${config.networking.hostName} " (builtins.readFile ../.sops.yaml);
 in
 
 {
 
   sops = {
     age.keyFile = "/var/lib/sops-nix/key";
-    # Login password for every host, so an unattended install boots into a
-    # usable machine. Needs the host key in .sops.yaml; until then the
-    # password set at install time stays (mutable users).
-    secrets.artesia-password = {
+    # Login password, so an unattended install boots into a usable machine
+    secrets.artesia-password = lib.mkIf haveHostKey {
       sopsFile = ../secrets/secrets.yaml;
       neededForUsers = true;
     };
@@ -91,7 +93,7 @@ in
   users.users.artesia = {
     isNormalUser = true;
     description = "artesia";
-    hashedPasswordFile = config.sops.secrets.artesia-password.path;
+    hashedPasswordFile = lib.mkIf haveHostKey config.sops.secrets.artesia-password.path;
     extraGroups = [
       "networkmanager"
       "wheel"

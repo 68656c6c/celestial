@@ -74,13 +74,17 @@ in
         "nix-command"
         "flakes"
       ];
+      # nixos-install reads this file, not the target's settings, so the
+      # CachyOS kernel for io has to be reachable from here too.
       substituters = [
         "https://attic.artesia.cloud/celestial"
         "https://celestial.cachix.org"
+        "https://nyx-cache.chaotic.cx/"
       ];
       trusted-public-keys = [
         "celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g="
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
+        "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk="
       ];
     };
 

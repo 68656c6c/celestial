@@ -35,7 +35,7 @@ in_cache() {
 hosts=("$@")
 if [ "${#hosts[@]}" -eq 0 ]; then
   all_hosts="$(
-    nix eval --raw "$REPO_ROOT#nixosConfigurations" \
+    nix eval --raw --no-write-lock-file "$REPO_ROOT#nixosConfigurations" \
       --apply 'ns: builtins.concatStringsSep " " (builtins.attrNames ns)'
   )"
   read -r -a hosts <<<"$all_hosts"
@@ -49,7 +49,7 @@ for host in "${hosts[@]}"; do
   attr="$REPO_ROOT#nixosConfigurations.$host.config.system.build.toplevel"
 
   echo "==> $host: evaluating"
-  if ! out="$(nix eval --raw "$attr.outPath")"; then
+  if ! out="$(nix eval --raw --no-write-lock-file "$attr.outPath")"; then
     echo "    evaluation failed" >&2
     failed+=("$host")
     continue
@@ -63,7 +63,7 @@ for host in "${hosts[@]}"; do
   fi
 
   echo "==> $host: building"
-  if ! nix build --no-link --print-build-logs "$attr"; then
+  if ! nix build --no-link --print-build-logs --no-write-lock-file "$attr"; then
     echo "    build failed" >&2
     failed+=("$host")
     continue

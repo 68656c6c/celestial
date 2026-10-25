@@ -41,18 +41,21 @@ jobs:
           determinate: false
 
       - name: Lint
-        run: nix flake check
+        run: nix flake check --no-write-lock-file
 
       - name: List hosts
         id: hosts
         run: |
-          hosts="$(nix eval --json .#nixosConfigurations --apply builtins.attrNames)"
+          hosts="$(nix eval --json --no-write-lock-file .#nixosConfigurations --apply builtins.attrNames)"
           echo "hosts=$hosts" >> "$GITHUB_OUTPUT"
           echo "building: $hosts"
 
   build:
     needs: prepare
     runs-on: ubuntu-latest
+    env:
+      # Dependabot pull requests run without repository secrets: no attic then
+      HAS_ATTIC: ${{ secrets.ATTIC_TOKEN != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -69,10 +72,11 @@ jobs:
         with:
           determinate: false
           extra-conf: |
-            extra-substituters = ${{ env.ATTIC_CACHE_URL }} https://celestial.cachix.org https://nyx-cache.chaotic.cx/
+            extra-substituters = ${{ secrets.ATTIC_TOKEN != '' && env.ATTIC_CACHE_URL || '' }} https://celestial.cachix.org https://nyx-cache.chaotic.cx/
             extra-trusted-public-keys = celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g= celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk= nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=
 
       - uses: ./.github/actions/attic
+        if: env.HAS_ATTIC == 'true'
         with:
           public-url: ${{ env.ATTIC_PUBLIC_URL }}
           cache: ${{ env.ATTIC_CACHE }}

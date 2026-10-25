@@ -34,7 +34,7 @@ jobs:
 
       - name: Build the image
         run: |
-          nix build .#installer-iso --print-build-logs
+          nix build .#installer-iso --print-build-logs --no-write-lock-file
           cp result/iso/*.iso celestial-installer.iso
           sha256sum celestial-installer.iso > celestial-installer.iso.sha256
           ls -lh celestial-installer.iso
