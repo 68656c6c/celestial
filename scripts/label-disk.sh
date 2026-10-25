@@ -6,9 +6,10 @@
 set -euo pipefail
 
 command -v sgdisk >/dev/null || {
-  echo "sgdisk missing, run: nix shell nixpkgs#gptfdisk -c sudo $0" >&2
+  echo "sgdisk missing, run: sudo nix shell nixpkgs#gptfdisk -c $0" >&2
   exit 1
 }
+[ "$(id -u)" = 0 ] || { echo "run as root: sudo nix shell nixpkgs#gptfdisk -c $0" >&2; exit 1; }
 
 label() { # <mountpoint or device> <label>
   local src="$1" name="$2" part disk num

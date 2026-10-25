@@ -135,7 +135,7 @@ Every machine runs the `scx_lavd` sched_ext scheduler (built for interactive and
 
 `nix build .#installer-iso` (CI does it on every change to the installer, the disk layout or the lock) produces a bootable image with this repo embedded. On boot it reads the machine's DMI product name, finds the host whose `host.dmi` lists it, shows the internal disk it will wipe, waits 15 seconds for an abort, waits for network, runs disko with that host's `host.disk` values, puts an age key in place (from a stick labelled `CELESTIAL_KEYS` if one holds `keys/<host>.key`, otherwise freshly generated), runs `nixos-install` from the embedded flake and reboots. Unknown machines get a prompt instead of a wipe. A generated key cannot decrypt `secrets.yaml` yet, so in that case the installer asks for a login password once; adding the printed public key to `.sops.yaml` hands the password over to the secret afterwards.
 
-Every host's login password now comes from `secrets.yaml` (`artesia-password`), which is what makes an unattended install bootable into a usable machine. Hosts installed before disko need `scripts/label-disk.sh` run once so their partitions carry the labels the new mount table expects.
+Every host's login password now comes from `secrets.yaml` (`artesia-password`), which is what makes an unattended install bootable into a usable machine. Hosts installed before disko need `sudo nix shell nixpkgs#gptfdisk -c scripts/label-disk.sh` run once, before switching, so their partitions carry the labels the new mount table expects; switching first leaves the next boot waiting for `disk-main-root`, recoverable by booting the previous generation (hold Space for the menu on fastboot hosts) and labelling then.
 
 ### Where does a change go?
 
