@@ -176,7 +176,7 @@ flowchart LR
     secrets -->|"decrypted when the config is applied<br/>with /var/lib/sops-nix/key"| hostsbox
 ```
 
-Secrets are stored encrypted in git. `.sops.yaml` lists each machine's public key; the single secrets file is readable by every machine, and a backup key can read everything so secrets survive a lost machine. Every machine keeps its private key at `/var/lib/sops-nix/key`. Only nymphe currently uses a secret (its login password), the other machines decrypt nothing, but they all have a key so a secret can be added without onboarding work. aphrodite's key still needs adding to `.sops.yaml`.
+Secrets are stored encrypted in git. `.sops.yaml` lists each machine's public key; the single secrets file is readable by every machine, and a backup key can read everything so secrets survive a lost machine. Every machine keeps its private key at `/var/lib/sops-nix/key`. Two secrets are in use on every machine: the login password and the attic pull token. aphrodite's key still needs adding to `.sops.yaml`.
 
 A normal change goes through `deploy.nu`: `nix fmt` formats, `nix flake check` runs deadnix and a format check, then commit, push and apply the new configuration to the current machine. The push triggers CI, which runs the same check, then builds each machine in its own job and uploads anything not yet cached. When another machine updates, it downloads those builds instead of compiling them itself.
 
@@ -184,8 +184,6 @@ Dependency updates are CI's job too. `update-flake.yml` runs `nix flake update` 
 
 ### How CI reaches the cache
 
-The machines are on the lab network, where `attic.artesia.cloud` resolves to the attic server directly. GitHub's runners are not, so the same name is also published through Pangolin as a public resource: no Pangolin login in front of it. Attic does its own authentication, a token is needed to push and reads of the public cache are anonymous, which is exactly how the machines use it inside the lab. Nothing in the cache is secret: the configurations are in this public repo and secrets are decrypted at boot, never built into the store. CI logs in with `ATTIC_TOKEN` (`.github/actions/attic`) and uses the real URL as substituter.
+The machines are on the lab network, where `attic.artesia.cloud` resolves to the attic server directly. GitHub's runners are not, so the same name is also published through Pangolin as a public resource: no Pangolin login in front of it, because attic authenticates everything itself. The cache is private: reads and pushes both need an attic token. Nix cannot send bearer tokens, but attic accepts the token as an HTTP Basic password, so every machine carries one line, `machine attic.artesia.cloud password <pull token>`, as the sops secret `attic-netrc`, wired into Nix's `netrc-file`. CI writes the same line to `/etc/nix/netrc` on the runner and logs the attic client in with the push-capable token (`.github/actions/attic`). The installer pulls from attic when the key stick carries an `attic.netrc`, otherwise it builds what the public caches lack.
 
-If reads should ever be locked down as well, attic can flip the cache to private; every machine then gets a pull token through sops into Nix's `netrc-file`. One extra secret per host, no change to CI.
-
-Repository secret: `ATTIC_TOKEN`, an attic token with push rights on the `celestial` cache. Optional repository variable `ATTIC_PUBLIC_URL` overrides the hostname.
+Repository secret: `ATTIC_TOKEN`, an attic token with pull and push rights on the `celestial` cache. Optional repository variable `ATTIC_PUBLIC_URL` overrides the hostname.

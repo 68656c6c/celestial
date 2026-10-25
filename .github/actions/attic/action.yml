@@ -1,8 +1,9 @@
 name: attic
 description: >
-  Log in to the attic cache. The attic resource in Pangolin is public, attic's
-  own token gates pushes and reads are anonymous, the same way the hosts use
-  it inside the lab.
+  Reach the private attic cache. The Pangolin resource is public and attic
+  authenticates everything itself: the nix daemon gets the token through
+  /etc/nix/netrc (attic accepts it as a Basic password), the attic client
+  through `attic login`.
 
 inputs:
   public-url:
@@ -12,29 +13,40 @@ inputs:
     description: Cache name
     default: celestial
   attic-token:
-    description: attic server token with push permission on the cache
+    description: attic token with pull and push permission on the cache
     required: true
 
 runs:
   using: composite
   steps:
-    - name: Install attic-client from the flake's nixpkgs
+    - name: Give the nix daemon the token
       shell: bash
-      run: echo "$(nix build --inputs-from . --no-link --print-out-paths nixpkgs#attic-client)/bin" >> "$GITHUB_PATH"
+      env:
+        PUBLIC_URL: ${{ inputs.public-url }}
+        ATTIC_TOKEN: ${{ inputs.attic-token }}
+      run: |
+        host="${PUBLIC_URL#*://}"; host="${host%%/*}"
+        printf 'machine %s\npassword %s\n' "$host" "$ATTIC_TOKEN" | sudo install -m 0600 /dev/stdin /etc/nix/netrc
+        sudo systemctl restart nix-daemon
 
     - name: Check the cache answers
       shell: bash
       env:
         PUBLIC_URL: ${{ inputs.public-url }}
         CACHE: ${{ inputs.cache }}
+        ATTIC_TOKEN: ${{ inputs.attic-token }}
       run: |
-        if curl -fsS -o /dev/null "$PUBLIC_URL/$CACHE/nix-cache-info"; then
+        if curl -fsS -o /dev/null -H "Authorization: Bearer $ATTIC_TOKEN" "$PUBLIC_URL/$CACHE/nix-cache-info"; then
           echo "attic reachable at $PUBLIC_URL"
           exit 0
         fi
-        echo "::error::$PUBLIC_URL/$CACHE/nix-cache-info did not answer with 200; a 401 or 302 means the Pangolin resource still has authentication on" >&2
-        curl -sS -i "$PUBLIC_URL/$CACHE/nix-cache-info" | head -15 >&2 || true
+        echo "::error::$PUBLIC_URL/$CACHE/nix-cache-info did not answer with 200; 401 means the token has no pull right, 302 means the Pangolin resource still has authentication on" >&2
+        curl -sS -i -H "Authorization: Bearer $ATTIC_TOKEN" "$PUBLIC_URL/$CACHE/nix-cache-info" | head -15 >&2 || true
         exit 1
+
+    - name: Install attic-client from the flake's nixpkgs
+      shell: bash
+      run: echo "$(nix build --inputs-from . --no-link --print-out-paths nixpkgs#attic-client)/bin" >> "$GITHUB_PATH"
 
     - name: Log in to attic
       shell: bash

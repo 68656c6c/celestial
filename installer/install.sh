@@ -3,7 +3,8 @@
 #   2. pick the internal disk, show it, give 15 seconds to abort
 #   3. wait for network (caches, flake inputs)
 #   4. disko: wipe, partition, format, mount
-#   5. age key: from a stick labelled CELESTIAL_KEYS (keys/<host>.key) or new
+#   5. a stick labelled CELESTIAL_KEYS may carry keys/<host>.key (age key) and
+#      attic.netrc (pull token for the private cache); otherwise a new age key
 #   6. nixos-install, set a password if the key is new, reboot
 
 hosts_json="${1:?hosts json}"
@@ -60,7 +61,7 @@ disko --mode destroy,format,mount --yes-wipe-all-disks \
   --argstr swapSize "$swap_size" --argstr espSize "$esp_size" \
   "$flake/disko/layout.nix"
 
-# 5. age key
+# 5. key stick: age key, and the netrc that lets this install pull from attic
 install -d -m 700 /mnt/var/lib/sops-nix
 key_from_stick=0
 if [ -e "/dev/disk/by-label/$keys_label" ]; then
@@ -70,6 +71,11 @@ if [ -e "/dev/disk/by-label/$keys_label" ]; then
     cp "/keys/keys/$host.key" /mnt/var/lib/sops-nix/key
     key_from_stick=1
     say "age key taken from the $keys_label stick"
+  fi
+  if [ -f /keys/attic.netrc ]; then
+    install -m 600 /keys/attic.netrc /etc/nix/netrc
+    systemctl restart nix-daemon
+    say "attic pull token taken from the $keys_label stick"
   fi
   umount /keys
 fi

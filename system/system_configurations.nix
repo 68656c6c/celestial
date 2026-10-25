@@ -1,8 +1,15 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
+
+let
+  # sops leaves key names in clear, so the pull token wiring switches itself on
+  # once `attic-netrc` has been added to secrets.yaml
+  haveAtticNetrc = lib.hasInfix "attic-netrc:" (builtins.readFile ../secrets/secrets.yaml);
+in
 
 {
 
@@ -14,6 +21,10 @@
     secrets.artesia-password = {
       sopsFile = ../secrets/secrets.yaml;
       neededForUsers = true;
+    };
+    # "machine attic.artesia.cloud / password <pull token>": the cache is private
+    secrets.attic-netrc = lib.mkIf haveAtticNetrc {
+      sopsFile = ../secrets/secrets.yaml;
     };
   };
 
@@ -120,6 +131,7 @@
       ];
       # a broken cache entry costs a local build, not a failed switch
       fallback = true;
+      netrc-file = lib.mkIf haveAtticNetrc config.sops.secrets.attic-netrc.path;
     };
   };
 }

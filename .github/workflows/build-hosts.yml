@@ -79,4 +79,6 @@ jobs:
           attic-token: ${{ secrets.ATTIC_TOKEN }}
 
       - name: Build and push ${{ matrix.host }}
+        env:
+          ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
         run: ./scripts/build-hosts.sh "${{ matrix.host }}"

@@ -14,6 +14,7 @@ Builds each host's system closure and pushes it to the attic cache, skipping
 hosts whose toplevel is already present. With no arguments, does every host.
 
 Environment:
+  ATTIC_TOKEN      token for the private cache (narinfo checks; attic push uses its login)
   ATTIC_CACHE      cache name for attic push   (default: celestial)
   ATTIC_CACHE_URL  binary cache endpoint       (default: https://attic.artesia.cloud/\$ATTIC_CACHE)
   PUSH             set to 0 to build only      (default: 1)
@@ -26,7 +27,9 @@ EOF
 in_cache() {
   local hash="${1#/nix/store/}"
   hash="${hash%%-*}"
-  [ "$(curl -sS -o /dev/null -w '%{http_code}' "$CACHE_URL/$hash.narinfo")" = "200" ]
+  local -a auth=()
+  [ -n "${ATTIC_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $ATTIC_TOKEN")
+  [ "$(curl -sS -o /dev/null -w '%{http_code}' "${auth[@]}" "$CACHE_URL/$hash.narinfo")" = "200" ]
 }
 
 hosts=("$@")
