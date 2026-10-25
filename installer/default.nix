@@ -47,7 +47,7 @@ in
           options = {
             dmi = lib.mkOption { type = lib.types.listOf lib.types.str; };
             layout = lib.mkOption { type = lib.types.str; };
-            swapSize = lib.mkOption { type = lib.types.str; };
+            swapSize = lib.mkOption { type = lib.types.nullOr lib.types.str; };
             espSize = lib.mkOption { type = lib.types.str; };
           };
         }

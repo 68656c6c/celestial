@@ -27,8 +27,9 @@ in
         description = "Root filesystem. btrfs gets nix and home subvolumes.";
       };
       swapSize = lib.mkOption {
-        type = lib.types.str;
+        type = lib.types.nullOr lib.types.str;
         default = "16G";
+        description = "Swap partition size, null for none (zram still applies on laptops).";
       };
       espSize = lib.mkOption {
         type = lib.types.str;

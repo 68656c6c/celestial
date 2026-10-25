@@ -1,7 +1,8 @@
 # One disk, GPT: ESP, swap, root. Used twice: imported by diy-modules/host_disk.nix
 # to describe every host (device is a placeholder there, mounts go by partition
-# label), and run by the installer with --argstr device/layout/swapSize/espSize
-# to format the disk it detected.
+# label), and run by the installer with --argstr device/layout/espSize and
+# --argstr swapSize (or --arg swapSize null for no swap partition) to format
+# the disk it detected.
 {
   device,
   layout ? "btrfs",
@@ -30,10 +31,6 @@
             ];
           };
         };
-        swap = {
-          size = swapSize;
-          content.type = "swap";
-        };
         root = {
           size = "100%";
           content =
@@ -54,7 +51,18 @@
                 mountpoint = "/";
               };
         };
-      };
+      }
+      // (
+        if swapSize == null then
+          { }
+        else
+          {
+            swap = {
+              size = swapSize;
+              content.type = "swap";
+            };
+          }
+      );
     };
   };
 }

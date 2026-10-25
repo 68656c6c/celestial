@@ -26,7 +26,7 @@ if [ -z "$host" ]; then
   jq -e --arg h "$host" 'has($h)' "$hosts_json" >/dev/null || die "unknown host $host"
 fi
 layout="$(jq -r --arg h "$host" '.[$h].layout' "$hosts_json")"
-swap_size="$(jq -r --arg h "$host" '.[$h].swapSize' "$hosts_json")"
+swap_size="$(jq -r --arg h "$host" '.[$h].swapSize // "none"' "$hosts_json")"
 esp_size="$(jq -r --arg h "$host" '.[$h].espSize' "$hosts_json")"
 
 # 2. disk: largest non-removable disk that is not the installer medium
@@ -38,6 +38,8 @@ disk="$(lsblk -dbno NAME,SIZE,RM,TYPE \
 [ -n "$disk" ] || die "no internal disk found"
 device="/dev/$disk"
 
+swap_args=(--arg swapSize null)
+[ "$swap_size" = none ] || swap_args=(--argstr swapSize "$swap_size")
 say "installing $host ($layout, swap $swap_size, ESP $esp_size) onto $device"
 echo "EVERYTHING ON $device WILL BE ERASED:"
 lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS "$device"
@@ -58,7 +60,7 @@ done
 say "partitioning $device"
 disko --mode destroy,format,mount --yes-wipe-all-disks \
   --argstr device "$device" --argstr layout "$layout" \
-  --argstr swapSize "$swap_size" --argstr espSize "$esp_size" \
+  "${swap_args[@]}" --argstr espSize "$esp_size" \
   "$flake/disko/layout.nix"
 
 # 5. key stick: age key, and the netrc that lets this install pull from attic
