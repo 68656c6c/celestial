@@ -27,7 +27,7 @@ nh os switch       # apply to the current machine
 `scripts/deploy.nu` does all of that plus commit, push and a push to the attic cache.
 
 ## CI
-GitHub Actions builds every host on each push to `main` and pushes the closures to attic through Pangolin (`.github/workflows/build-hosts.yml`). Every Monday `update-flake.yml` bumps `flake.lock`, builds everything and opens a pull request; merge it and the next switch is a download.
+GitHub Actions builds every host on each push to `main` and pushes the closures to attic through Pangolin (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
 
 Repository secrets: `ATTIC_TOKEN` (attic token with push rights), `PANGOLIN_ACCESS_TOKEN_ID` and `PANGOLIN_ACCESS_TOKEN` (a shareable link on the attic resource). Optional variable `ATTIC_PUBLIC_URL`, default `https://attic.artesia.cloud`.
 

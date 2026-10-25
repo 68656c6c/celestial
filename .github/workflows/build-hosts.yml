@@ -1,11 +1,13 @@
 name: build-hosts
 
 # Builds every host and pushes the closures to attic, skipping hosts that
-# are already cached. Hosts come from the folders under system/per_host.
+# are already cached. Pull requests are built but not pushed. Hosts come
+# from the folders under system/per_host.
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -18,6 +20,11 @@ env:
   ATTIC_CACHE: celestial
   ATTIC_CACHE_URL: http://127.0.0.1:8080/celestial
   ATTIC_PUBLIC_URL: ${{ vars.ATTIC_PUBLIC_URL || 'https://attic.artesia.cloud' }}
+  PUSH: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+concurrency:
+  group: build-hosts-${{ inputs.ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   prepare:

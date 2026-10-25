@@ -17,7 +17,9 @@ update_pkg() {
   local name="$1" repo="$2" nix_file="$3" asset_tpl="$4"
 
   local release_json latest_tag
-  if ! release_json=$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest"); then
+  local -a auth=()
+  [ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ] && auth=(-H "Authorization: Bearer ${GH_TOKEN:-$GITHUB_TOKEN}")
+  if ! release_json=$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/${repo}/releases/latest"); then
     echo "$name: could not reach the GitHub API" >&2
     return 1
   fi

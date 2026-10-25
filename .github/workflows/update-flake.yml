@@ -1,21 +1,31 @@
 name: update-flake
 
-# Weekly flake.lock bump. Every host is built and cached before the pull
-# request exists, so an open PR is known good. No PR means the build failed.
-# The build is called from here on purpose: a push made with GITHUB_TOKEN
-# never triggers other workflows.
+# Scheduled bumps. Mondays: flake.lock and the AppImage browsers, on the
+# update/flake-lock branch. Every other day: only the browsers in
+# diy-packages, on update/browsers. Every host is built and cached before a
+# pull request exists, so an open PR is known good. No PR means the build
+# failed. The build is called from here on purpose: a push made with
+# GITHUB_TOKEN never triggers other workflows.
 
 on:
   schedule:
     - cron: "0 5 * * 1"
+    - cron: "0 5 * * 0,2-6"
   workflow_dispatch:
+    inputs:
+      what:
+        description: What to update
+        type: choice
+        default: all
+        options: [all, flake, browsers]
 
 permissions:
   contents: write
   pull-requests: write
 
-env:
-  UPDATE_BRANCH: update/flake-lock
+concurrency:
+  group: update-flake
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -23,49 +33,87 @@ jobs:
     outputs:
       changed: ${{ steps.update.outputs.changed }}
       summary: ${{ steps.update.outputs.summary }}
+      branch: ${{ steps.plan.outputs.branch }}
+      title: ${{ steps.plan.outputs.title }}
     steps:
+      - name: Decide what to update
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          WHAT: ${{ inputs.what }}
+        run: |
+          case "$EVENT" in
+            schedule) [ "$SCHEDULE" = "0 5 * * 0,2-6" ] && what=browsers || what=all ;;
+            *) what="${WHAT:-all}" ;;
+          esac
+          if [ "$what" = browsers ]; then
+            branch=update/browsers; title="update browsers"
+          else
+            branch=update/flake-lock; title="update inputs"
+          fi
+          echo "what=$what" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "title=$title" >> "$GITHUB_OUTPUT"
+          echo "updating: $what -> $branch"
+
       - uses: actions/checkout@v7
 
       - uses: DeterminateSystems/nix-installer-action@v23
         with:
           determinate: false
 
-      - name: Update flake.lock
+      - name: Update
         id: update
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WHAT: ${{ steps.plan.outputs.what }}
         run: |
-          nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"
-          if git diff --quiet flake.lock; then
-            echo "flake.lock is already current"
+          : > "$RUNNER_TEMP/summary.txt"
+          if [ "$WHAT" != browsers ]; then
+            nix flake update 2>&1 | tee "$RUNNER_TEMP/update.log"
+            grep -E "^(• Updated input|    '|  → )" "$RUNNER_TEMP/update.log" >> "$RUNNER_TEMP/summary.txt" || true
+          fi
+          if [ "$WHAT" != flake ]; then
+            ./scripts/update-appimages.sh 2>&1 | tee "$RUNNER_TEMP/appimages.log"
+            grep -E " -> " "$RUNNER_TEMP/appimages.log" >> "$RUNNER_TEMP/summary.txt" || true
+          fi
+          if git diff --quiet; then
+            echo "everything is already current"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "changed=true" >> "$GITHUB_OUTPUT"
           {
             echo "summary<<SUMMARY_EOF"
-            grep -E "^(• Updated input|    '|  → )" "$RUNNER_TEMP/update.log" || true
+            cat "$RUNNER_TEMP/summary.txt"
             echo "SUMMARY_EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: Push the update branch
         if: steps.update.outputs.changed == 'true'
+        env:
+          BRANCH: ${{ steps.plan.outputs.branch }}
+          TITLE: ${{ steps.plan.outputs.title }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$UPDATE_BRANCH"
+          git checkout -B "$BRANCH"
           {
-            echo "flake.lock: update inputs"
+            echo "$TITLE"
             echo
-            grep -E "^(• Updated input|    '|  → )" "$RUNNER_TEMP/update.log" || true
+            cat "$RUNNER_TEMP/summary.txt"
           } > "$RUNNER_TEMP/commit.msg"
-          git commit -F "$RUNNER_TEMP/commit.msg" flake.lock
-          git push --force origin "$UPDATE_BRANCH"
+          git add flake.lock diy-packages
+          git commit -F "$RUNNER_TEMP/commit.msg"
+          git push --force origin "$BRANCH"
 
   build:
     needs: update
     if: needs.update.outputs.changed == 'true'
     uses: ./.github/workflows/build-hosts.yml
     with:
-      ref: update/flake-lock
+      ref: ${{ needs.update.outputs.branch }}
     secrets: inherit
 
   pull-request:
@@ -77,14 +125,15 @@ jobs:
       - name: Open or refresh the pull request
         env:
           GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ needs.update.outputs.branch }}
+          TITLE: ${{ needs.update.outputs.title }}
           SUMMARY: ${{ needs.update.outputs.summary }}
         run: |
           body="$(printf 'Every host built and is in the attic cache.\n\n```\n%s\n```\n' "$SUMMARY")"
-          existing="$(gh pr list --head "$UPDATE_BRANCH" --base main --state open --json number --jq '.[0].number')"
+          existing="$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')"
           if [ -n "$existing" ]; then
             gh pr edit "$existing" --body "$body"
             echo "updated pull request #$existing"
           else
-            gh pr create --head "$UPDATE_BRANCH" --base main \
-              --title "flake.lock: update inputs" --body "$body"
+            gh pr create --head "$BRANCH" --base main --title "$TITLE" --body "$body"
           fi

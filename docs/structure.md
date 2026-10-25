@@ -168,7 +168,7 @@ Secrets are stored encrypted in git. `.sops.yaml` lists each machine's public ke
 
 A normal change goes through `deploy.nu`: `nix fmt` formats, `nix flake check` runs deadnix and a format check, then commit, push, apply the new configuration to the current machine and upload the result to the cache. The push also triggers CI, which runs the same check, then builds each machine in its own job and uploads anything not yet cached. When another machine updates, it downloads those builds instead of compiling them itself.
 
-Dependency updates are CI's job too. Every Monday `update-flake.yml` runs `nix flake update`, pushes the new lock to the `update/flake-lock` branch, runs the same build for every machine and only then opens a pull request listing the changed inputs. If the build fails there is no pull request, only a red run. Merging the pull request is the whole upgrade; the machines download what CI already built.
+Dependency updates are CI's job too. `update-flake.yml` runs `nix flake update` every Monday (branch `update/flake-lock`) and `scripts/update-appimages.sh` every day (branch `update/browsers`; the Helium and Zen browsers are not in nixpkgs, so their AppImage versions live in `diy-packages/`). Each pushes its result, runs the same build for every machine and only then opens a pull request listing what changed. Pull requests you open yourself get the same build, minus the push to the cache. If the build fails there is no pull request, only a red run. Merging the pull request is the whole upgrade; the machines download what CI already built.
 
 ### How CI reaches the cache
 
