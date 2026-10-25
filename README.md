@@ -26,7 +26,10 @@ nh os switch       # apply to the current machine
 ```
 `scripts/deploy.nu` does all of that plus commit, push and a push to the attic cache.
 
-Inputs are bumped by CI: every Monday `update-flake.yml` runs `nix flake update`, builds every host into the cache and opens a pull request with the changes. Merge it and the next switch is a download.
+## CI
+GitHub Actions builds every host on each push to `main` and pushes the closures to attic through Pangolin (`.github/workflows/build-hosts.yml`). Every Monday `update-flake.yml` bumps `flake.lock`, builds everything and opens a pull request; merge it and the next switch is a download.
+
+Repository secrets: `ATTIC_TOKEN` (attic token with push rights), `PANGOLIN_ACCESS_TOKEN_ID` and `PANGOLIN_ACCESS_TOKEN` (a shareable link on the attic resource). Optional variable `ATTIC_PUBLIC_URL`, default `https://attic.artesia.cloud`.
 
 ## Adding a host
 1. Install git and nh and clone the repo to `~/.dotfiles`
