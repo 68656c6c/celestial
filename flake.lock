@@ -55,6 +55,24 @@
         "url": "https://flakehub.com/f/DeterminateSystems/flake-schemas/%3D0.5.0.tar.gz"
       }
     },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1791914995,
+        "narHash": "sha256-Zf/xfQEAasnwnmEfHqW/4hjDE/s44yn2hD4RuVIZRjA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "b7a79d3fea1e214f6d668d521cecec0c01e26544",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -138,6 +156,27 @@
         "type": "github"
       }
     },
+    "niri-float-sticky": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1788698372,
+        "narHash": "sha256-kQiZEjeviamwC/kUhc2p089cqNpjkcjzzIAv1UWW4tw=",
+        "owner": "probeldev",
+        "repo": "niri-float-sticky",
+        "rev": "b3e79bd99bf99b993c3348f0051564f9d25f65e4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "probeldev",
+        "repo": "niri-float-sticky",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1792503283,
@@ -186,6 +225,7 @@
         "disko": "disko",
         "home-manager": "home-manager",
         "millennium": "millennium",
+        "niri-float-sticky": "niri-float-sticky",
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",

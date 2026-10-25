@@ -42,17 +42,61 @@ let
     ''
   ) (lib.range 1 10);
 
-  bitwardenRule = app: ''
+  # Bitwarden popouts (unlock, passkey picker, ...) as an overlay near the top
+  # instead of a tiled column. Firefox-based browsers prefix extension windows
+  # with "Extension: (name)", Chromium-based ones carry the bare page title.
+  bitwardenRule = app: title: ''
     window-rule {
-      match app-id="^${app}$" title=r#"^Extension: \(Bitwarden Password Manager\) - Bitwarden"#
+      match app-id="^${app}$" title=r#"${title}"#
       open-floating true
+      default-floating-position x=0 y=120 relative-to="top"
     }
   '';
+
+  # Mod+P: picture-in-picture mode for the focused window. Tiled -> a 960x540
+  # float in the bottom-right corner that follows the active workspace (the
+  # niri-float-sticky daemon moves it on every workspace switch). Floating ->
+  # back into the tiling. A window on another workspace only gets a frame
+  # callback about once a second, so a film streamed to Discord from a hidden
+  # workspace would arrive at 1 fps; keeping it visible keeps the full rate.
+  niriPip = pkgs.writeShellApplication {
+    name = "niri-pip";
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.niri-float-sticky
+    ];
+    text = ''
+      win="$(niri msg --json focused-window)"
+      [ "$win" = "null" ] && exit 0
+      if [ "$(jq -r .is_floating <<<"$win")" = "true" ]; then
+        niri-float-sticky -ipc unset_sticky
+        niri msg action toggle-window-floating
+        exit 0
+      fi
+      out="$(niri msg --json focused-output)"
+      w=960; h=540; margin=24
+      x=$(( $(jq -r .logical.width <<<"$out") - w - margin ))
+      y=$(( $(jq -r .logical.height <<<"$out") - h - margin ))
+      niri msg action toggle-window-floating
+      niri msg action set-window-width "$w"
+      niri msg action set-window-height "$h"
+      niri msg action move-floating-window -x "$x" -y "$y"
+      niri-float-sticky -ipc set_sticky
+    '';
+  };
 in
 
 lib.mkIf osConfig.programs.niri.enable {
+  home.packages = [
+    pkgs.niri-float-sticky
+    niriPip
+  ];
+
   xdg.configFile."niri/config.kdl".text = ''
     spawn-at-startup "noctalia"
+    // Bare mpv and browser picture-in-picture windows stick on their own;
+    // everything else through Mod+P.
+    spawn-at-startup "niri-float-sticky" "-app-id" "^mpv$" "-title" "^Picture-in-Picture$"
     spawn-at-startup "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit"
 
     hotkey-overlay {
@@ -133,8 +177,19 @@ lib.mkIf osConfig.programs.niri.enable {
       }
     }
 
-    ${bitwardenRule "zen"}
-    ${bitwardenRule "helium"}
+    ${bitwardenRule "zen" "^Extension: \\(Bitwarden Password Manager\\)"}
+    ${bitwardenRule "helium" "^Bitwarden( Password Manager)?$"}
+
+    // The window Discord (or anything else) is streaming gets a thin red border.
+    window-rule {
+      match is-window-cast-target=true
+      border {
+        on
+        width 2
+        active-color "#e53935"
+        inactive-color "#e53935"
+      }
+    }
 
     window-rule {
       match app-id=r#"^dev\.noctalia\.Noctalia$"#
@@ -155,6 +210,7 @@ lib.mkIf osConfig.programs.niri.enable {
       Mod+Comma { consume-or-expel-window-left; }
       Mod+Period { consume-or-expel-window-right; }
       Mod+O { toggle-overview; }
+      Mod+P { spawn "niri-pip"; }
       Mod+Shift+Slash { show-hotkey-overlay; }
 
       Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }

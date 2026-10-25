@@ -26,6 +26,11 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Floating windows that follow the active workspace (niri has no sticky windows)
+    niri-float-sticky = {
+      url = "github:probeldev/niri-float-sticky";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -46,7 +51,10 @@
       };
 
       overlays = [
-        (import ./overlays { unstable = unstablePkgs; })
+        (import ./overlays {
+          unstable = unstablePkgs;
+          niri-float-sticky = inputs.niri-float-sticky.packages.${system}.default;
+        })
         inputs.millennium.overlays.default
       ];
 
