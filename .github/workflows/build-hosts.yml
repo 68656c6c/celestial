@@ -1,0 +1,77 @@
+name: build-hosts
+
+# Builds every host and pushes the closures to attic, skipping hosts that
+# are already cached. Hosts come from the folders under system/per_host.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build
+        type: string
+        required: true
+
+env:
+  ATTIC_CACHE: celestial
+  ATTIC_CACHE_URL: http://127.0.0.1:8080/celestial
+  ATTIC_PUBLIC_URL: ${{ vars.ATTIC_PUBLIC_URL || 'https://attic.artesia.cloud' }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      hosts: ${{ steps.hosts.outputs.hosts }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: DeterminateSystems/nix-installer-action@v23
+        with:
+          determinate: false
+
+      - name: Lint
+        run: nix flake check
+
+      - name: List hosts
+        id: hosts
+        run: |
+          hosts="$(nix eval --json .#nixosConfigurations --apply builtins.attrNames)"
+          echo "hosts=$hosts" >> "$GITHUB_OUTPUT"
+          echo "building: $hosts"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        host: ${{ fromJSON(needs.prepare.outputs.hosts) }}
+    steps:
+      # A hosted runner has ~14 GB free, a NixOS closure needs more.
+      - uses: wimpysworld/nothing-but-nix@baf7355748bb5651f08b839669d6bb39051b2874 # 2026-06-19
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: DeterminateSystems/nix-installer-action@v23
+        with:
+          determinate: false
+          extra-conf: |
+            extra-substituters = http://127.0.0.1:8080/celestial https://celestial.cachix.org
+            extra-trusted-public-keys = celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g= celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk=
+
+      - uses: ./.github/actions/attic
+        with:
+          public-url: ${{ env.ATTIC_PUBLIC_URL }}
+          cache: ${{ env.ATTIC_CACHE }}
+          token-id: ${{ secrets.PANGOLIN_ACCESS_TOKEN_ID }}
+          token: ${{ secrets.PANGOLIN_ACCESS_TOKEN }}
+          attic-token: ${{ secrets.ATTIC_TOKEN }}
+
+      - name: Build and push ${{ matrix.host }}
+        run: ./scripts/build-hosts.sh "${{ matrix.host }}"

@@ -1,0 +1,67 @@
+name: attic through pangolin
+description: >
+  Reach the attic cache through Pangolin. Neither the attic client nor Nix can
+  send custom headers, so a local Caddy adds Pangolin's shareable-link headers
+  and attic and Nix talk to 127.0.0.1:8080 instead.
+
+inputs:
+  public-url:
+    description: Public URL of the attic server behind Pangolin
+    default: https://attic.artesia.cloud
+  cache:
+    description: Cache name
+    default: celestial
+  token-id:
+    description: Pangolin shareable link token id (P-Access-Token-Id)
+    required: true
+  token:
+    description: Pangolin shareable link token (P-Access-Token)
+    required: true
+  attic-token:
+    description: attic server token with push permission on the cache
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install caddy and attic-client from the flake's nixpkgs
+      shell: bash
+      run: |
+        for pkg in caddy attic-client; do
+          echo "$(nix build --inputs-from . --no-link --print-out-paths "nixpkgs#$pkg")/bin" >> "$GITHUB_PATH"
+        done
+
+    - name: Start the header-injecting proxy
+      shell: bash
+      env:
+        PUBLIC_URL: ${{ inputs.public-url }}
+        CACHE: ${{ inputs.cache }}
+        TOKEN_ID: ${{ inputs.token-id }}
+        TOKEN: ${{ inputs.token }}
+      run: |
+        nohup caddy reverse-proxy \
+          --from http://127.0.0.1:8080 \
+          --to "$PUBLIC_URL" \
+          --change-host-header \
+          --header-up "P-Access-Token-Id: $TOKEN_ID" \
+          --header-up "P-Access-Token: $TOKEN" \
+          > "$RUNNER_TEMP/caddy.log" 2>&1 &
+
+        for _ in $(seq 30); do
+          if curl -fsS -o /dev/null "http://127.0.0.1:8080/$CACHE/nix-cache-info"; then
+            echo "attic reachable through pangolin"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "::error::attic did not answer through the proxy, check the pangolin tokens and resource" >&2
+        curl -sS -i "http://127.0.0.1:8080/$CACHE/nix-cache-info" | head -20 >&2 || true
+        cat "$RUNNER_TEMP/caddy.log" >&2
+        exit 1
+
+    - name: Log in to attic
+      shell: bash
+      env:
+        CACHE: ${{ inputs.cache }}
+        ATTIC_TOKEN: ${{ inputs.attic-token }}
+      run: attic login "$CACHE" http://127.0.0.1:8080 "$ATTIC_TOKEN"
