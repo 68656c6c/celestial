@@ -85,7 +85,7 @@ The baseline cannot know what hardware a machine has or what it is used for, so 
 | Machine | Type | Compositor | What makes it different |
 |---|---|---|---|
 | io | desktop | niri | NVIDIA graphics card with a driver tweak to limit video memory use, three monitors, Sunshine (a remote desktop and game streaming server) reachable on its LAN address, a USB label printer, virtual machine tools, 3D and image editing software, a Windows boot entry |
-| ganymedes | laptop | niri and sway | single built-in screen, laptop power management, fixed public DNS servers |
+| ganymedes | laptop | niri and sway | single built-in screen, laptop power management, fixed public DNS servers, an HD-audio pin patch for its Acer Predator speaker wiring (headphone jack sense off, right pair and subwoofers enabled) and a pinned 4.0 + microphone audio profile |
 | nymphe | laptop | sway only | built to run on very little: no xwayland, foot instead of ghostty, waybar and fuzzel instead of noctalia, no Discord presence or cache uploader in the background, `host.fastboot`, screen scaled to 125%, smaller cursor, login password from an encrypted secret, laptop power management |
 | aphrodite | laptop | niri | single built-in screen, AMD so no thermald, laptop power management |
 
