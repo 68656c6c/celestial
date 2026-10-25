@@ -118,6 +118,8 @@
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
         "celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g="
       ];
+      # a broken cache entry costs a local build, not a failed switch
+      fallback = true;
     };
   };
 }
