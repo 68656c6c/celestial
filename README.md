@@ -31,7 +31,7 @@ nh os switch       # apply to the current machine
 ## CI
 GitHub Actions builds every host on each push to `main` and pushes the closures to attic through Pangolin (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
 
-Repository secrets: `ATTIC_TOKEN` (attic token with push rights), `PANGOLIN_ACCESS_TOKEN_ID` and `PANGOLIN_ACCESS_TOKEN` (a shareable link on the attic resource). Optional variable `ATTIC_PUBLIC_URL`, default `https://attic.artesia.cloud`.
+Repository secret: `ATTIC_TOKEN` (attic token with push rights; the attic resource in Pangolin is public and attic gates pushes itself). Optional variable `ATTIC_PUBLIC_URL`, default `https://attic.artesia.cloud`.
 
 ## Reinstalling a host
 Download `celestial-installer.iso` from the latest `installer` workflow run, `dd` it to a stick, boot it with ethernet plugged in. It matches the machine to a host by DMI product name (`host.dmi`), shows the disk it is about to wipe, counts down 15 seconds, then partitions with disko and installs. If a second stick labelled `CELESTIAL_KEYS` holds `keys/<host>.key`, that becomes the host's age key and the login password comes from the secrets; otherwise a key is generated, you set a password once, and the printed public key goes into `.sops.yaml`.

@@ -15,7 +15,7 @@ This repo is the complete configuration for my Linux machines. Each machine runs
 | sops / age | Encryption for secrets stored in git. Each machine has its own private key and can only decrypt the files it is allowed to. |
 | attic | A self-hosted binary cache. Machines download finished builds from it instead of compiling locally. |
 | GitHub Actions | The CI that builds every machine on every push, on GitHub's own runners. |
-| Pangolin | A self-hosted tunnel that publishes lab services on the internet behind its own login. Attic is reachable through it. |
+| Pangolin | A self-hosted tunnel that publishes lab services on the internet. Attic is reachable through it. |
 | Wayland compositor | The component that draws windows and handles input on a modern Linux desktop. niri (scrolling columns) and sway (classic tiling) are the two used here. |
 | noctalia | The desktop shell on top of niri: status bar, app launcher, notifications, lock screen, wallpaper rotation. |
 | Tailscale | A mesh VPN. The daemon runs on every machine, joining the network is a manual step. |
@@ -163,7 +163,7 @@ flowchart LR
     local -->|"upload build, lab network"| attic[("attic binary cache")]
 
     main -->|"on push"| ci["GitHub Actions: build-hosts.yml<br/>lint, then one job per machine"]
-    ci -->|"caddy adds the<br/>pangolin headers"| pangolin["Pangolin<br/>attic.artesia.cloud"]
+    ci -->|"attic token"| pangolin["Pangolin<br/>attic.artesia.cloud"]
     pangolin --> attic
     upd["GitHub Actions: update-flake.yml<br/>Mondays 05:00"] -->|"nix flake update,<br/>then build-hosts.yml"| ci
     upd -->|"pull request with the new lock"| main
@@ -180,6 +180,8 @@ Dependency updates are CI's job too. `update-flake.yml` runs `nix flake update` 
 
 ### How CI reaches the cache
 
-The machines are on the lab network, where `attic.artesia.cloud` resolves to the attic server directly. GitHub's runners are not, so the same name is also published through Pangolin, protected by Pangolin's login. Pangolin lets a client skip the login by sending the id and token of a shareable link as two request headers, `P-Access-Token-Id` and `P-Access-Token`. Neither the attic client nor Nix can add request headers, so each build job starts a small Caddy reverse proxy on `127.0.0.1:8080` that adds them (`.github/actions/attic`), and attic and Nix talk to that. Attic still checks its own token for uploads, so the Pangolin headers only hide the service, they do not replace its authentication.
+The machines are on the lab network, where `attic.artesia.cloud` resolves to the attic server directly. GitHub's runners are not, so the same name is also published through Pangolin as a public resource: no Pangolin login in front of it. Attic does its own authentication, a token is needed to push and reads of the public cache are anonymous, which is exactly how the machines use it inside the lab. Nothing in the cache is secret: the configurations are in this public repo and secrets are decrypted at boot, never built into the store. CI logs in with `ATTIC_TOKEN` (`.github/actions/attic`) and uses the real URL as substituter.
 
-Pangolin side: one HTTP resource for the attic server on `attic.artesia.cloud`, left protected, with a shareable link that never expires. The link's id and token are the repository secrets `PANGOLIN_ACCESS_TOKEN_ID` and `PANGOLIN_ACCESS_TOKEN`; `ATTIC_TOKEN` is an attic token with push rights on the `celestial` cache. The optional repository variable `ATTIC_PUBLIC_URL` overrides the hostname.
+If reads should ever be locked down as well, attic can flip the cache to private; every machine then gets a pull token through sops into Nix's `netrc-file`. One extra secret per host, no change to CI.
+
+Repository secret: `ATTIC_TOKEN`, an attic token with push rights on the `celestial` cache. Optional repository variable `ATTIC_PUBLIC_URL` overrides the hostname.
