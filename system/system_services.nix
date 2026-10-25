@@ -1,9 +1,18 @@
-{
-  ...
-}:
+{ pkgs, ... }:
 
 {
   services = {
+    # sched_ext scheduler tuned for desktop latency, and automatic nice/ionice
+    # for the usual suspects (compilers, steam, browsers) so the compositor wins
+    scx = {
+      enable = true;
+      scheduler = "scx_lavd";
+    };
+    ananicy = {
+      enable = true;
+      package = pkgs.ananicy-cpp;
+      rulesProvider = pkgs.ananicy-rules-cachyos;
+    };
     blueman.enable = true;
     displayManager = {
       ly = {

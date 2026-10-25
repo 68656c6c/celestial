@@ -26,7 +26,7 @@ nix fmt            # format every .nix file
 nix flake check    # deadnix + nixfmt --check, CI runs this before building
 nh os switch       # apply to the current machine
 ```
-`scripts/deploy.nu` does all of that plus commit, push and a push to the attic cache.
+`scripts/deploy.nu` does all of that plus commit and push. CI builds and caches; the machines only download.
 
 ## CI
 GitHub Actions builds every host on each push to `main` and pushes the closures to attic through Pangolin (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.

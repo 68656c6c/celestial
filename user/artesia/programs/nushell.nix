@@ -48,10 +48,6 @@
     extraConfig = ''
       def nos [...args] {
         nh os switch ...$args
-        if (which attic | is-not-empty) {
-          print "Pushing system closure to attic..."
-          attic push celestial /run/current-system
-        }
       }
 
       def nwhich [flag: string] {

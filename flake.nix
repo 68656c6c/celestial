@@ -84,6 +84,8 @@
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;
+                # activate at login instead of during the switch
+                startAsUserService = true;
                 extraSpecialArgs = {
                   inherit inputs;
                   unstable = unstablePkgs;

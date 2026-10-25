@@ -22,8 +22,7 @@
   host.cursor.size = 28;
   host.laptop.enable = true;
   host.fastboot.enable = true;
-
-  home-manager.startAsUserService = true;
+  host.gpu = "intel";
 
   home-manager.users.artesia = {
     home.stateVersion = "25.05";
@@ -47,7 +46,6 @@
       };
     };
     systemd.user.services = {
-      attic-watch-store.Install.WantedBy = lib.mkForce [ ];
       flameshot.Install.WantedBy = lib.mkForce [ ];
     };
   };

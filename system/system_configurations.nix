@@ -103,7 +103,7 @@
     };
     optimise = {
       automatic = true;
-      dates = [ "20:00" ];
+      dates = [ "weekly" ]; # hardlinking the store is heavy IO, not while in use
     };
     settings = {
       experimental-features = [

@@ -21,6 +21,8 @@
   ];
 
   host.laptop.enable = true;
+  host.fastboot.enable = true;
+  host.gpu = "intel";
 
   # ALC255 pin re-task. The headphone jack (0x21) reports "plugged" with
   # nothing in it, so PipeWire marks the speakers unavailable. Turn off jack

@@ -12,7 +12,7 @@ in
   options.host.fastboot.enable = lib.mkEnableOption "faster boot: nixos-init, /etc overlay, userborn, no boot menu";
 
   config = lib.mkIf cfg.enable {
-    boot.loader.timeout = 0;
+    boot.loader.timeout = lib.mkDefault 0;
 
     # Rust init and an immutable /etc assembled in the initrd instead of the
     # perl activation script. /etc is read-only, so stateful files such as

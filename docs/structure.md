@@ -160,11 +160,10 @@ flowchart LR
 
     deploy["scripts/deploy.nu<br/>nix fmt, nix flake check,<br/>commit, push"] --> main[("main branch on GitHub")]
     deploy -->|"apply config"| local["current machine"]
-    local -->|"upload build, lab network"| attic[("attic binary cache")]
 
     main -->|"on push"| ci["GitHub Actions: build-hosts.yml<br/>lint, then one job per machine"]
     ci -->|"attic token"| pangolin["Pangolin<br/>attic.artesia.cloud"]
-    pangolin --> attic
+    pangolin --> attic[("attic binary cache")]
     upd["GitHub Actions: update-flake.yml<br/>Mondays 05:00"] -->|"nix flake update,<br/>then build-hosts.yml"| ci
     upd -->|"pull request with the new lock"| main
 
@@ -174,7 +173,7 @@ flowchart LR
 
 Secrets are stored encrypted in git. `.sops.yaml` lists each machine's public key; the single secrets file is readable by every machine, and a backup key can read everything so secrets survive a lost machine. Every machine keeps its private key at `/var/lib/sops-nix/key`. Only nymphe currently uses a secret (its login password), the other machines decrypt nothing, but they all have a key so a secret can be added without onboarding work. aphrodite's key still needs adding to `.sops.yaml`.
 
-A normal change goes through `deploy.nu`: `nix fmt` formats, `nix flake check` runs deadnix and a format check, then commit, push, apply the new configuration to the current machine and upload the result to the cache. The push also triggers CI, which runs the same check, then builds each machine in its own job and uploads anything not yet cached. When another machine updates, it downloads those builds instead of compiling them itself.
+A normal change goes through `deploy.nu`: `nix fmt` formats, `nix flake check` runs deadnix and a format check, then commit, push and apply the new configuration to the current machine. The push triggers CI, which runs the same check, then builds each machine in its own job and uploads anything not yet cached. When another machine updates, it downloads those builds instead of compiling them itself.
 
 Dependency updates are CI's job too. `update-flake.yml` runs `nix flake update` every Monday (branch `update/flake-lock`) and `scripts/update-appimages.sh` every day (branch `update/browsers`; the Helium and Zen browsers are not in nixpkgs, so their AppImage versions live in `diy-packages/`). Each pushes its result, runs the same build for every machine and only then opens a pull request listing what changed. Pull requests you open yourself get the same build, minus the push to the cache. If the build fails there is no pull request, only a red run. Merging the pull request is the whole upgrade; the machines download what CI already built.
 

@@ -6,6 +6,9 @@
 {
   networking.hostName = "io";
   host.disk.layout = "ext4";
+  host.gpu = "nvidia";
+  host.fastboot.enable = true;
+  boot.loader.timeout = 3; # the Windows entry must stay reachable
   # networking.nameservers = [
   #   "10.2.50.1"
   #   "10.44.4.2"
@@ -36,10 +39,7 @@
     }
   ];
 
-  services.xserver.videoDrivers = [ "nvidia" ];
-  hardware.graphics.enable = true;
   hardware.nvidia = {
-    modesetting.enable = true;
     open = false;
     package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
   };
