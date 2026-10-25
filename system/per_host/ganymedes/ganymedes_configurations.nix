@@ -22,9 +22,12 @@
   host.laptop.enable = true;
 
   # ALC255 pin re-task. The headphone jack (0x21) reports "plugged" with
-  # nothing in it, so PipeWire marks the speakers (0x14) unavailable. Turn
-  # off jack detection on 0x21: both ports become selectable, no auto switch.
-  # 0x17 is the mono amp driving the subwoofer, left unconfigured by the BIOS.
+  # nothing in it, so PipeWire marks the speakers unavailable. Turn off jack
+  # detection on 0x21: both ports become selectable, no auto switch.
+  # The BIOS only wires the left pair (0x14). 0x1b drives the right pair and
+  # 0x17 (mono amp) the subwoofers; make them front / back / LFE of one group,
+  # the hdajackretask map every G9-79x owner ended up with. Shows up as a
+  # 5.1 output in PipeWire, pick that profile once.
   # patch= is one entry per controller and the NVIDIA HDMI one probes first,
   # so list it twice; the [codec] line keeps it to the Realtek.
   boot.extraModprobeConfig = "options snd-hda-intel patch=hda-jack-retask.fw,hda-jack-retask.fw";
@@ -34,7 +37,9 @@
       0x10ec0255 0x1025105b 0
       [pincfg]
       0x21 0x03211120
-      0x17 0x90170111
+      0x14 0x90170150
+      0x17 0x90170151
+      0x1b 0x90170152
     '')
   ];
 
