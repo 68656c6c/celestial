@@ -12,6 +12,10 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     millennium = {
       url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -24,6 +28,7 @@
 
   outputs =
     inputs@{
+      self,
       nixpkgs,
       unstable,
       ...
@@ -90,6 +95,33 @@
           ];
         };
 
+      nixosConfigurations = lib.genAttrs hosts mkHost;
+
+      # Bootable image that installs one of the hosts above, unattended.
+      installer = lib.nixosSystem {
+        specialArgs = {
+          inherit inputs;
+        };
+        modules = [
+          {
+            nixpkgs = {
+              hostPlatform = system;
+              config.allowUnfree = true;
+            };
+          }
+          ./installer
+          {
+            celestial.installer = {
+              flake = self;
+              hosts = lib.mapAttrs (_: host: {
+                inherit (host.config.host) dmi;
+                inherit (host.config.host.disk) layout swapSize espSize;
+              }) nixosConfigurations;
+            };
+          }
+        ];
+      };
+
       nixFiles = lib.fileset.toSource {
         root = ./.;
         fileset = lib.fileset.fileFilter (file: file.hasExt "nix") ./.;
@@ -97,6 +129,8 @@
     in
     {
       formatter.${system} = pkgs.nixfmt-tree;
+
+      packages.${system}.installer-iso = installer.config.system.build.isoImage;
 
       checks.${system}.lint =
         pkgs.runCommand "celestial-lint"
@@ -113,6 +147,6 @@
             touch $out
           '';
 
-      nixosConfigurations = lib.genAttrs hosts mkHost;
+      inherit nixosConfigurations;
     };
 }

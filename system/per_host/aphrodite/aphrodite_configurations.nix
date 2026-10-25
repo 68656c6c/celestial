@@ -4,6 +4,7 @@
 
 {
   networking.hostName = "aphrodite";
+  host.disk.layout = "ext4";
   networking.nameservers = [
     "1.1.1.1"
     "1.0.0.1"

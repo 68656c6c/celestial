@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   ...
 }:
@@ -25,13 +24,6 @@
   host.fastboot.enable = true;
 
   home-manager.startAsUserService = true;
-
-  sops.secrets.artesia-password = {
-    sopsFile = ../../../secrets/secrets.yaml;
-    neededForUsers = true;
-  };
-
-  users.users.artesia.hashedPasswordFile = config.sops.secrets.artesia-password.path;
 
   home-manager.users.artesia = {
     home.stateVersion = "25.05";

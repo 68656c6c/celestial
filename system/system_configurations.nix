@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   ...
 }:
@@ -7,6 +8,13 @@
 
   sops = {
     age.keyFile = "/var/lib/sops-nix/key";
+    # Login password for every host, so an unattended install boots into a
+    # usable machine. Needs the host key in .sops.yaml; until then the
+    # password set at install time stays (mutable users).
+    secrets.artesia-password = {
+      sopsFile = ../secrets/secrets.yaml;
+      neededForUsers = true;
+    };
   };
 
   boot = {
@@ -72,6 +80,7 @@
   users.users.artesia = {
     isNormalUser = true;
     description = "artesia";
+    hashedPasswordFile = config.sops.secrets.artesia-password.path;
     extraGroups = [
       "networkmanager"
       "wheel"

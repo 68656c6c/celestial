@@ -5,6 +5,7 @@
 
 {
   networking.hostName = "io";
+  host.disk.layout = "ext4";
   # networking.nameservers = [
   #   "10.2.50.1"
   #   "10.44.4.2"

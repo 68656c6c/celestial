@@ -5,6 +5,7 @@
 
 {
   networking.hostName = "ganymedes";
+  host.dmi = [ "Predator G9-791" ];
   networking.nameservers = [
     "1.1.1.1"
     "1.0.0.1"

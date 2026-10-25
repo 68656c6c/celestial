@@ -14,10 +14,12 @@ fi
 RELEASE="$(nixos-version 2>/dev/null | cut -d. -f1-2)"
 : "${RELEASE:=26.05}"
 
+PRODUCT="$(sed 's/[[:space:]]*$//' /sys/class/dmi/id/product_name 2>/dev/null || true)"
+
 echo "==> Generating hardware config..."
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
-sudo nixos-generate-config --dir "$TMP_DIR"
+sudo nixos-generate-config --no-filesystems --dir "$TMP_DIR"
 mkdir -p "$HOST_DIR"
 mv "$TMP_DIR/hardware-configuration.nix" "$HOST_DIR/hardware-configuration.$HOSTNAME.nix"
 sudo chown "$(id -u):$(id -g)" "$HOST_DIR/hardware-configuration.$HOSTNAME.nix"
@@ -54,6 +56,8 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
 
 {
   networking.hostName = "$HOSTNAME";
+  host.dmi = [ "$PRODUCT" ];
+  host.disk.layout = "btrfs";
   networking.nameservers = [
   ];
 
@@ -104,3 +108,4 @@ echo "public key: $PUBKEY"
 echo "1. dns, monitors and host.laptop in $HOST_DIR/${HOSTNAME}_configurations.nix"
 echo "2. re-encrypt secrets with: sops updatekeys secrets/secrets.yaml"
 echo "3. after the first switch, join the tailnet by hand: sudo tailscale up"
+echo "4. this install mounts by UUID; run scripts/label-disk.sh before switching to the new host folder"

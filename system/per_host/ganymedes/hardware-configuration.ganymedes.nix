@@ -24,35 +24,7 @@
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" = {
-    device = "/dev/disk/by-uuid/ff831c8c-4b3d-4100-8ad9-cc85f10a5178";
-    fsType = "btrfs";
-  };
-
-  fileSystems."/nix" = {
-    device = "/dev/disk/by-uuid/ff831c8c-4b3d-4100-8ad9-cc85f10a5178";
-    fsType = "btrfs";
-    options = [ "subvol=nix" ];
-  };
-
-  fileSystems."/home" = {
-    device = "/dev/disk/by-uuid/ff831c8c-4b3d-4100-8ad9-cc85f10a5178";
-    fsType = "btrfs";
-    options = [ "subvol=home" ];
-  };
-
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/4A3C-31F9";
-    fsType = "vfat";
-    options = [
-      "fmask=0077"
-      "dmask=0077"
-    ];
-  };
-
-  swapDevices = [
-    { device = "/dev/disk/by-uuid/5acf6c47-cf7b-4f97-9567-b90aeeed55ae"; }
-  ];
+  # Filesystems and swap come from host.disk (disko), see disko/layout.nix.
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
