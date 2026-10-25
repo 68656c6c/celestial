@@ -42,16 +42,42 @@ let
     ''
   ) (lib.range 1 10);
 
-  # Bitwarden popouts (unlock, passkey picker, ...) as an overlay near the top
-  # instead of a tiled column. Firefox-based browsers prefix extension windows
-  # with "Extension: (name)", Chromium-based ones carry the bare page title.
-  bitwardenRule = app: title: ''
+  # Bitwarden popouts (unlock, passkey picker, ...) as an overlay instead of a
+  # tiled column. Firefox-based browsers prefix extension windows with
+  # "Extension: (name)", Chromium-based ones carry the bare page title.
+  bitwardenTitle = {
+    zen = "^Extension: \\(Bitwarden Password Manager\\)";
+    helium = "^Bitwarden( Password Manager)?$";
+  };
+
+  bitwardenRule = app: ''
     window-rule {
-      match app-id="^${app}$" title=r#"${title}"#
+      match app-id="^${app}$" title=r#"${bitwardenTitle.${app}}"#
       open-floating true
       default-floating-position x=0 y=120 relative-to="top"
     }
   '';
+
+  # Firefox maps popup windows before it sets their title, so the rule above
+  # misses them. Watch the event stream and float a Bitwarden popout the moment
+  # its title shows up.
+  niriAutofloat = pkgs.writeShellApplication {
+    name = "niri-autofloat";
+    runtimeInputs = [ pkgs.jq ];
+    text = ''
+      niri msg --json event-stream | while read -r ev; do
+        id="$(jq -r --arg re '${bitwardenTitle.zen}|${bitwardenTitle.helium}' '
+          .WindowOpenedOrChanged.window // empty
+          | select(.is_floating == false)
+          | select((.app_id // "") | test("^(zen|helium)$"))
+          | select((.title // "") | test($re))
+          | .id' <<<"$ev")"
+        [ -n "$id" ] || continue
+        niri msg action toggle-window-floating --id "$id"
+        niri msg action center-window --id "$id"
+      done
+    '';
+  };
 
   # Mod+P: picture-in-picture mode for the focused window. Tiled -> a 960x540
   # float in the bottom-right corner that follows the active workspace (the
@@ -90,6 +116,7 @@ lib.mkIf osConfig.programs.niri.enable {
   home.packages = [
     pkgs.niri-float-sticky
     niriPip
+    niriAutofloat
   ];
 
   xdg.configFile."niri/config.kdl".text = ''
@@ -97,6 +124,7 @@ lib.mkIf osConfig.programs.niri.enable {
     // Bare mpv and browser picture-in-picture windows stick on their own;
     // everything else through Mod+P.
     spawn-at-startup "niri-float-sticky" "-app-id" "^mpv$" "-title" "^Picture-in-Picture$"
+    spawn-at-startup "niri-autofloat"
     spawn-at-startup "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit"
 
     hotkey-overlay {
@@ -177,8 +205,8 @@ lib.mkIf osConfig.programs.niri.enable {
       }
     }
 
-    ${bitwardenRule "zen" "^Extension: \\(Bitwarden Password Manager\\)"}
-    ${bitwardenRule "helium" "^Bitwarden( Password Manager)?$"}
+    ${bitwardenRule "zen"}
+    ${bitwardenRule "helium"}
 
     // The window Discord (or anything else) is streaming gets a thin red border.
     window-rule {
