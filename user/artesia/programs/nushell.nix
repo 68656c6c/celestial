@@ -16,6 +16,10 @@
       tree = "eza --tree";
     };
     environmentVariables = {
+      # nushell does not load home.sessionVariables, so helix.defaultEditor
+      # never reaches it and NixOS's EDITOR=nano wins (sops, git, ...)
+      EDITOR = "hx";
+      VISUAL = "hx";
       NIXOS_OZONE_WL = 1;
       WLR_NO_HARDWARE_CURSORS = 1;
       NH_OS_FLAKE = "${config.home.homeDirectory}/.dotfiles";

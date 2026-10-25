@@ -39,6 +39,7 @@
     gpu-screen-recorder-gtk
     nh
     nixfmt
+    helix # for root: sudo -E sops edit ... keeps EDITOR=hx, secure_path has no user profile
     fortune
     zenity
     xdg-desktop-portal-gtk
