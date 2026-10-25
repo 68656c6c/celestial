@@ -1,0 +1,42 @@
+name: installer
+
+# Builds the bootable installer image and keeps it as a workflow artifact.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - installer/**
+      - disko/**
+      - diy-modules/host_disk.nix
+      - flake.lock
+      - .github/workflows/installer.yml
+
+jobs:
+  iso:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: wimpysworld/nothing-but-nix@baf7355748bb5651f08b839669d6bb39051b2874 # 2026-06-19
+
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/nix-installer-action@v23
+        with:
+          determinate: false
+          extra-conf: |
+            extra-substituters = https://celestial.cachix.org
+            extra-trusted-public-keys = celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk=
+
+      - name: Build the image
+        run: |
+          nix build .#installer-iso --print-build-logs
+          cp result/iso/*.iso celestial-installer.iso
+          ls -lh celestial-installer.iso
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: celestial-installer
+          path: celestial-installer.iso
+          retention-days: 14
+          compression-level: 0
