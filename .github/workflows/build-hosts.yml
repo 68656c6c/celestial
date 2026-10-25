@@ -69,8 +69,8 @@ jobs:
         with:
           determinate: false
           extra-conf: |
-            extra-substituters = ${{ env.ATTIC_CACHE_URL }} https://celestial.cachix.org
-            extra-trusted-public-keys = celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g= celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk=
+            extra-substituters = ${{ env.ATTIC_CACHE_URL }} https://celestial.cachix.org https://nyx-cache.chaotic.cx/
+            extra-trusted-public-keys = celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g= celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk= nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=
 
       - uses: ./.github/actions/attic
         with:

@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   ...
 }:
@@ -23,6 +24,25 @@
   host.laptop.enable = true;
   host.fastboot.enable = true;
   host.gpu = "intel";
+
+  # GTX 980M next to the iGPU. The desktop renders on Intel, games get the
+  # NVIDIA card through `nvidia-offload <cmd>`. Maxwell cannot power down at
+  # runtime under the proprietary driver, so it idles at a few watts.
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open = false;
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
+    powerManagement.enable = true;
+    prime = {
+      offload = {
+        enable = true;
+        enableOffloadCmd = true;
+      };
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
+    };
+  };
 
   # ALC255 pin re-task. The headphone jack (0x21) reports "plugged" with
   # nothing in it, so PipeWire marks the speakers unavailable. Turn off jack

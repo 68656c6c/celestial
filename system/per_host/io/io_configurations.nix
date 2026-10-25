@@ -1,5 +1,7 @@
 {
   config,
+  inputs,
+  pkgs,
   ...
 }:
 
@@ -9,6 +11,16 @@
   host.gpu = "nvidia";
   host.fastboot.enable = true;
   boot.loader.timeout = 3; # the Windows entry must stay reachable
+
+  # CachyOS LTS kernel (BORE, sched_ext), prebuilt by Chaotic Nyx. The nvidia
+  # 580 modules are built against it locally, the cache only has the current
+  # nvidia branch.
+  boot.kernelPackages =
+    inputs.chaotic.unrestrictedPackages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_cachyos-lts;
+  nix.settings = {
+    substituters = [ "https://nyx-cache.chaotic.cx/" ];
+    trusted-public-keys = [ "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=" ];
+  };
   # networking.nameservers = [
   #   "10.2.50.1"
   #   "10.44.4.2"

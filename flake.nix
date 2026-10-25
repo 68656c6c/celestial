@@ -16,6 +16,8 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # CachyOS kernels, prebuilt against their own nixpkgs (no follows on purpose)
+    chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     millennium = {
       url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
       inputs.nixpkgs.follows = "nixpkgs";
