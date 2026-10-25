@@ -24,7 +24,7 @@ label() { # <mountpoint or device> <label>
 
 label / disk-main-root
 label /boot disk-main-ESP
-swap="$(swapon --show=NAME --noheadings | head -1 || true)"
+swap="$(swapon --show=NAME --noheadings | grep -v '^/dev/zram' | head -1 || true)"
 [ -n "$swap" ] && label "$swap" disk-main-swap
 
 partprobe 2>/dev/null || true
