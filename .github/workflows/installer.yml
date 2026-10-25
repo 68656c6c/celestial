@@ -1,6 +1,7 @@
 name: installer
 
-# Builds the bootable installer image and keeps it as a workflow artifact.
+# Builds the bootable installer image and publishes it as the rolling
+# `installer` release: one ISO plus its sha256, replaced on every build.
 
 on:
   workflow_dispatch:
@@ -12,6 +13,9 @@ on:
       - diy-modules/host_disk.nix
       - flake.lock
       - .github/workflows/installer.yml
+
+permissions:
+  contents: write
 
 jobs:
   iso:
@@ -32,11 +36,18 @@ jobs:
         run: |
           nix build .#installer-iso --print-build-logs
           cp result/iso/*.iso celestial-installer.iso
+          sha256sum celestial-installer.iso > celestial-installer.iso.sha256
           ls -lh celestial-installer.iso
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: celestial-installer
-          path: celestial-installer.iso
-          retention-days: 14
-          compression-level: 0
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Built from ${GITHUB_SHA} on $(date -u +%Y-%m-%d). Unattended: boots, matches the machine by DMI, wipes its internal disk after a 15 second countdown."
+          if gh release view installer >/dev/null 2>&1; then
+            gh release edit installer --target "$GITHUB_SHA" --notes "$notes"
+          else
+            gh release create installer --prerelease --title "installer" --notes "$notes"
+          fi
+          gh release upload installer --clobber celestial-installer.iso celestial-installer.iso.sha256
+          git push --force origin "HEAD:refs/tags/installer"
