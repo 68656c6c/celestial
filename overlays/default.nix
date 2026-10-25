@@ -1,9 +1,10 @@
 { unstable }:
-_final: _prev: {
-  hyprland = unstable.hyprland;
+final: _prev: {
+  # Software not in nixpkgs, available as pkgs.diy.<name>
+  diy = import ../diy-packages { pkgs = final; };
+
+  # Stable release for everything, unstable for the few that need to move faster
   hyprpicker = unstable.hyprpicker;
-  hyprcursor = unstable.hyprcursor;
-  xdg-desktop-portal-hyprland = unstable.xdg-desktop-portal-hyprland;
   nushell = unstable.nushell;
   atuin = unstable.atuin;
   flameshot = unstable.flameshot;

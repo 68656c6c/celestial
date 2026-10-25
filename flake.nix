@@ -35,61 +35,90 @@
 
     let
       system = "x86_64-linux";
-      hosts = import ./system/hosts.nix;
+      lib = nixpkgs.lib;
+
       unstablePkgs = import unstable {
         inherit system;
         config.allowUnfree = true;
       };
+
+      overlays = [
+        (import ./overlays { unstable = unstablePkgs; })
+        inputs.millennium.overlays.default
+      ];
+
+      # Only for the flake's own outputs (packages, checks, formatter).
+      # Hosts build their package set through the nixpkgs module below.
       pkgs = import nixpkgs {
-        inherit system;
+        inherit system overlays;
         config.allowUnfree = true;
-        overlays = [
-          (import ./overlays { unstable = unstablePkgs; })
-          inputs.millennium.overlays.default
-        ];
       };
-      diy = (import ./diy-packages { inherit pkgs; });
+
+      # Every directory under system/per_host is a host.
+      hosts = lib.attrNames (
+        lib.filterAttrs (_: type: type == "directory") (builtins.readDir ./system/per_host)
+      );
 
       mkHost =
-        _hostname: hardwareFile: extraModules:
-        nixpkgs.lib.nixosSystem {
-          inherit system pkgs;
-
+        name:
+        lib.nixosSystem {
           specialArgs = {
             inherit inputs;
             unstable = unstablePkgs;
-            inherit diy;
           };
 
           modules = [
+            {
+              nixpkgs = {
+                hostPlatform = system;
+                config.allowUnfree = true;
+                inherit overlays;
+              };
+            }
             ./system
             ./imports
-            hardwareFile
+            ./system/per_host/${name}/hardware-configuration.${name}.nix
+            ./system/per_host/${name}
             {
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 extraSpecialArgs = {
                   inherit inputs;
-                  diy = diy;
                   unstable = unstablePkgs;
                 };
                 users.artesia = import ./user/artesia;
                 backupFileExtension = "backup";
               };
             }
-          ]
-          ++ extraModules;
+          ];
         };
+
+      nixFiles = lib.fileset.toSource {
+        root = ./.;
+        fileset = lib.fileset.fileFilter (file: file.hasExt "nix") ./.;
+      };
     in
     {
-      packages.${system}.runner-image = diy.runner-image;
+      formatter.${system} = pkgs.nixfmt-tree;
 
-      nixosConfigurations = nixpkgs.lib.mapAttrs' (name: _: {
-        name = name;
-        value = mkHost name ./system/per_host/${name}/hardware-configuration.${name}.nix [
-          ./system/per_host/${name}
-        ];
-      }) hosts;
+      packages.${system}.runner-image = pkgs.diy.runner-image;
+
+      checks.${system}.lint =
+        pkgs.runCommand "celestial-lint"
+          {
+            nativeBuildInputs = with pkgs; [
+              deadnix
+              nixfmt
+            ];
+          }
+          ''
+            cd ${nixFiles}
+            deadnix --fail --no-lambda-arg .
+            find . -name '*.nix' -exec nixfmt --check {} +
+            touch $out
+          '';
+
+      nixosConfigurations = lib.genAttrs hosts mkHost;
     };
 }

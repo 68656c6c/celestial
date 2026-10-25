@@ -8,6 +8,20 @@
 
 let
   mod = "Mod4";
+
+  # 143.973 -> "143.973", 60.0 -> "60.000"
+  fmtRefresh =
+    r:
+    let
+      whole = builtins.floor r;
+      milli = builtins.floor ((r - whole) * 1000 + 0.5);
+    in
+    if milli == 1000 then
+      "${toString (whole + 1)}.000"
+    else
+      "${toString whole}.${lib.fixedWidthNumber 3 milli}";
+
+  resolution = m: "${toString m.width}x${toString m.height}";
 in
 
 lib.mkIf osConfig.programs.sway.enable {
@@ -28,15 +42,13 @@ lib.mkIf osConfig.programs.sway.enable {
             name = m.output;
             value = {
               scale = toString m.scale;
+              mode = "${resolution m}${lib.optionalString (m.refresh != null) "@${fmtRefresh m.refresh}Hz"}";
             }
-            // lib.optionalAttrs (m.mode != "") { mode = m.mode; }
-            // lib.optionalAttrs (m.position != "") {
-              position = lib.replaceStrings [ "x" ] [ " " ] m.position;
-            };
+            // lib.optionalAttrs (m.x != null) { position = "${toString m.x} ${toString m.y}"; };
           }) osConfig.host.monitors
         )
         // {
-          "*".bg = "/home/artesia/.dotfiles/wallpapers/1721870130513827.png fill";
+          "*".bg = "${config.home.homeDirectory}/.dotfiles/wallpapers/1721870130513827.png fill";
         };
 
       input = {
@@ -72,6 +84,7 @@ lib.mkIf osConfig.programs.sway.enable {
         "${mod}+f" = "fullscreen toggle";
         "${mod}+space" = "exec fuzzel";
         "${mod}+l" = "exec swaylock -f";
+        "Print" = "exec flameshot gui";
 
         "${mod}+Left" = "focus left";
         "${mod}+Right" = "focus right";
@@ -118,7 +131,24 @@ lib.mkIf osConfig.programs.sway.enable {
       bindgesture swipe:3:left workspace next
       bindgesture swipe:3:right workspace prev
       for_window [app_id="^(zen|helium)$" title="^Extension: \(Bitwarden Password Manager\) - Bitwarden"] floating enable
+      # flameshot's capture overlay must float at the origin to cover the screen instead of tiling (flameshot docs)
+      for_window [app_id="flameshot"] border pixel 0, floating enable, fullscreen disable, move absolute position 0 0
     '';
+  };
+
+  programs.fuzzel = {
+    enable = true;
+    settings.colors = {
+      background = "000000ee";
+      text = "ffe4e1ff";
+      prompt = "ff5a36ff";
+      input = "ffe4e1ff";
+      match = "ff5a36ff";
+      selection = "c8102eff";
+      selection-text = "ffe4e1ff";
+      selection-match = "ffb347ff";
+      border = "e0303aff";
+    };
   };
 
   programs.waybar = {

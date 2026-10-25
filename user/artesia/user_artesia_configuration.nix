@@ -1,7 +1,7 @@
 {
+  config,
   pkgs,
   lib,
-  diy,
   osConfig,
   ...
 }:
@@ -11,8 +11,7 @@
   home.homeDirectory = "/home/artesia";
   home.pointerCursor = {
     enable = true;
-    package = diy.kasane-teto-cursor-linux;
-    hyprcursor.enable = true;
+    package = pkgs.diy.kasane-teto-cursor-linux;
     gtk.enable = true;
     x11.enable = true;
     name = "kasane-teto-cursor-linux";
@@ -20,7 +19,7 @@
   };
   home.sessionVariables = {
     NIXOS_OZONE_WL = 1;
-    NH_OS_FLAKE = "/home/artesia/.dotfiles";
+    NH_OS_FLAKE = "${config.home.homeDirectory}/.dotfiles";
     WLR_NO_HARDWARE_CURSORS = 1;
     XCURSOR_SIZE = osConfig.host.cursor.size;
   };
@@ -61,20 +60,7 @@
     enable = lib.mkDefault true;
     config = {
       common = {
-        default = [
-          "hyprland"
-          "gtk"
-          # "gnome"
-        ];
-        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
-      };
-      hyprland = {
-        default = [
-          "hyprland"
-          "gtk"
-          # "gnome"
-        ];
-        "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+        default = [ "gtk" ];
         "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
       niri = {
@@ -86,15 +72,11 @@
       };
     };
     extraPortals = with pkgs; [
-      xdg-desktop-portal-hyprland
       xdg-desktop-portal-gnome
       xdg-desktop-portal-gtk
       gnome-keyring
-      # xdg-desktop-portal-gnome
     ];
   };
 
   dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
-
-  home.stateVersion = "25.05"; # Have you read da comment?
 }

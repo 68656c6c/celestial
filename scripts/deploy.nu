@@ -1,12 +1,12 @@
 export def deploy [message: string] {
-  let repo_dir = "/home/artesia/.dotfiles"
+  let repo_dir = $"($env.HOME)/.dotfiles"
   cd $repo_dir
 
   print "Formatting Nix files..."
-  nixfmt-all
+  nix fmt
 
-  print "Checking for dead Nix code..."
-  deadnix-all
+  print "Linting Nix files..."
+  nix flake check
 
   print "Staging and committing..."
   git add .

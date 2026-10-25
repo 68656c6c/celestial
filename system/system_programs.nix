@@ -7,9 +7,6 @@
         exec nu
       fi
     '';
-    hyprland.enable = true;
-    hyprland.withUWSM = true;
-
     noctalia.recommendedServices.enable = true;
     sway = {
       wrapperFeatures.gtk = true;
@@ -21,7 +18,6 @@
     };
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
-    openvpn3.enable = true;
     steam = {
       enable = true;
       package = pkgs.millennium-steam;

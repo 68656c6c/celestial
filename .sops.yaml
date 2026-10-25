@@ -2,18 +2,10 @@ keys:
   - &host_io age17jq33fydz8gpsel7y7e5txrydyvyzeuwmpuyntn7r293qdld4f6sd083kd
   - &host_ganymedes age15rm6xu3q6xe9ymua5xj8ngxgm3w7fe5vh0slrfa57zgv0t8mh4eszk3gsl
   - &host_nymphe age1d37zv3299va6q8nmqr2fllzsq33pne78mz7dlr57n25h5g4t4e3s9zddyk
+  # aphrodite: add its key here and under `all` (sudo age-keygen -y /var/lib/sops-nix/key)
   - &backup age14yvm0d4eu0m08tgwd5sada2yxcg0vt2pyhyn0lweppdpx5swyarsg3p6a6
 
 recipient_sets:
-  io: &io
-    - *host_io
-    - *backup
-  ganymedes: &ganymedes
-    - *host_ganymedes
-    - *backup
-  nymphe: &nymphe
-    - *host_nymphe
-    - *backup
   all: &all
     - *host_io
     - *host_ganymedes
@@ -24,12 +16,3 @@ creation_rules:
   - path_regex: secrets/secrets\.yaml$
     key_groups:
       - age: *all
-  - path_regex: secrets/vpn_io\.ovpn$
-    key_groups:
-      - age: *io
-  - path_regex: secrets/vpn_ganymedes\.ovpn$
-    key_groups:
-      - age: *ganymedes
-  - path_regex: secrets/vpn_nymphe\.ovpn$
-    key_groups:
-      - age: *nymphe

@@ -9,35 +9,27 @@
 let
   cursorSize = toString osConfig.host.cursor.size;
 
-  niriMode =
-    mode:
+  # 143.973 -> "143.973", 60.0 -> "60.000"
+  fmtRefresh =
+    r:
     let
-      parts = lib.splitString "@" mode;
-      rate = lib.splitString "." (builtins.elemAt parts 1);
-      frac = if builtins.length rate > 1 then builtins.elemAt rate 1 else "";
+      whole = builtins.floor r;
+      milli = builtins.floor ((r - whole) * 1000 + 0.5);
     in
-    if builtins.length parts < 2 then
-      mode
+    if milli == 1000 then
+      "${toString (whole + 1)}.000"
     else
-      "${builtins.head parts}@${builtins.head rate}.${frac}${
-        lib.fixedWidthString (3 - lib.stringLength frac) "0" ""
-      }";
+      "${toString whole}.${lib.fixedWidthNumber 3 milli}";
 
-  outputs = lib.concatMapStringsSep "\n" (
-    m:
-    let
-      pos = lib.splitString "x" m.position;
-    in
-    ''
-      output "${m.output}" {
-        ${lib.optionalString (m.mode != "") ''mode "${niriMode m.mode}"''}
-        ${lib.optionalString (
-          m.position != ""
-        ) "position x=${builtins.elemAt pos 0} y=${builtins.elemAt pos 1}"}
-        scale ${builtins.toJSON m.scale}
-      }
-    ''
-  ) osConfig.host.monitors;
+  resolution = m: "${toString m.width}x${toString m.height}";
+
+  outputs = lib.concatMapStringsSep "\n" (m: ''
+    output "${m.output}" {
+      mode "${resolution m}${lib.optionalString (m.refresh != null) "@${fmtRefresh m.refresh}"}"
+      ${lib.optionalString (m.x != null) "position x=${toString m.x} y=${toString m.y}"}
+      scale ${builtins.toJSON m.scale}
+    }
+  '') osConfig.host.monitors;
 
   workspaceBinds = lib.concatMapStrings (
     i:
@@ -58,7 +50,7 @@ let
   '';
 in
 
-{
+lib.mkIf osConfig.programs.niri.enable {
   xdg.configFile."niri/config.kdl".text = ''
     spawn-at-startup "noctalia"
     spawn-at-startup "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit"
@@ -123,6 +115,22 @@ in
       clip-to-geometry true
     }
 
+    // flameshot opens its capture overlay as a fullscreen toplevel, which niri
+    // would tile into a column. Float it over the whole screen instead, without
+    // the rounded corners and shadow every other window gets. The pinned
+    // screenshots have the title "flameshot-pin" and keep the defaults.
+    window-rule {
+      match app-id=r#"^flameshot$"# title=r#"^flameshot$"#
+      open-floating true
+      open-fullscreen false
+      default-floating-position x=0 y=0
+      geometry-corner-radius 0
+      clip-to-geometry false
+      shadow {
+        off
+      }
+    }
+
     ${bitwardenRule "zen"}
     ${bitwardenRule "helium"}
 
@@ -149,6 +157,7 @@ in
 
       Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
       Mod+L { spawn "noctalia" "msg" "session" "lock"; }
+      Print { spawn "flameshot" "gui"; }
 
       Mod+Left { focus-column-or-monitor-left; }
       Mod+Right { focus-column-or-monitor-right; }

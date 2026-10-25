@@ -1,16 +1,10 @@
-{ diy, ... }:
+{ pkgs, ... }:
 
 {
   services = {
-    xserver = {
-      enable = true;
-      desktopManager.xfce.enable = true;
-    };
-
-    tailscale.enable = true;
     printing = {
       enable = true;
-      drivers = [ diy.cups-citizen-ctzcls ];
+      drivers = [ pkgs.diy.cups-citizen-ctzcls ];
     };
     avahi = {
       enable = true;

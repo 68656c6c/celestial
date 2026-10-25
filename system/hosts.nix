@@ -1,6 +1,0 @@
-{
-  io = { };
-  ganymedes = { };
-  nymphe = { };
-  aphrodite = { };
-}

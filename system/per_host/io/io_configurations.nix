@@ -13,30 +13,27 @@
   host.monitors = [
     {
       output = "HDMI-A-1";
-      mode = "1920x1080";
-      position = "0x0";
-      scale = 1.0;
+      width = 1920;
+      height = 1080;
+      x = 0;
+      y = 0;
     }
     {
       output = "DP-1";
-      mode = "2560x1440@143.973";
-      position = "1920x0";
-      scale = 1.0;
+      width = 2560;
+      height = 1440;
+      refresh = 143.973;
+      x = 1920;
+      y = 0;
     }
     {
       output = "DVI-I-1";
-      mode = "1920x1200";
-      position = "4480x0";
-      scale = 1.0;
+      width = 1920;
+      height = 1200;
+      x = 4480;
+      y = 0;
     }
   ];
-
-  vpn.lab_local = {
-    enable = false;
-    updateDns = false;
-  };
-
-  vpn.tailscale.enable = false;
 
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
@@ -54,13 +51,6 @@
           pattern = {
             feature = "procname";
             matches = "niri";
-          };
-          profile = "Limit Free Buffer Pool On Wayland Compositors";
-        }
-        {
-          pattern = {
-            feature = "procname";
-            matches = "Hyprland";
           };
           profile = "Limit Free Buffer Pool On Wayland Compositors";
         }
@@ -84,4 +74,8 @@
       efi /EFI/Microsoft/Boot/bootmgfw.efi
     '';
   };
+
+  # Release this machine was first installed with. Leave it alone.
+  system.stateVersion = "25.05";
+  home-manager.users.artesia.home.stateVersion = "25.05";
 }

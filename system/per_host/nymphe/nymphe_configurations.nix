@@ -14,42 +14,27 @@
   host.monitors = [
     {
       output = "eDP-1";
-      mode = "1920x1080";
+      width = 1920;
+      height = 1080;
       scale = 1.25;
     }
   ];
 
   host.cursor.size = 28;
-  vpn.lab_local = {
-    enable = true;
-    updateDns = true;
-  };
-
-  vpn.tailscale.enable = true;
-
-  boot.loader.timeout = 0;
+  host.laptop.enable = true;
+  host.fastboot.enable = true;
 
   home-manager.startAsUserService = true;
 
-  system.nixos-init.enable = true;
-  system.etc.overlay.enable = true;
-
-  sops = {
-    age.keyFile = lib.mkForce "/var/lib/sops-nix/key";
-    secrets.artesia-password = {
-      sopsFile = ../../../secrets/secrets.yaml;
-      neededForUsers = true;
-    };
+  sops.secrets.artesia-password = {
+    sopsFile = ../../../secrets/secrets.yaml;
+    neededForUsers = true;
   };
 
   users.users.artesia.hashedPasswordFile = config.sops.secrets.artesia-password.path;
 
-  systemd.services.nix-gc.unitConfig.ConditionACPower = true;
-  systemd.services.nix-optimise.unitConfig.ConditionACPower = true;
-
-  zramSwap.enable = true;
-
   home-manager.users.artesia = {
+    home.stateVersion = "25.05";
     services.arrpc.enable = lib.mkForce false;
     programs.ghostty.systemd.enable = lib.mkForce false;
     programs.foot = {
@@ -69,29 +54,12 @@
         keybindings."Mod4+q" = lib.mkForce "exec foot";
       };
     };
-    programs.fuzzel = {
-      enable = true;
-      settings.colors = {
-        background = "000000ee";
-        text = "ffe4e1ff";
-        prompt = "ff5a36ff";
-        input = "ffe4e1ff";
-        match = "ff5a36ff";
-        selection = "c8102eff";
-        selection-text = "ffe4e1ff";
-        selection-match = "ffb347ff";
-        border = "e0303aff";
-      };
-    };
     systemd.user.services = {
       attic-watch-store.Install.WantedBy = lib.mkForce [ ];
       flameshot.Install.WantedBy = lib.mkForce [ ];
-      tailscale-systray.Install.WantedBy = lib.mkForce [ ];
     };
   };
 
-  fileSystems."/boot".options = [
-    "noauto"
-    "x-systemd.automount"
-  ];
+  # Release this machine was first installed with. Leave it alone.
+  system.stateVersion = "25.05";
 }

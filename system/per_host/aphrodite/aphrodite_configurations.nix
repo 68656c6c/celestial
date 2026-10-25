@@ -12,16 +12,19 @@
   host.monitors = [
     {
       output = "eDP-1";
-      mode = "1920x1080";
+      width = 1920;
+      height = 1080;
       scale = 1.0;
     }
   ];
 
   host.cursor.size = 32;
-  vpn.lab_local = {
-    enable = false;
-    updateDns = true;
+  host.laptop = {
+    enable = true;
+    thermald = false; # AMD
   };
 
-  vpn.tailscale.enable = true;
+  # Release this machine was first installed with. Leave it alone.
+  system.stateVersion = "25.05";
+  home-manager.users.artesia.home.stateVersion = "25.05";
 }

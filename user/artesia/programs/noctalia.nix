@@ -11,14 +11,8 @@ let
     if osConfig.host.monitors == [ ] then null else builtins.head osConfig.host.monitors;
 
   primaryOutput = if primaryMonitor == null then "eDP-1" else primaryMonitor.output;
-
-  rawMode =
-    if primaryMonitor == null || primaryMonitor.mode == "" then "1920x1080" else primaryMonitor.mode;
-
-  modeParts = lib.splitString "x" (builtins.head (lib.splitString "@" rawMode));
-
-  screenWidth = lib.toInt (builtins.elemAt modeParts 0);
-  screenHeight = lib.toInt (builtins.elemAt modeParts 1);
+  screenWidth = if primaryMonitor == null then 1920 else primaryMonitor.width;
+  screenHeight = if primaryMonitor == null then 1080 else primaryMonitor.height;
 
   centerX = screenWidth / 2;
   centerY = screenHeight / 2;
@@ -48,7 +42,7 @@ let
     nightlight.temperature_night = 3100;
 
     shell = {
-      avatar_path = "/home/artesia/Pictures/20260415_193158.jpg";
+      avatar_path = "${config.home.homeDirectory}/Pictures/20260415_193158.jpg";
       font_family = "Atkinson Hyperlegible Next";
       panel = {
         clipboard_placement = "attached";
@@ -65,7 +59,6 @@ let
           "gtk4"
           "ghostty"
           "helix"
-          "hyprland"
           "kcolorscheme"
           "niri"
           "qt"
@@ -89,7 +82,7 @@ let
     };
 
     wallpaper = {
-      directory = "/home/artesia/.dotfiles/wallpapers/";
+      directory = "${config.home.homeDirectory}/.dotfiles/wallpapers/";
       transition_on_startup = true;
       automation = {
         enabled = true;

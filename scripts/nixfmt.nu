@@ -1,25 +1,18 @@
+# Thin wrappers around the flake's own formatter and checks.
+# `nix fmt` runs nixfmt over the tree, `nix flake check` runs deadnix, statix and nixfmt --check.
+
 export def nixfmt-all [] {
-  let repo_dir = "/home/artesia/.dotfiles"
-  let files = (glob "**/*.nix"
-    | where { not ($in =~ "result") and not ($in =~ ".git") and not ($in =~ "flake.lock") })
-
-  for file in $files {
-    print $"Formatting: ($file)"
-    nixfmt $file
-  }
-
+  let repo_dir = $"($env.HOME)/.dotfiles"
+  cd $repo_dir
+  print "Formatting Nix files..."
+  nix fmt
   print "Done."
 }
 
 export def deadnix-all [] {
-  let repo_dir = "/home/artesia/.dotfiles"
-  let files = (glob "**/*.nix"
-    | where { not ($in =~ "result") and not ($in =~ ".git") and not ($in =~ "flake.lock") })
-
-  for file in $files {
-    print $"Checking dead code: ($file)"
-    deadnix --no-lambda-arg $file
-  }
-
-  print "No dead code found."
+  let repo_dir = $"($env.HOME)/.dotfiles"
+  cd $repo_dir
+  print "Linting Nix files..."
+  nix flake check
+  print "No lint findings."
 }

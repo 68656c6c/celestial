@@ -12,19 +12,19 @@
   host.monitors = [
     {
       output = "eDP-1";
-      mode = "1920x1080";
+      width = 1920;
+      height = 1080;
       scale = 1.0;
     }
   ];
 
-  vpn.lab_local = {
-    enable = true;
-    updateDns = true;
-  };
-
-  vpn.tailscale.enable = true;
+  host.laptop.enable = true;
 
   security = {
     tpm2.enable = false;
   };
+
+  # Release this machine was first installed with. Leave it alone.
+  system.stateVersion = "25.05";
+  home-manager.users.artesia.home.stateVersion = "25.05";
 }
