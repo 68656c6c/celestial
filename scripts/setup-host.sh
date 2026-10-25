@@ -58,6 +58,7 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
   networking.hostName = "$HOSTNAME";
   host.dmi = [ "$PRODUCT" ];
   host.disk.layout = "btrfs";
+  host.gpu = "intel"; # intel, amd or nvidia
   networking.nameservers = [
   ];
 
