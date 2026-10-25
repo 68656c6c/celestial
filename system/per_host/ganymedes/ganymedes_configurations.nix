@@ -25,7 +25,7 @@
   host.fastboot.enable = true;
   host.gpu = "intel";
 
-  # GTX 980M next to the iGPU. The desktop renders on Intel, games get the
+  # GTX 970M next to the iGPU. The desktop renders on Intel, games get the
   # NVIDIA card through `nvidia-offload <cmd>`. Maxwell cannot power down at
   # runtime under the proprietary driver, so it idles at a few watts.
   services.xserver.videoDrivers = [ "nvidia" ];
