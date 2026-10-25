@@ -129,8 +129,10 @@ in
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
         "celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g="
       ];
-      # a broken cache entry costs a local build, not a failed switch
+      # a broken cache entry costs a local build, not a failed switch,
+      # and an unreachable cache costs seconds, not minutes
       fallback = true;
+      connect-timeout = 5;
       netrc-file = lib.mkIf haveAtticNetrc config.sops.secrets.attic-netrc.path;
     };
   };
