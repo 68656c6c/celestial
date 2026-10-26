@@ -58,9 +58,7 @@
     stremio-linux-shell
     attic-client
     qimgv
-    legcord
     pwvucontrol
-    pavucontrol
     pangolin-cli
     pantheon.pantheon-agent-polkit
     diy.helium
