@@ -85,6 +85,24 @@ let
   # back into the tiling. A window on another workspace only gets a frame
   # callback about once a second, so a film streamed to Discord from a hidden
   # workspace would arrive at 1 fps; keeping it visible keeps the full rate.
+  # Shift+Print: pick a region on any monitor, annotate it in satty. niri's own
+  # screenshot UI (Print) covers the plain case; flameshot cannot, its portal
+  # path in niri only handles a single output.
+  niriAnnotate = pkgs.writeShellApplication {
+    name = "niri-annotate";
+    runtimeInputs = [
+      pkgs.grim
+      pkgs.slurp
+      pkgs.satty
+      pkgs.wl-clipboard
+    ];
+    text = ''
+      region="$(slurp)" || exit 0
+      grim -g "$region" - | satty --filename - --copy-command wl-copy \
+        --output-filename "$HOME/Pictures/Screenshots/%Y%m%d-%H%M%S.png"
+    '';
+  };
+
   niriPip = pkgs.writeShellApplication {
     name = "niri-pip";
     runtimeInputs = [
@@ -117,6 +135,7 @@ lib.mkIf osConfig.programs.niri.enable {
     pkgs.niri-float-sticky
     niriPip
     niriAutofloat
+    niriAnnotate
   ];
 
   xdg.configFile."niri/config.kdl".text = ''
@@ -189,22 +208,6 @@ lib.mkIf osConfig.programs.niri.enable {
       clip-to-geometry true
     }
 
-    // flameshot opens its capture overlay as a fullscreen toplevel, which niri
-    // would tile into a column. Float it over the whole screen instead, without
-    // the rounded corners and shadow every other window gets. The pinned
-    // screenshots have the title "flameshot-pin" and keep the defaults.
-    window-rule {
-      match app-id=r#"^flameshot$"# title=r#"^flameshot$"#
-      open-floating true
-      open-fullscreen false
-      default-floating-position x=0 y=0
-      geometry-corner-radius 0
-      clip-to-geometry false
-      shadow {
-        off
-      }
-    }
-
     ${bitwardenRule "zen"}
     ${bitwardenRule "helium"}
 
@@ -243,7 +246,8 @@ lib.mkIf osConfig.programs.niri.enable {
 
       Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
       Mod+L { spawn "noctalia" "msg" "session" "lock"; }
-      Print { spawn "flameshot" "gui"; }
+      Print { screenshot; }
+      Shift+Print { spawn "niri-annotate"; }
 
       Mod+Left { focus-column-or-monitor-left; }
       Mod+Right { focus-column-or-monitor-right; }
