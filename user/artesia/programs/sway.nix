@@ -178,8 +178,14 @@ lib.mkIf osConfig.programs.sway.enable {
     };
 
     extraConfig = ''
+      # Touchpad gestures. Pinch to close on purpose: a swipe is too easy to trip.
       bindgesture swipe:3:left workspace next
       bindgesture swipe:3:right workspace prev
+      bindgesture swipe:3:up fullscreen toggle
+      bindgesture swipe:3:down floating toggle
+      bindgesture swipe:4:left move container to workspace next
+      bindgesture swipe:4:right move container to workspace prev
+      bindgesture pinch:inward kill
       # Bitwarden popouts: Firefox-based browsers prefix extension windows, Chromium-based ones carry the bare page title
       for_window [app_id="^zen$" title="^Extension: \(Bitwarden Password Manager\)"] floating enable
       for_window [app_id="^helium$" title="^Bitwarden( Password Manager)?$"] floating enable
