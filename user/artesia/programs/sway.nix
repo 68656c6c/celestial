@@ -49,6 +49,30 @@ let
       esac
     '';
   };
+
+  # Waybar button: rotate the built-in screen a quarter turn clockwise per
+  # click, right click back to normal. Touch follows the output, so the
+  # touchscreen stays aligned. No sensor is involved: whatever is picked stays.
+  swayRotate = pkgs.writeShellApplication {
+    name = "sway-rotate";
+    runtimeInputs = [ pkgs.jq ];
+    text = ''
+      out="$(swaymsg -t get_outputs --raw | jq -r '(map(select(.focused)) + .)[0].name')"
+      cur="$(swaymsg -t get_outputs --raw | jq -r --arg o "$out" 'map(select(.name == $o))[0].transform')"
+      case "''${1:-}" in
+        next)
+          case "$cur" in
+            normal) new=90 ;; 90) new=180 ;; 180) new=270 ;; *) new=normal ;;
+          esac
+          swaymsg output "$out" transform "$new" >/dev/null; cur="$new" ;;
+        reset) swaymsg output "$out" transform normal >/dev/null; cur=normal ;;
+      esac
+      case "$cur" in
+        normal) echo '{"text": "󰑵", "tooltip": "screen upright", "class": "normal"}' ;;
+        *) echo "{\"text\": \"󰑵 $cur°\", \"tooltip\": \"screen rotated $cur°, right click resets\", \"class\": \"rotated\"}" ;;
+      esac
+    '';
+  };
 in
 
 lib.mkIf osConfig.programs.sway.enable {
@@ -206,6 +230,7 @@ lib.mkIf osConfig.programs.sway.enable {
       modules-right = [
         "tray"
         "custom/keyboard"
+        "custom/rotate"
         "wireplumber"
         "backlight"
         "custom/nightlight"
@@ -231,6 +256,14 @@ lib.mkIf osConfig.programs.sway.enable {
         return-type = "json";
         interval = "once";
         on-click = "${lib.getExe swayKeyboard} toggle";
+      };
+
+      "custom/rotate" = {
+        exec = lib.getExe swayRotate;
+        return-type = "json";
+        interval = "once";
+        on-click = "${lib.getExe swayRotate} next";
+        on-click-right = "${lib.getExe swayRotate} reset";
       };
 
       wireplumber = {
@@ -327,6 +360,7 @@ lib.mkIf osConfig.programs.sway.enable {
       #clock,
       #tray,
       #custom-keyboard,
+      #custom-rotate,
       #wireplumber,
       #backlight,
       #custom-nightlight,
@@ -336,6 +370,10 @@ lib.mkIf osConfig.programs.sway.enable {
       }
 
       #custom-keyboard.off {
+        color: #ffb347;
+      }
+
+      #custom-rotate.rotated {
         color: #ffb347;
       }
 
