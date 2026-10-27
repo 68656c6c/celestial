@@ -32,7 +32,7 @@ label "$root" disk-main-root
 # The ESP by its GPT type on the root disk, not by mountpoint: with
 # host.fastboot /boot is only mounted on demand, so findmnt has nothing to say.
 disk="/dev/$(lsblk -no PKNAME "$root")"
-esp="$(lsblk -no PATH,PARTTYPE "$disk" | awk 'tolower($2) == "c12a7328-f81f-11d2-ba4b-00a2ab3f8a1a" { print $1; exit }')"
+esp="$(lsblk -no PATH,PARTTYPE "$disk" | awk 'tolower($2) == "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" { print $1; exit }')"
 [ -n "$esp" ] || esp="$(partition_of /boot || true)"
 if [ -n "$esp" ]; then label "$esp" disk-main-ESP; else echo "skip ESP: none found on $disk" >&2; fi
 
