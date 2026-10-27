@@ -1,8 +1,4 @@
-{
-  lib,
-  pkgs,
-  ...
-}:
+{ ... }:
 
 {
   networking.hostName = "nymphe";
@@ -29,7 +25,7 @@
   host.gpu = "intel";
   hardware.bluetooth.enable = true;
 
-  home-manager.users.artesia = {
+  home-manager.users.artesia = { lib, pkgs, ... }: {
     home.stateVersion = "25.05";
     services.arrpc.enable = lib.mkForce false;
     services.blueman-applet.enable = true;
@@ -50,6 +46,20 @@
     # accessibility key it watches and it then pops up on text fields.
     # Manual show: busctl call --user sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 SetVisible b true
     home.packages = [ pkgs.squeekboard ];
+    dconf.settings = {
+      # On-screen layout only; the physical keyboard stays on sway's xkb setting.
+      "org/gnome/desktop/input-sources".sources = [
+        (lib.hm.gvariant.mkTuple [
+          "xkb"
+          "us+dvorak"
+        ])
+      ];
+      # Panel height multiplier, keys stretch with it (1.0 is the default, 2.0 the cap)
+      "sm/puri/Squeekboard" = {
+        scale-in-horizontal-screen-orientation = 1.3;
+        scale-in-vertical-screen-orientation = 1.2;
+      };
+    };
     wayland.windowManager.sway = {
       xwayland = false;
       config = {
