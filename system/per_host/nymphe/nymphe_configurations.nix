@@ -21,6 +21,9 @@
 
   host.cursor.size = 28;
   host.laptop.enable = true;
+  # Lenovo conservation mode: 1 stops charging at 60%, 0 charges to full.
+  # Off for travelling, back to 1 when the laptop lives on the charger again.
+  services.tlp.settings.STOP_CHARGE_THRESH_BAT0 = 0;
   host.fastboot.enable = true;
   host.gpu = "intel";
 
