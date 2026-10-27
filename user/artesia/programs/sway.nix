@@ -25,19 +25,27 @@ let
 
   internalKeyboard = "1:1:AT_Translated_Set_2_keyboard";
 
+  # Waybar button: internal keyboard on/off. Off also enables the on-screen
+  # keyboard: squeekboard (nymphe) watches this GNOME accessibility key and
+  # pops up on text fields while it is true. The Flex does not report its fold
+  # to the OS, so this button is tablet mode.
   swayKeyboard = pkgs.writeShellApplication {
     name = "sway-keyboard";
-    runtimeInputs = [ pkgs.jq ];
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.dconf
+    ];
     text = ''
-      if [ "''${1:-}" = toggle ]; then
-        swaymsg input '${internalKeyboard}' events toggle enabled disabled >/dev/null
-        exit 0
-      fi
+      [ "''${1:-}" = toggle ] && swaymsg input '${internalKeyboard}' events toggle enabled disabled >/dev/null
       state="$(swaymsg -t get_inputs --raw | jq -r --arg id '${internalKeyboard}' \
         'map(select(.identifier == $id))[0].libinput.send_events // empty')"
       case "$state" in
-        enabled) echo '{"text": "󰌌", "tooltip": "internal keyboard on", "class": "on"}' ;;
-        disabled) echo '{"text": "󰌐", "tooltip": "internal keyboard off", "class": "off"}' ;;
+        enabled)
+          [ "''${1:-}" = toggle ] && dconf write /org/gnome/desktop/a11y/applications/screen-keyboard-enabled false
+          echo '{"text": "󰌌", "tooltip": "internal keyboard on", "class": "on"}' ;;
+        disabled)
+          [ "''${1:-}" = toggle ] && dconf write /org/gnome/desktop/a11y/applications/screen-keyboard-enabled true
+          echo '{"text": "󰌐", "tooltip": "internal keyboard off, on-screen keyboard on text fields", "class": "off"}' ;;
       esac
     '';
   };

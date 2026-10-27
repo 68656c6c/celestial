@@ -1,6 +1,9 @@
 { pkgs, ... }:
 {
   programs = {
+    # GSettings backed by dconf for every GTK app (color scheme, squeekboard's
+    # visibility key); without it settings land in a memory backend and vanish
+    dconf.enable = true;
     # Apparently because it can mess with login shell, but I kinda want to go back to just nushell, we'll see later
     bash.interactiveShellInit = ''
       if ! [ "$TERM" = "dumb" ] && [ -z "$BASH_EXECUTION_STRING" ]; then
