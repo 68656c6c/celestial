@@ -22,6 +22,25 @@ let
       "${toString whole}.${lib.fixedWidthNumber 3 milli}";
 
   resolution = m: "${toString m.width}x${toString m.height}";
+
+  internalKeyboard = "1:1:AT_Translated_Set_2_keyboard";
+
+  swayKeyboard = pkgs.writeShellApplication {
+    name = "sway-keyboard";
+    runtimeInputs = [ pkgs.jq ];
+    text = ''
+      if [ "''${1:-}" = toggle ]; then
+        swaymsg input '${internalKeyboard}' events toggle enabled disabled >/dev/null
+        exit 0
+      fi
+      state="$(swaymsg -t get_inputs --raw | jq -r --arg id '${internalKeyboard}' \
+        'map(select(.identifier == $id))[0].libinput.send_events // empty')"
+      case "$state" in
+        enabled) echo '{"text": "󰌌", "tooltip": "internal keyboard on", "class": "on"}' ;;
+        disabled) echo '{"text": "󰌐", "tooltip": "internal keyboard off", "class": "off"}' ;;
+      esac
+    '';
+  };
 in
 
 lib.mkIf osConfig.programs.sway.enable {
@@ -178,6 +197,7 @@ lib.mkIf osConfig.programs.sway.enable {
       modules-center = [ "clock" ];
       modules-right = [
         "tray"
+        "custom/keyboard"
         "wireplumber"
         "backlight"
         "custom/nightlight"
@@ -197,6 +217,13 @@ lib.mkIf osConfig.programs.sway.enable {
       };
 
       tray.spacing = 8;
+
+      "custom/keyboard" = {
+        exec = lib.getExe swayKeyboard;
+        return-type = "json";
+        interval = "once";
+        on-click = "${lib.getExe swayKeyboard} toggle";
+      };
 
       wireplumber = {
         format = "{icon} {volume}%";
@@ -291,12 +318,17 @@ lib.mkIf osConfig.programs.sway.enable {
 
       #clock,
       #tray,
+      #custom-keyboard,
       #wireplumber,
       #backlight,
       #custom-nightlight,
       #power-profiles-daemon,
       #battery {
         padding: 0 10px;
+      }
+
+      #custom-keyboard.off {
+        color: #ffb347;
       }
 
       #battery.warning {
