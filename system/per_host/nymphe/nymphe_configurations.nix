@@ -26,10 +26,12 @@
   services.tlp.settings.STOP_CHARGE_THRESH_BAT0 = 0;
   host.fastboot.enable = true;
   host.gpu = "intel";
+  hardware.bluetooth.enable = true;
 
   home-manager.users.artesia = {
     home.stateVersion = "25.05";
     services.arrpc.enable = lib.mkForce false;
+    services.blueman-applet.enable = true;
     programs.ghostty.systemd.enable = lib.mkForce false;
     programs.foot = {
       enable = true;

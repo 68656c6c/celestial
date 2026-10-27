@@ -69,7 +69,6 @@ lib.mkIf osConfig.programs.sway.enable {
       bars = [ ];
 
       startup = [
-        { command = "waybar"; }
         { command = "nm-applet --indicator"; }
         { command = lib.getExe pkgs.mako; }
       ];
@@ -153,8 +152,21 @@ lib.mkIf osConfig.programs.sway.enable {
     };
   };
 
+  systemd.user.services.waybar = {
+    Unit.Before = [ "tray.target" ];
+    Service = {
+      Type = "dbus";
+      BusName = "org.kde.StatusNotifierWatcher";
+    };
+    Install.WantedBy = lib.mkForce [ "sway-session.target" ];
+  };
+
   programs.waybar = {
     enable = true;
+    systemd = {
+      enable = true;
+      targets = [ "sway-session.target" ];
+    };
     settings.main = {
       layer = "top";
       position = "bottom";
