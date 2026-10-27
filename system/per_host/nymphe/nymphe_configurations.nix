@@ -1,5 +1,6 @@
 {
   lib,
+  pkgs,
   ...
 }:
 
@@ -43,12 +44,22 @@
         };
       };
     };
+    # Folded over, the firmware cuts keyboard and touchpad and raises the
+    # tablet switch. squeekboard runs while it is on and pops up on text
+    # fields by itself (input-method protocol). Manual show if an app does
+    # not announce its fields:
+    #   busctl call --user sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 SetVisible b true
+    home.packages = [ pkgs.squeekboard ];
     wayland.windowManager.sway = {
       xwayland = false;
       config = {
         terminal = lib.mkForce "foot";
         keybindings."Mod4+q" = lib.mkForce "exec foot";
       };
+      extraConfig = ''
+        bindswitch --reload --locked tablet:on exec squeekboard
+        bindswitch --reload --locked tablet:off exec pkill squeekboard
+      '';
     };
     systemd.user.services = {
       flameshot.Install.WantedBy = lib.mkForce [ ];
