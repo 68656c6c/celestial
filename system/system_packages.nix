@@ -60,6 +60,7 @@
     qimgv
     pwvucontrol
     pangolin-cli
+    bottles
     pantheon.pantheon-agent-polkit
     diy.helium
     diy.zen-browser
