@@ -6,11 +6,11 @@
 
 appimageTools.wrapType2 rec {
   pname = "zen";
-  version = "1.23.4b";
+  version = "1.24.1b";
 
   src = fetchurl {
     url = "https://github.com/zen-browser/desktop/releases/download/${version}/${pname}-x86_64.AppImage";
-    sha256 = "sha256-CsrlVCGYSHkuf0Y697MaoRjkDESh4zaYthGecbpP7LY=";
+    sha256 = "sha256-ALp2Ibp3F9klB32HIN3nkCPlmVCHLfuaAwIJ3qxxx9A=";
   };
 
   extraInstallCommands =
