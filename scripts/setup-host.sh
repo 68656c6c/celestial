@@ -97,6 +97,9 @@ write_new "$HOST_DIR/${HOSTNAME}_programs.nix" << EOF
 
 {
   programs = {
+    # compositor: niri with noctalia, or sway.enable = true
+    niri.enable = true;
+    noctalia.enable = true;
   };
 }
 EOF

@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   services = {
@@ -53,5 +53,13 @@
       alsa.support32Bit = true;
       pulse.enable = true;
     };
+  };
+
+  # Flatpak asserts on portals. The compositors bring their own; this keeps a
+  # host that has not picked one yet evaluating.
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config.common.default = lib.mkDefault [ "gtk" ];
   };
 }
