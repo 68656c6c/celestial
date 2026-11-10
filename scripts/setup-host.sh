@@ -6,10 +6,15 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST_DIR="$REPO_ROOT/system/per_host/$HOSTNAME"
 SOPS_FILE="$REPO_ROOT/.sops.yaml"
 
-if [ -d "$HOST_DIR" ]; then
-  echo "Error: $HOST_DIR already exists" >&2
-  exit 1
-fi
+# Safe to run again: the hardware file is regenerated, an existing age key and
+# existing per-host files are kept.
+write_new() { # <file>, content on stdin; never overwrites
+  if [ -e "$1" ]; then echo "    keeping $1"; cat >/dev/null; else cat >"$1"; fi
+}
+
+age_keygen() {
+  if command -v age-keygen >/dev/null; then sudo age-keygen "$@"; else sudo nix shell nixpkgs#age -c age-keygen "$@"; fi
+}
 
 RELEASE="$(nixos-version 2>/dev/null | cut -d. -f1-2)"
 : "${RELEASE:=26.05}"
@@ -26,15 +31,23 @@ sudo chown "$(id -u):$(id -g)" "$HOST_DIR/hardware-configuration.$HOSTNAME.nix"
 
 echo "==> Generating sops age key..."
 sudo mkdir -p /var/lib/sops-nix
-sudo age-keygen -o /var/lib/sops-nix/key 2>/dev/null
+if sudo test -s /var/lib/sops-nix/key; then
+  echo "    keeping the existing key"
+else
+  age_keygen -o /var/lib/sops-nix/key
+fi
 sudo chmod 600 /var/lib/sops-nix/key
-PUBKEY=$(sudo age-keygen -y /var/lib/sops-nix/key)
+PUBKEY=$(age_keygen -y /var/lib/sops-nix/key)
 
 echo "==> Adding $HOSTNAME to .sops.yaml..."
-sed -i "/^  - &backup /i\\  - &host_$HOSTNAME $PUBKEY" "$SOPS_FILE"
-sed -i "/^  all: &all$/a\\    - *host_$HOSTNAME" "$SOPS_FILE"
+if grep -q "&host_$HOSTNAME " "$SOPS_FILE"; then
+  echo "    already listed"
+else
+  sed -i "/^  - &backup /i\\  - &host_$HOSTNAME $PUBKEY" "$SOPS_FILE"
+  sed -i "/^  all: &all$/a\\    - *host_$HOSTNAME" "$SOPS_FILE"
+fi
 
-cat > "$HOST_DIR/default.nix" << EOF
+write_new "$HOST_DIR/default.nix" << EOF
 { ... }:
 
 {
@@ -47,7 +60,7 @@ cat > "$HOST_DIR/default.nix" << EOF
 }
 EOF
 
-cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
+write_new "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
 { ... }:
 
 {
@@ -70,7 +83,7 @@ cat > "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
 }
 EOF
 
-cat > "$HOST_DIR/${HOSTNAME}_packages.nix" << EOF
+write_new "$HOST_DIR/${HOSTNAME}_packages.nix" << EOF
 { pkgs, ... }:
 
 {
@@ -79,7 +92,7 @@ cat > "$HOST_DIR/${HOSTNAME}_packages.nix" << EOF
 }
 EOF
 
-cat > "$HOST_DIR/${HOSTNAME}_programs.nix" << EOF
+write_new "$HOST_DIR/${HOSTNAME}_programs.nix" << EOF
 { ... }:
 
 {
@@ -88,7 +101,7 @@ cat > "$HOST_DIR/${HOSTNAME}_programs.nix" << EOF
 }
 EOF
 
-cat > "$HOST_DIR/${HOSTNAME}_services.nix" << EOF
+write_new "$HOST_DIR/${HOSTNAME}_services.nix" << EOF
 { ... }:
 
 {
