@@ -36,7 +36,7 @@ Repository secret: `ATTIC_TOKEN` (attic token with pull and push rights; the cac
 ## Reinstalling a host
 Download `celestial-installer.iso` from the [installer release](https://github.com/68656c6c/celestial/releases/tag/installer) (rebuilt by CI on every change to the installer, the disk layout or the lock; the `.sha256` next to it is for checking the download), `dd` it to a stick, boot it with ethernet plugged in. It matches the machine to a host by DMI product name (`host.dmi`), shows the disk it is about to wipe, counts down 15 seconds, then partitions with disko and installs. If a second stick labelled `CELESTIAL_KEYS` holds `keys/<host>.key`, that becomes the host's age key and the login password comes from the secrets; an `attic.netrc` on the same stick lets the install pull from the private cache. Otherwise a key is generated, you set a password once, and the printed public key goes into `.sops.yaml`.
 
-Machines installed before disko mount by UUID. Run `sudo nix shell nixpkgs#gptfdisk -c scripts/label-disk.sh` on them once, before switching to a configuration from this point on; it only writes GPT partition labels, for root, the ESP and the active swap partition (zram is skipped).
+Machines installed before disko mount by UUID. Run `sudo nix --extra-experimental-features "nix-command flakes" shell nixpkgs#gptfdisk -c scripts/label-disk.sh` on them once, before switching to a configuration from this point on; it only writes GPT partition labels, for root, the ESP and the active swap partition (zram is skipped).
 
 ## Adding a host
 1. Boot any NixOS installer, install git and nh, clone the repo to `~/.dotfiles`

@@ -13,7 +13,7 @@ write_new() { # <file>, content on stdin; never overwrites
 }
 
 age_keygen() {
-  if command -v age-keygen >/dev/null; then sudo age-keygen "$@"; else sudo nix shell nixpkgs#age -c age-keygen "$@"; fi
+  if command -v age-keygen >/dev/null; then sudo age-keygen "$@"; else sudo nix --extra-experimental-features "nix-command flakes" shell nixpkgs#age -c age-keygen "$@"; fi
 }
 
 RELEASE="$(nixos-version 2>/dev/null | cut -d. -f1-2)"

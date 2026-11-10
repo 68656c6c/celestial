@@ -6,10 +6,10 @@
 set -euo pipefail
 
 command -v sgdisk >/dev/null || {
-  echo "sgdisk missing, run: sudo nix shell nixpkgs#gptfdisk -c $0" >&2
+  echo "sgdisk missing, run: sudo nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#gptfdisk -c $0" >&2
   exit 1
 }
-[ "$(id -u)" = 0 ] || { echo "run as root: sudo nix shell nixpkgs#gptfdisk -c $0" >&2; exit 1; }
+[ "$(id -u)" = 0 ] || { echo "run as root: sudo nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#gptfdisk -c $0" >&2; exit 1; }
 
 partition_of() { # <mountpoint or device> -> block device, or nothing
   local src="$1" part
