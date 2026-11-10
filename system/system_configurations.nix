@@ -9,10 +9,18 @@ let
   # sops leaves key names in clear, so the pull token wiring switches itself on
   # once `attic-netrc` has been added to secrets.yaml
   haveAtticNetrc = lib.hasInfix "attic-netrc:" (builtins.readFile ../secrets/secrets.yaml);
-  # A host whose key is not in .sops.yaml yet cannot decrypt anything, and a
-  # secret that fails to decrypt fails activation. Until the key is added the
-  # password set at install time stays (mutable users).
-  haveHostKey = lib.hasInfix "&host_${config.networking.hostName} " (builtins.readFile ../.sops.yaml);
+  # Use the secrets only when this host can really decrypt them: its key must
+  # be in .sops.yaml AND secrets.yaml must have been re-encrypted for it
+  # (sops updatekeys). A key that is only listed locks the user out, because
+  # the password file never appears.
+  hostKey =
+    let
+      line = lib.findFirst (lib.hasInfix "&host_${config.networking.hostName} ") null (
+        lib.splitString "\n" (builtins.readFile ../.sops.yaml)
+      );
+    in
+    if line == null then null else lib.last (lib.splitString " " line);
+  haveHostKey = hostKey != null && lib.hasInfix hostKey (builtins.readFile ../secrets/secrets.yaml);
 in
 
 {
