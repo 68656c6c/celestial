@@ -1,6 +1,6 @@
-# Bootable installer image. Boots, picks the host by DMI product name, wipes
-# the internal disk with disko and installs that host from the embedded copy
-# of this flake. See installer/install.sh for the steps.
+# Bootable installer image. Boots, clones this repo, picks the host by DMI
+# product name (or creates one), wipes the internal disk with disko and
+# installs. See installer/install.sh for the steps.
 {
   config,
   lib,
@@ -14,8 +14,6 @@ let
   cfg = config.celestial.installer;
   system = pkgs.stdenv.hostPlatform.system;
 
-  hostsJson = pkgs.writeText "celestial-hosts.json" (builtins.toJSON cfg.hosts);
-
   install = pkgs.writeShellApplication {
     name = "celestial-install";
     runtimeInputs = with pkgs; [
@@ -23,8 +21,12 @@ let
       coreutils
       curl
       gawk
+      git
+      gnugrep
       gnused
       jq
+      mkpasswd
+      nixfmt
       util-linux
       inputs.disko.packages.${system}.disko
     ];
@@ -35,24 +37,10 @@ in
 {
   imports = [ "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix" ];
 
-  options.celestial.installer = {
-    flake = lib.mkOption {
-      type = lib.types.path;
-      description = "Source of this flake, embedded in the image at /etc/celestial.";
-    };
-    hosts = lib.mkOption {
-      description = "Per host: DMI names and disk layout, taken from the host configurations.";
-      type = lib.types.attrsOf (
-        lib.types.submodule {
-          options = {
-            dmi = lib.mkOption { type = lib.types.listOf lib.types.str; };
-            layout = lib.mkOption { type = lib.types.str; };
-            swapSize = lib.mkOption { type = lib.types.nullOr lib.types.str; };
-            espSize = lib.mkOption { type = lib.types.str; };
-          };
-        }
-      );
-    };
+  options.celestial.installer.repo = lib.mkOption {
+    type = lib.types.str;
+    default = "https://github.com/68656c6c/celestial.git";
+    description = "Where the installer clones the configuration from.";
   };
 
   config = {
@@ -61,10 +49,10 @@ in
     isoImage.squashfsCompression = "zstd -Xcompression-level 6";
     boot.supportedFilesystems.zfs = lib.mkForce false;
 
-    environment.etc.celestial.source = cfg.flake;
     environment.systemPackages = [
       install
       pkgs.age
+      pkgs.git
       pkgs.jq
       inputs.disko.packages.${system}.disko
     ];
@@ -75,9 +63,10 @@ in
         "flakes"
       ];
       # nixos-install reads this file, not the target's settings, so the
-      # CachyOS kernel for io has to be reachable from here too.
+      # CachyOS kernel for io has to be reachable from here too. attic is
+      # private: install.sh adds it when the stick brings the token, without
+      # one it would only cost retries.
       substituters = [
-        "https://attic.artesia.cloud/celestial"
         "https://celestial.cachix.org"
         "https://nyx-cache.chaotic.cx/"
       ];
@@ -86,22 +75,28 @@ in
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
         "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk="
       ];
+      # a cache that is down or wants a token costs seconds, not the install
+      fallback = true;
+      connect-timeout = 5;
     };
 
-    # Runs on tty1 instead of the login prompt. Fails over to a shell.
+    # Runs on tty1 instead of the login prompt. Fails over to a shell, where
+    # `celestial-install <repo url>` starts it again.
     systemd.services.celestial-install = {
-      description = "Unattended NixOS install";
+      description = "NixOS install";
       wantedBy = [ "multi-user.target" ];
-      wants = [ "network-online.target" ];
       after = [
-        "network-online.target"
+        "NetworkManager.service"
         "systemd-udev-settle.service"
       ];
       conflicts = [ "getty@tty1.service" ];
       unitConfig.OnFailure = "getty@tty1.service";
+      # nix, nixos-install, nixos-generate-config, nmtui, systemctl
+      path = [ "/run/current-system/sw" ];
+      environment.HOME = "/root";
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = "${lib.getExe install} ${hostsJson}";
+        ExecStart = "${lib.getExe install} ${cfg.repo}";
         StandardInput = "tty-force";
         StandardOutput = "tty";
         StandardError = "tty";

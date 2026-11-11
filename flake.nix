@@ -35,7 +35,6 @@
 
   outputs =
     inputs@{
-      self,
       nixpkgs,
       unstable,
       ...
@@ -109,7 +108,9 @@
 
       nixosConfigurations = lib.genAttrs hosts mkHost;
 
-      # Bootable image that installs one of the hosts above, unattended.
+      # Bootable image that installs one of the hosts above, or creates a new
+      # one. It clones this repo when it runs, so it only needs rebuilding when
+      # installer/ or the lock changes.
       installer = lib.nixosSystem {
         specialArgs = {
           inherit inputs;
@@ -122,15 +123,6 @@
             };
           }
           ./installer
-          {
-            celestial.installer = {
-              flake = self;
-              hosts = lib.mapAttrs (_: host: {
-                inherit (host.config.host) dmi;
-                inherit (host.config.host.disk) layout swapSize espSize;
-              }) nixosConfigurations;
-            };
-          }
         ];
       };
 
@@ -143,6 +135,12 @@
       formatter.${system} = pkgs.nixfmt-tree;
 
       packages.${system}.installer-iso = installer.config.system.build.isoImage;
+
+      # What the installer needs to know about each host: which machine it is
+      # and how its disk is laid out. `nix eval --json .#lib.hostFacts`
+      lib.hostFacts = lib.mapAttrs (_: host: {
+        inherit (host.config.host) dmi disk;
+      }) nixosConfigurations;
 
       checks.${system}.lint =
         pkgs.runCommand "celestial-lint"

@@ -101,7 +101,10 @@ in
   users.users.artesia = {
     isNormalUser = true;
     description = "artesia";
-    hashedPasswordFile = lib.mkIf haveHostKey config.sops.secrets.artesia-password.path;
+    # A host whose key cannot read the secrets yet logs in with the password
+    # setup-host.sh asked for and stored next to the key.
+    hashedPasswordFile =
+      if haveHostKey then config.sops.secrets.artesia-password.path else "/var/lib/sops-nix/password";
     extraGroups = [
       "networkmanager"
       "wheel"

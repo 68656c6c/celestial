@@ -4,6 +4,7 @@
 
 {
   networking.hostName = "aphrodite";
+  host.dmi = [ "HP EliteBook x360 830 G6" ];
   host.gpu = "intel";
   host.fastboot.enable = true;
   networking.nameservers = [

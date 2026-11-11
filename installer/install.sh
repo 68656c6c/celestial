@@ -1,39 +1,126 @@
-# Unattended install of one host of this flake. Runs from the installer image.
-#   1. match the machine to a host by DMI product name (or ask)
-#   2. pick the internal disk, show it, give 15 seconds to abort
-#   3. wait for network (caches, flake inputs)
-#   4. disko: wipe, partition, format, mount
-#   5. a stick labelled CELESTIAL_KEYS may carry keys/<host>.key (age key) and
-#      attic.netrc (pull token for the private cache); otherwise a new age key
-#   6. nixos-install, set a password if the key is new, reboot
+# Installs one host of this flake on the machine it boots on. Runs from the
+# installer image on tty1. Every question comes before the disk is touched,
+# after the countdown it runs by itself.
+#   1. network: ethernet, wifi profiles from the stick, or the nmtui menu
+#   2. the repo: celestial.bundle on the stick, otherwise a fresh clone
+#   3. host: matched by DMI product name, else named by the only key on the
+#      stick when that is for a host not in the repo yet, else asked. A name
+#      without a folder becomes a new host, described from this hardware
+#   4. scripts/setup-host.sh: hardware file, age key (keys/<host>.key from
+#      the stick, otherwise new), and a login password when that key cannot
+#      read the secrets yet
+#   5. show the disk, 15 seconds to abort, disko
+#   6. nixos-install, leave the repo in ~/.dotfiles, reboot
+#
+# The stick is any filesystem labelled CEL_KEYS, all of it optional:
+#   keys/<host>.key      age key for that host (scripts/key-stick.sh)
+#   wifi/*.nmconnection  NetworkManager profiles, for machines without ethernet
+#   attic.netrc          pull token for the private cache
+#   celestial.bundle     `git bundle create celestial.bundle HEAD main`, to install
+#                        commits that are not pushed
 
-hosts_json="${1:?hosts json}"
-flake=/etc/celestial
-keys_label=CELESTIAL_KEYS
+repo_url="${1:?repo url}"
+repo=/tmp/celestial
+stick=/run/celestial/stick
+keys=/run/celestial/sops-nix
+keys_label=CEL_KEYS
 
 say() { printf '\n==> %s\n' "$*"; }
 die() { printf '\n!! %s\n' "$*" >&2; exit 1; }
-shell() { say "dropping to a shell"; exec bash -l; }
+shell() { say "dropping to a shell, celestial-install $repo_url starts over"; exec bash -l; }
 
-# 1. host
-product="$(sed 's/[[:space:]]*$//' /sys/class/dmi/id/product_name 2>/dev/null || true)"
-host="$(jq -r --arg p "$product" 'to_entries[] | select(.value.dmi | index($p)) | .key' "$hosts_json" | head -1)"
-if [ -z "$host" ]; then
-  say "no host matches this machine (DMI product: '${product:-unknown}')"
-  echo "known hosts: $(jq -r 'keys | join(" ")' "$hosts_json")"
-  read -r -p "hostname to install, empty for a shell: " host
-  [ -n "$host" ] || shell
-  jq -e --arg h "$host" 'has($h)' "$hosts_json" >/dev/null || die "unknown host $host"
+mkdir -p "$stick" "$keys"
+chmod 700 "$keys"
+if [ -e "/dev/disk/by-label/$keys_label" ] && ! mountpoint -q "$stick"; then
+  mount -o ro "/dev/disk/by-label/$keys_label" "$stick"
+  say "found the $keys_label stick"
 fi
-layout="$(jq -r --arg h "$host" '.[$h].layout' "$hosts_json")"
-swap_size="$(jq -r --arg h "$host" '.[$h].swapSize // "none"' "$hosts_json")"
-esp_size="$(jq -r --arg h "$host" '.[$h].espSize' "$hosts_json")"
 
-# 2. disk: largest non-removable disk that is not the installer medium
+# 1. network
+for profile in "$stick"/wifi/*.nmconnection; do
+  [ -e "$profile" ] || continue
+  install -m 600 "$profile" /etc/NetworkManager/system-connections/
+  nmcli connection reload || true
+  echo "wifi profile from the stick: $(basename "$profile")"
+done
+online() { curl -fsS -m 10 -o /dev/null https://cache.nixos.org/nix-cache-info 2>/dev/null; }
+tries=0
+until online; do
+  tries=$((tries + 1))
+  if [ "$tries" -lt 4 ]; then
+    echo "waiting for network..."
+    sleep 5
+    continue
+  fi
+  tries=0
+  echo "no network yet. Plug in ethernet, or press enter to pick a wifi network."
+  if read -r -t 30; then nmtui connect || true; fi
+done
+
+# 2. repo
+rm -rf "$repo"
+if [ -f "$stick/celestial.bundle" ]; then
+  say "configuration from celestial.bundle on the stick"
+  git clone -q "$stick/celestial.bundle" "$repo"
+  git -C "$repo" remote set-url origin "$repo_url"
+else
+  say "cloning $repo_url"
+  git clone -q "$repo_url" "$repo"
+fi
+git -C "$repo" log -1 --format='at %h %s (%cr)'
+
+# 3. host
+say "reading the hosts (fetches the flake inputs first, give it a minute)"
+nix eval --json "$repo#lib.hostFacts" > /run/celestial/hosts.json
+product="$(sed 's/[[:space:]]*$//' /sys/class/dmi/id/product_name 2>/dev/null || true)"
+host="$(jq -r --arg p "$product" 'to_entries[] | select(.value.dmi | index($p)) | .key' /run/celestial/hosts.json | head -1)"
+# An unknown machine, and the stick holds exactly one key, for a host that has
+# no folder yet: that key was made for this machine (key-stick.sh <stick> <name>)
+new_from_stick=0
+if [ -z "$host" ]; then
+  mapfile -t stick_keys < <(find "$stick/keys" -maxdepth 1 -name '*.key' 2>/dev/null)
+  if [ "${#stick_keys[@]}" = 1 ]; then
+    candidate="$(basename "${stick_keys[0]}" .key)"
+    if [[ "$candidate" =~ ^[a-z][a-z0-9-]*$ ]] && ! jq -e --arg h "$candidate" 'has($h)' /run/celestial/hosts.json >/dev/null; then
+      host="$candidate"
+      new_from_stick=1
+    fi
+  fi
+fi
+if [ "$new_from_stick" = 1 ]; then
+  say "new host $host for this machine ($product), named by the key on the stick"
+elif [ -n "$host" ]; then
+  say "this machine is $host ($product)"
+else
+  say "no host claims this machine (DMI product: '${product:-unknown}')"
+  echo "hosts: $(jq -r 'keys | join(" ")' /run/celestial/hosts.json)"
+  echo "One of these names installs that host here. A new name creates a host for this machine."
+  read -r -p "hostname, empty for a shell: " host
+  [ -n "$host" ] || shell
+  [[ "$host" =~ ^[a-z][a-z0-9-]*$ ]] || die "not a hostname: $host"
+  if jq -e --arg h "$host" 'has($h)' /run/celestial/hosts.json >/dev/null; then
+    echo "to have $host recognised next time: host.dmi = [ \"$product\" ];"
+  fi
+fi
+
+# 4. hardware file, key, password, per-host folder
+if [ -f "$stick/keys/$host.key" ]; then
+  install -m 600 "$stick/keys/$host.key" "$keys/key"
+  say "age key for $host taken from the stick"
+fi
+KEY_DIR="$keys" "$repo/scripts/setup-host.sh" "$host"
+git -C "$repo" add -A
+
+nix eval --json "$repo#lib.hostFacts.$host.disk" > /run/celestial/disk.json
+layout="$(jq -r .layout /run/celestial/disk.json)"
+swap_size="$(jq -r '.swapSize // "none"' /run/celestial/disk.json)"
+esp_size="$(jq -r .espSize /run/celestial/disk.json)"
+
+# 5. disk: largest internal disk. Not the installer medium, nothing on USB.
 iso_part="$(findmnt -no SOURCE /iso 2>/dev/null || true)"
 iso_disk="$([ -n "$iso_part" ] && lsblk -no PKNAME "$iso_part" 2>/dev/null || true)"
-disk="$(lsblk -dbno NAME,SIZE,RM,TYPE \
-  | awk -v skip="$iso_disk" '$4 == "disk" && $3 == 0 && $1 != skip { print $2, $1 }' \
+disk="$(lsblk -dbno NAME,SIZE,RM,TYPE,TRAN \
+  | awk -v skip="$iso_disk" '$4 == "disk" && $3 == 0 && $5 != "usb" && $1 != skip && $1 !~ /^zram/ { print $2, $1 }' \
   | sort -rn | head -1 | awk '{ print $2 }')"
 [ -n "$disk" ] || die "no internal disk found"
 device="/dev/$disk"
@@ -50,62 +137,47 @@ for i in $(seq 15 -1 1); do
 done
 echo
 
-# 3. network
-until curl -fsS -o /dev/null https://cache.nixos.org/nix-cache-info; do
-  echo "waiting for network, plug in ethernet..."
-  sleep 5
-done
-
-# 4. disk
 say "partitioning $device"
 disko --mode destroy,format,mount --yes-wipe-all-disks \
   --argstr device "$device" --argstr layout "$layout" \
   "${swap_args[@]}" --argstr espSize "$esp_size" \
-  "$flake/disko/layout.nix"
+  "$repo/disko/layout.nix"
 
-# 5. key stick: age key, and the netrc that lets this install pull from attic
 install -d -m 700 /mnt/var/lib/sops-nix
-key_from_stick=0
-if [ -e "/dev/disk/by-label/$keys_label" ]; then
-  mkdir -p /keys
-  mount -o ro "/dev/disk/by-label/$keys_label" /keys
-  if [ -f "/keys/keys/$host.key" ]; then
-    cp "/keys/keys/$host.key" /mnt/var/lib/sops-nix/key
-    key_from_stick=1
-    say "age key taken from the $keys_label stick"
-  fi
-  if [ -f /keys/attic.netrc ]; then
-    install -m 600 /keys/attic.netrc /etc/nix/netrc
-    systemctl restart nix-daemon
-    say "attic pull token taken from the $keys_label stick"
-  fi
-  umount /keys
+cp -a "$keys/." /mnt/var/lib/sops-nix/
+cache_args=()
+if [ -f "$stick/attic.netrc" ]; then
+  install -m 600 "$stick/attic.netrc" /etc/nix/netrc
+  systemctl restart nix-daemon
+  cache_args=(--option extra-substituters https://attic.artesia.cloud/celestial)
+  say "attic pull token taken from the stick"
 fi
-if [ ! -f /mnt/var/lib/sops-nix/key ]; then
-  age-keygen -o /mnt/var/lib/sops-nix/key 2>/dev/null
-  say "generated a new age key"
-fi
-chmod 600 /mnt/var/lib/sops-nix/key
-pubkey="$(age-keygen -y /mnt/var/lib/sops-nix/key)"
-echo "$pubkey" > /mnt/var/lib/sops-nix/key.pub
 
 # 6. install
 say "installing $host"
-nixos-install --flake "$flake#$host" --no-root-passwd --no-channel-copy
+nixos-install --flake "$repo#$host" --no-root-passwd --no-channel-copy "${cache_args[@]}"
 
-if [ "$key_from_stick" = 0 ]; then
-  say "this key is not in .sops.yaml yet, so the login password cannot come from secrets.yaml"
-  echo "set one for artesia now (replaced by the secret once the key is added):"
-  until nixos-enter --root /mnt -c 'passwd artesia'; do echo "try again"; done
-fi
+# The repo goes along, with whatever setup-host.sh wrote, ready to commit.
+# artesia is the first normal user, so 1000:users.
+install -d -m 700 -o 1000 -g 100 /mnt/home/artesia
+cp -a "$repo" /mnt/home/artesia/.dotfiles
+chown -R 1000:100 /mnt/home/artesia/.dotfiles
 
 say "done"
-cat <<MSG
-host:            $host
-disk:            $device
-age public key:  $pubkey
-
-Add the key to .sops.yaml under keys and all, then: sops updatekeys secrets/secrets.yaml
-MSG
-read -r -t 30 -p "rebooting in 30s, enter reboots now, ctrl-c for a shell " || true
+echo "host:  $host"
+echo "disk:  $device"
+if [ -n "$(git -C "$repo" status --porcelain)" ]; then
+  echo
+  echo "The repo in the new home (.dotfiles) has changes to commit and push:"
+  git -C "$repo" status --short
+fi
+if ! grep -q "$(age-keygen -y "$keys/key")" "$repo/secrets/secrets.yaml"; then
+  echo
+  echo "Login is the password you typed. To move it to the secrets, after that push:"
+  echo "  on an enrolled machine:  git pull && scripts/rekey.sh, commit, push"
+  echo "  on $host:                git pull && nh os switch"
+fi
+echo
+mountpoint -q "$stick" && umount "$stick"
+read -r -t 60 -p "rebooting in 60s, enter reboots now, ctrl-c for a shell " || true
 reboot

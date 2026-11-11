@@ -9,8 +9,7 @@ on:
     branches: [main]
     paths:
       - installer/**
-      - disko/**
-      - diy-modules/host_disk.nix
+      - flake.nix
       - flake.lock
       - .github/workflows/installer.yml
 
@@ -43,7 +42,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes="Built from ${GITHUB_SHA} on $(date -u +%Y-%m-%d). Unattended: boots, matches the machine by DMI, wipes its internal disk after a 15 second countdown."
+          notes="Built from ${GITHUB_SHA} on $(date -u +%Y-%m-%d). Boots, clones the repo, matches the machine by DMI or creates a host for it, wipes its internal disk after a 15 second countdown."
           if gh release view installer >/dev/null 2>&1; then
             gh release edit installer --target "$GITHUB_SHA" --notes "$notes"
           else

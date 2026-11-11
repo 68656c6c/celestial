@@ -9,9 +9,9 @@ My NixOS stack: one flake, home-manager, niri with noctalia, or sway, four machi
   disko           - the one disk layout every host uses (ESP, root, optional swap)
   docs            - how the repo fits together
   imports         - third-party modules every host loads
-  installer       - bootable image that installs a host unattended
+  installer       - bootable image that installs a host, new or existing
   overlays        - unstable versions of a few apps, and the diy package set
-  scripts         - setup, deploy and update helpers
+  scripts         - install, key, deploy and update helpers
   secrets         - sops-encrypted, only readable by my machines
   system          - the shared baseline and one folder per host
   user            - home-manager config for the artesia user
@@ -33,18 +33,40 @@ GitHub Actions builds every host on each push to `main` and pushes the closures 
 
 Repository secret: `ATTIC_TOKEN` (attic token with pull and push rights; the cache is private, attic gates everything, the Pangolin resource in front is public). Optional variable `ATTIC_PUBLIC_URL`, default `https://attic.artesia.cloud`. Hosts get their pull token from the `attic-netrc` entry in `secrets/secrets.yaml` once it is added; until then they build what the public caches lack.
 
-## Reinstalling a host
-Download `celestial-installer.iso` from the [installer release](https://github.com/68656c6c/celestial/releases/tag/installer) (rebuilt by CI on every change to the installer, the disk layout or the lock; the `.sha256` next to it is for checking the download), `dd` it to a stick, boot it with ethernet plugged in. It matches the machine to a host by DMI product name (`host.dmi`), shows the disk it is about to wipe, counts down 15 seconds, then partitions with disko and installs. If a second stick labelled `CELESTIAL_KEYS` holds `keys/<host>.key`, that becomes the host's age key and the login password comes from the secrets; an `attic.netrc` on the same stick lets the install pull from the private cache. Otherwise a key is generated, you set a password once, and the printed public key goes into `.sops.yaml`.
+## Installing a host
+New machine or reinstall, it is the same stick. Download `celestial-installer.iso` from the [installer release](https://github.com/68656c6c/celestial/releases/tag/installer) (the `.sha256` next to it is for checking the download), `dd` it to a stick and boot it. The installer clones this repo when it runs, so the stick does not go stale when hosts change; CI only rebuilds it when `installer/` or the lock changes.
 
-Machines installed before disko mount by UUID. Run `sudo nix --extra-experimental-features "nix-command flakes" shell nixpkgs#gptfdisk -c scripts/label-disk.sh` on them once, before switching to a configuration from this point on; it only writes GPT partition labels, for root, the ESP and the active swap partition (zram is skipped).
+It asks everything before it touches the disk, then runs by itself:
 
-## Adding a host
-1. Boot any NixOS installer, install git and nh, clone the repo to `~/.dotfiles`
-2. Run `scripts/setup-host.sh <hostname>`. It generates the hardware file (no filesystems, disko owns those), the age key at `/var/lib/sops-nix/key`, the per-host folder with the machine's DMI name, and the `.sops.yaml` entries
-3. Fill in monitors, DNS, `host.disk.layout`, `host.gpu`, `host.laptop.enable` and `host.fastboot.enable` in `system/per_host/<hostname>/<hostname>_configurations.nix`
-4. `sops updatekeys secrets/secrets.yaml`, commit, then reinstall from the stick or `nh os switch .#<hostname>` after `scripts/label-disk.sh`
-5. `sudo tailscale up` once if the machine should be on the tailnet
+1. Network. Ethernet just works. Without it, it offers the `nmtui` wifi menu.
+2. Host. A machine whose DMI product name is in some host's `host.dmi` is recognised. A new machine with a key stick prepared for it (below) takes its name from that key. Otherwise it asks for a name: an existing one installs that host here, a new one creates the host. A new host is filled in from what the hardware reports (hardware file, DMI name, GPU, laptop or not, connected screens), so it is recognised by itself from then on.
+3. Password, only when the host's age key cannot read the secrets yet.
+4. It shows the disk it is about to wipe and counts down 15 seconds.
 
-Hosts are discovered from the folders under `system/per_host/`, there is no list to maintain.
+Then disko, `nixos-install`, reboot. The repo ends up in `~/.dotfiles` with whatever was generated, ready to commit.
+
+A new host logs in with the password typed in step 3 until its key is enrolled:
+```
+new host:           cd ~/.dotfiles, commit, push
+any enrolled host:  git pull && scripts/rekey.sh, commit, push
+new host:           git pull && nh os switch
+```
+Then fill in what cannot be detected (screen scale and positions, extra packages) in `system/per_host/<hostname>/`, and `sudo tailscale up` if it should be on the tailnet. Hosts are discovered from the folders under `system/per_host/`, there is no list to maintain.
+
+### The key stick
+Optional second stick, any filesystem labelled `CEL_KEYS` (`mkfs.vfat -n CEL_KEYS /dev/sdX1`). With the host's key on it the install asks nothing and the secrets work from the first boot.
+
+| On the stick | What it does | How it gets there |
+|---|---|---|
+| `keys/<host>.key` | the host's age key | `scripts/key-stick.sh <mountpoint>` on that host before wiping it, or `scripts/key-stick.sh <mountpoint> <newhost>` on any enrolled host to make and enroll a key for a machine that does not exist yet (commit and push after) |
+| `wifi/*.nmconnection` | wifi without the menu | `sudo cp /etc/NetworkManager/system-connections/<name>.nmconnection` from a machine that knows the network |
+| `attic.netrc` | pull from the private cache during the install | one line, `machine attic.artesia.cloud password <pull token>` |
+| `celestial.bundle` | install commits that are not pushed | `git bundle create celestial.bundle HEAD main` |
+
+### Trying it first
+`scripts/test-installer.sh` builds the image and boots it in a VM with an empty disk, installing the current commit. With a DMI product name as argument (`scripts/test-installer.sh "Predator G9-791"`) the VM poses as that machine.
+
+### Converting a machine that already runs NixOS
+Clone the repo to `~/.dotfiles` and run `scripts/setup-host.sh <hostname>`, the same script the installer uses. It tells you what is left: `scripts/label-disk.sh` so the existing partitions carry the GPT labels the mount table expects (only labels are written; root, the ESP and the active swap partition, zram is skipped), then `nh os switch .#<hostname>`.
 
 Anyone could clone and use this, but my secrets have no use to you and the structure is whatever made sense to me at the time.
