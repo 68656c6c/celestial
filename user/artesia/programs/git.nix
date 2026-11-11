@@ -17,6 +17,9 @@
         pl = "pull";
         ph = "push";
       };
+      # Clones over https (the installer's ~/.dotfiles, anything pasted from a
+      # browser) fetch without a login and push over ssh, where the key is.
+      url."git@github.com:".pushInsteadOf = "https://github.com/";
       gpg.format = "ssh";
       gpg.ssh.allowedSignersFile = "~/.config/git/allowed_signers";
       commit.gpgsign = true;
