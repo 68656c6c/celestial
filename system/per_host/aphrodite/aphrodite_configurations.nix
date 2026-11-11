@@ -4,7 +4,6 @@
 
 {
   networking.hostName = "aphrodite";
-  host.disk.layout = "ext4";
   host.gpu = "amd";
   host.fastboot.enable = true;
   networking.nameservers = [
