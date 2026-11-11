@@ -18,8 +18,8 @@ VM_DIR="${VM_DIR:-/tmp/celestial-vm}"
 BOOT="${BOOT:-iso}"
 PRODUCT="${1:-}"
 
-if ! command -v qemu-system-x86_64 >/dev/null || ! command -v mcopy >/dev/null || ! command -v mkfs.vfat >/dev/null; then
-  exec nix shell --inputs-from "$REPO_ROOT" nixpkgs#qemu_kvm nixpkgs#mtools nixpkgs#dosfstools -c "$0" "$@"
+if ! command -v qemu-system-x86_64 >/dev/null || ! command -v mcopy >/dev/null || ! command -v mkfs.vfat >/dev/null || ! command -v swtpm >/dev/null; then
+  exec nix shell --inputs-from "$REPO_ROOT" nixpkgs#qemu_kvm nixpkgs#mtools nixpkgs#dosfstools nixpkgs#swtpm -c "$0" "$@"
 fi
 
 mkdir -p "$VM_DIR"
@@ -28,7 +28,8 @@ args=()
 
 if [ "$BOOT" = iso ]; then
   nix build "$REPO_ROOT#installer-iso" --no-write-lock-file -o "$VM_DIR/iso"
-  rm -f "$VM_DIR/disk.qcow2" "$VM_DIR/vars.fd" "$VM_DIR/stick.img"
+  rm -rf "$VM_DIR/disk.qcow2" "$VM_DIR/vars.fd" "$VM_DIR/stick.img" "$VM_DIR/tpm"
+  mkdir -p "$VM_DIR/tpm"
   qemu-img create -q -f qcow2 "$VM_DIR/disk.qcow2" 80G
   install -m 644 "$ovmf/OVMF_VARS.fd" "$VM_DIR/vars.fd"
 
@@ -42,6 +43,10 @@ if [ "$BOOT" = iso ]; then
   args+=(-drive "if=none,id=stick,format=raw,file=$VM_DIR/stick.img" -device qemu-xhci -device "usb-storage,drive=stick")
 fi
 [ -z "$PRODUCT" ] || args+=(-smbios "type=1,product=$PRODUCT")
+
+# A TPM 2.0, like the real machines have, for hosts with an encrypted disk
+swtpm socket --tpm2 --tpmstate "dir=$VM_DIR/tpm" --ctrl "type=unixio,path=$VM_DIR/tpm/sock" --daemon
+args+=(-chardev "socket,id=chrtpm,path=$VM_DIR/tpm/sock" -tpmdev "emulator,id=tpm0,chardev=chrtpm" -device "tpm-tis,tpmdev=tpm0")
 
 # shellcheck disable=SC2086  # QEMU_ARGS is a list of words
 exec qemu-system-x86_64 -enable-kvm -machine q35 -cpu host -smp 4 -m 8G \

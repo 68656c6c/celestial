@@ -58,10 +58,22 @@ Optional second stick, any filesystem labelled `CEL_KEYS` (`mkfs.vfat -n CEL_KEY
 
 | On the stick | What it does | How it gets there |
 |---|---|---|
+| `keys/<host>.luks` | the disk passphrase of a host with `host.disk.encrypt` | a text file with the passphrase |
 | `keys/<host>.key` | the host's age key | `scripts/key-stick.sh <mountpoint>` on that host before wiping it, or `scripts/key-stick.sh <mountpoint> <newhost>` on any enrolled host to make and enroll a key for a machine that does not exist yet (commit and push after) |
 | `wifi/*.nmconnection` | wifi without the menu | `sudo cp /etc/NetworkManager/system-connections/<name>.nmconnection` from a machine that knows the network |
 | `attic.netrc` | pull from the private cache during the install | one line, `machine attic.artesia.cloud password <pull token>` |
 | `celestial.bundle` | install commits that are not pushed | `git bundle create celestial.bundle HEAD main` |
+
+### Encrypted disk and Secure Boot
+Two per-host switches, both for a fresh install: `host.disk.encrypt` puts the root in LUKS (swap gets a throwaway key per boot) and `host.secureboot.enable` has lanzaboote sign the boot files with keys the installer creates in `/var/lib/sbctl`. The installer asks for the disk's recovery passphrase, or reads it from `keys/<host>.luks` on the key stick. A pre-switch check refuses to apply either to an install that was not made for it.
+
+After the install, `scripts/secure-host.sh` finishes the job; it looks at the machine's state and does or names the next step, so run it after each reboot:
+```
+1. first boot: type the disk passphrase, log in, run scripts/secure-host.sh. It says how to put the firmware in setup mode
+2. back from the firmware: scripts/secure-host.sh enrolls the keys, reboot (Secure Boot is now on)
+3. scripts/secure-host.sh binds the disk to the TPM, sealed to the Secure Boot state. From here it unlocks by itself
+```
+The passphrase stays valid. If a firmware update makes the disk ask for it again, `scripts/secure-host.sh --again` binds the TPM anew.
 
 ### Trying it first
 `scripts/test-installer.sh` builds the image and boots it in a VM with an empty disk, installing the current commit. With a DMI product name as argument (`scripts/test-installer.sh "Predator G9-791"`) the VM poses as that machine.

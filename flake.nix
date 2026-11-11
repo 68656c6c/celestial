@@ -16,6 +16,11 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Secure Boot: signs the boot files with the machine's own keys
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.2.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # CachyOS kernels, prebuilt against their own nixpkgs (no follows on purpose)
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     millennium = {
@@ -140,6 +145,7 @@
       # and how its disk is laid out. `nix eval --json .#lib.hostFacts`
       lib.hostFacts = lib.mapAttrs (_: host: {
         inherit (host.config.host) dmi disk;
+        secureboot = host.config.host.secureboot.enable;
       }) nixosConfigurations;
 
       checks.${system}.lint =

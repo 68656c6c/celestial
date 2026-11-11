@@ -5,6 +5,9 @@
 {
   networking.hostName = "aphrodite";
   host.dmi = [ "HP EliteBook x360 830 G6" ];
+  # Disk in LUKS, unlocked by the TPM once Secure Boot is on (scripts/secure-host.sh)
+  host.disk.encrypt = true;
+  host.secureboot.enable = true;
   host.gpu = "intel";
   host.fastboot.enable = true;
   networking.nameservers = [

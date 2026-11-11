@@ -2,14 +2,38 @@
 # to describe every host (device is a placeholder there, mounts go by partition
 # label), and run by the installer with --argstr device/layout/espSize and
 # --argstr swapSize (or --arg swapSize null for no swap partition) to format
-# the disk it detected.
+# the disk it detected. With encrypt, root sits in LUKS (the installer passes
+# the file holding the recovery passphrase) and swap gets a throwaway key on
+# every boot, so nothing on the disk but the ESP is readable.
 {
   device,
   layout ? "btrfs",
   swapSize ? "16G",
   espSize ? "1G",
+  encrypt ? false,
+  passwordFile ? null,
   ...
 }:
+
+let
+  root =
+    if layout == "btrfs" then
+      {
+        type = "btrfs";
+        extraArgs = [ "-f" ];
+        mountpoint = "/";
+        subvolumes = {
+          nix.mountpoint = "/nix";
+          home.mountpoint = "/home";
+        };
+      }
+    else
+      {
+        type = "filesystem";
+        format = "ext4";
+        mountpoint = "/";
+      };
+in
 
 {
   disko.devices.disk.main = {
@@ -34,22 +58,21 @@
         root = {
           size = "100%";
           content =
-            if layout == "btrfs" then
+            if encrypt then
               {
-                type = "btrfs";
-                extraArgs = [ "-f" ];
-                mountpoint = "/";
-                subvolumes = {
-                  nix.mountpoint = "/nix";
-                  home.mountpoint = "/home";
+                type = "luks";
+                name = "cryptroot";
+                settings = {
+                  allowDiscards = true;
+                  # TPM first when a key is enrolled (scripts/secure-host.sh),
+                  # otherwise the passphrase prompt
+                  crypttabExtraOpts = [ "tpm2-device=auto" ];
                 };
+                content = root;
               }
+              // (if passwordFile == null then { } else { inherit passwordFile; })
             else
-              {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/";
-              };
+              root;
         };
       }
       // (
@@ -59,7 +82,10 @@
           {
             swap = {
               size = swapSize;
-              content.type = "swap";
+              content = {
+                type = "swap";
+                randomEncryption = encrypt;
+              };
             };
           }
       );

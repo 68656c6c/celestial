@@ -14,6 +14,7 @@
 #
 # The stick is any filesystem labelled CEL_KEYS, all of it optional:
 #   keys/<host>.key      age key for that host (scripts/key-stick.sh)
+#   keys/<host>.luks     disk passphrase, for a host with host.disk.encrypt
 #   wifi/*.nmconnection  NetworkManager profiles, for machines without ethernet
 #   attic.netrc          pull token for the private cache
 #   celestial.bundle     `git bundle create celestial.bundle HEAD main`, to install
@@ -111,10 +112,35 @@ fi
 KEY_DIR="$keys" "$repo/scripts/setup-host.sh" "$host"
 git -C "$repo" add -A
 
-nix eval --json "$repo#lib.hostFacts.$host.disk" > /run/celestial/disk.json
-layout="$(jq -r .layout /run/celestial/disk.json)"
-swap_size="$(jq -r '.swapSize // "none"' /run/celestial/disk.json)"
-esp_size="$(jq -r .espSize /run/celestial/disk.json)"
+nix eval --json "$repo#lib.hostFacts.$host" > /run/celestial/host.json
+layout="$(jq -r .disk.layout /run/celestial/host.json)"
+swap_size="$(jq -r '.disk.swapSize // "none"' /run/celestial/host.json)"
+esp_size="$(jq -r .disk.espSize /run/celestial/host.json)"
+encrypt="$(jq -r .disk.encrypt /run/celestial/host.json)"
+secureboot="$(jq -r .secureboot /run/celestial/host.json)"
+
+# An encrypted disk needs its recovery passphrase now. The TPM takes over the
+# daily unlocking later (scripts/secure-host.sh), this one is for the first
+# boots and for the day the TPM refuses.
+luks_args=()
+if [ "$encrypt" = true ]; then
+  if [ -f "$stick/keys/$host.luks" ]; then
+    tr -d '\r\n' < "$stick/keys/$host.luks" > /run/celestial/luks
+    say "disk passphrase for $host taken from the stick"
+  else
+    say "$host has an encrypted disk. Choose its recovery passphrase and keep it somewhere safe."
+    while :; do
+      read -r -s -p "    disk passphrase: " first; echo
+      read -r -s -p "    once more: " second; echo
+      if [ -n "$first" ] && [ "$first" = "$second" ]; then break; fi
+      echo "    empty or not the same, try again"
+    done
+    printf '%s' "$first" > /run/celestial/luks
+    unset first second
+  fi
+  chmod 600 /run/celestial/luks
+  luks_args=(--arg encrypt true --argstr passwordFile /run/celestial/luks)
+fi
 
 # 5. disk: largest internal disk. Not the installer medium, nothing on USB.
 iso_part="$(findmnt -no SOURCE /iso 2>/dev/null || true)"
@@ -127,7 +153,7 @@ device="/dev/$disk"
 
 swap_args=(--arg swapSize null)
 [ "$swap_size" = none ] || swap_args=(--argstr swapSize "$swap_size")
-say "installing $host ($layout, swap $swap_size, ESP $esp_size) onto $device"
+say "installing $host ($layout, encrypted: $encrypt, swap $swap_size, ESP $esp_size) onto $device"
 echo "EVERYTHING ON $device WILL BE ERASED:"
 lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS "$device"
 echo
@@ -140,11 +166,20 @@ echo
 say "partitioning $device"
 disko --mode destroy,format,mount --yes-wipe-all-disks \
   --argstr device "$device" --argstr layout "$layout" \
-  "${swap_args[@]}" --argstr espSize "$esp_size" \
+  "${swap_args[@]}" --argstr espSize "$esp_size" "${luks_args[@]}" \
   "$repo/disko/layout.nix"
+rm -f /run/celestial/luks
 
 install -d -m 700 /mnt/var/lib/sops-nix
 cp -a "$keys/." /mnt/var/lib/sops-nix/
+# Secure Boot keys of this machine, so the boot files are signed from the
+# first install on. The firmware gets them later, scripts/secure-host.sh.
+if [ "$secureboot" = true ]; then
+  say "creating Secure Boot keys"
+  sbctl create-keys
+  install -d -m 700 /mnt/var/lib/sbctl
+  cp -a /var/lib/sbctl/. /mnt/var/lib/sbctl/
+fi
 cache_args=()
 if [ -f "$stick/attic.netrc" ]; then
   install -m 600 "$stick/attic.netrc" /etc/nix/netrc
@@ -166,6 +201,11 @@ chown -R 1000:100 /mnt/home/artesia/.dotfiles
 say "done"
 echo "host:  $host"
 echo "disk:  $device"
+if [ "$secureboot" = true ] || [ "$encrypt" = true ]; then
+  echo
+  echo "Secure Boot and the TPM unlock are finished from the new system:"
+  echo "  scripts/secure-host.sh in the repo (says what the next step is, run it after each reboot)"
+fi
 if [ -n "$(git -C "$repo" status --porcelain)" ]; then
   echo
   echo "The repo in the new home (.dotfiles) has changes to commit and push:"

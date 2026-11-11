@@ -27,6 +27,7 @@ let
       jq
       mkpasswd
       nixfmt
+      sbctl
       util-linux
       inputs.disko.packages.${system}.disko
     ];
