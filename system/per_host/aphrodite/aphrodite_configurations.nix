@@ -4,7 +4,7 @@
 
 {
   networking.hostName = "aphrodite";
-  host.gpu = "amd";
+  host.gpu = "intel";
   host.fastboot.enable = true;
   networking.nameservers = [
     "1.1.1.1"
@@ -21,10 +21,7 @@
   ];
 
   host.cursor.size = 32;
-  host.laptop = {
-    enable = true;
-    thermald = false; # AMD
-  };
+  host.laptop.enable = true;
 
   # Release this machine was first installed with. Leave it alone.
   system.stateVersion = "25.05";
