@@ -13,6 +13,9 @@
     obsidian
     mpv
     unzip
+    btop # processes, cpu, memory
+    ncdu # what is using the disk
+    fastfetch # system summary in the terminal
     p7zip
     anki-bin
     libreoffice-fresh
