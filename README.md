@@ -38,9 +38,9 @@ New machine or reinstall, it is the same stick. Download `celestial-installer.is
 
 It asks everything before it touches the disk, then runs by itself:
 
-1. Network. Ethernet just works. Without it, it offers the `nmtui` wifi menu.
+1. Network. Ethernet just works. On a reinstall it reuses the wifi the old install knew. Otherwise it offers the `nmtui` wifi menu.
 2. Host. A machine whose DMI product name is in some host's `host.dmi` is recognised. A new machine with a key stick prepared for it (below) takes its name from that key. Otherwise it asks for a name: an existing one installs that host here, a new one creates the host. A new host is filled in from what the hardware reports (hardware file, DMI name, GPU, laptop or not, connected screens), so it is recognised by itself from then on.
-3. Password, only when the host's age key cannot read the secrets yet.
+3. Password, only when the host's age key cannot read the secrets yet. A reinstall keeps the key of the install it replaces (it asks for the old disk passphrase if that install is encrypted), so one stick is enough.
 4. It shows the disk it is about to wipe and counts down 15 seconds.
 
 Then disko, `nixos-install`, reboot. The repo ends up in `~/.dotfiles` with whatever was generated, ready to commit.

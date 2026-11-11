@@ -28,6 +28,8 @@ let
       mkpasswd
       nixfmt
       sbctl
+      cryptsetup
+      findutils
       util-linux
       inputs.disko.packages.${system}.disko
     ];

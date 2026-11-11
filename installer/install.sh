@@ -1,6 +1,8 @@
 # Installs one host of this flake on the machine it boots on. Runs from the
 # installer image on tty1. Every question comes before the disk is touched,
 # after the countdown it runs by itself.
+#   0. a reinstall: take the age key and wifi profiles from the install on
+#      the disk (asks for its passphrase if that one is encrypted)
 #   1. network: ethernet, wifi profiles from the stick, or the nmtui menu
 #   2. the repo: celestial.bundle on the stick, otherwise a fresh clone
 #   3. host: matched by DMI product name, else named by the only key on the
@@ -35,6 +37,50 @@ chmod 700 "$keys"
 if [ -e "/dev/disk/by-label/$keys_label" ] && ! mountpoint -q "$stick"; then
   mount -o ro "/dev/disk/by-label/$keys_label" "$stick"
   say "found the $keys_label stick"
+fi
+
+
+# 0. A reinstall: the install that is about to be wiped still holds the host's
+#    age key and the wifi it knew. Take both along, so one stick is enough.
+old=/run/celestial/old
+old_host=""
+old_root=/dev/disk/by-partlabel/disk-main-root
+mkdir -p "$old" /run/celestial/old-keys
+if [ -e "$old_root" ]; then
+  old_dev="$old_root"
+  if cryptsetup isLuks "$old_root" 2>/dev/null; then
+    old_dev=""
+    say "an encrypted install is on this disk"
+    echo "Its disk passphrase lets the reinstall keep its key and wifi. Empty skips that."
+    while read -r -s -p "    disk passphrase of the existing install: " old_pass && [ -n "$old_pass" ]; do
+      echo
+      if printf '%s' "$old_pass" | cryptsetup open --readonly --key-file - "$old_root" celestial-old; then
+        old_dev=/dev/mapper/celestial-old
+        break
+      fi
+      echo "    that did not open it, try again or leave empty"
+    done
+    echo
+    unset old_pass
+  fi
+  if [ -n "$old_dev" ] && mount -o ro "$old_dev" "$old" 2>/dev/null; then
+    old_host="$(readlink "$old/nix/var/nix/profiles/system" 2>/dev/null \
+      | xargs -r -I{} readlink "$old/nix/var/nix/profiles/{}" 2>/dev/null \
+      | sed -n 's/.*-nixos-system-\(.*\)-[0-9][0-9]\.[0-9][0-9].*/\1/p' || true)"
+    if [ -n "$old_host" ] && [ -s "$old/var/lib/sops-nix/key" ]; then
+      cp -a "$old/var/lib/sops-nix/." /run/celestial/old-keys/
+      say "found an install of $old_host on this disk, its age key is kept if this becomes $old_host again"
+    fi
+    for profile in "$old"/.rw-etc/upper/NetworkManager/system-connections/*.nmconnection \
+      "$old"/etc/NetworkManager/system-connections/*.nmconnection; do
+      [ -e "$profile" ] || continue
+      install -m 600 "$profile" /etc/NetworkManager/system-connections/
+      echo "wifi profile from the existing install: $(basename "$profile")"
+    done
+    nmcli connection reload || true
+    umount "$old"
+  fi
+  if [ -e /dev/mapper/celestial-old ]; then cryptsetup close celestial-old; fi
 fi
 
 # 1. network
@@ -108,6 +154,9 @@ fi
 if [ -f "$stick/keys/$host.key" ]; then
   install -m 600 "$stick/keys/$host.key" "$keys/key"
   say "age key for $host taken from the stick"
+elif [ "$old_host" = "$host" ] && [ -s /run/celestial/old-keys/key ]; then
+  cp -a /run/celestial/old-keys/. "$keys/"
+  say "age key for $host kept from the install on this disk"
 fi
 KEY_DIR="$keys" "$repo/scripts/setup-host.sh" "$host"
 git -C "$repo" add -A
