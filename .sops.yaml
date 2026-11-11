@@ -2,7 +2,7 @@ keys:
   - &host_io age17jq33fydz8gpsel7y7e5txrydyvyzeuwmpuyntn7r293qdld4f6sd083kd
   - &host_ganymedes age15rm6xu3q6xe9ymua5xj8ngxgm3w7fe5vh0slrfa57zgv0t8mh4eszk3gsl
   - &host_nymphe age1d37zv3299va6q8nmqr2fllzsq33pne78mz7dlr57n25h5g4t4e3s9zddyk
-  # aphrodite: add its key here and under `all` (sudo age-keygen -y /var/lib/sops-nix/key)
+  - &host_aphrodite age18n0zpq8exw60dphr0ma34y5yyzzwlt6rmjy4l9h9rf62vsf3pcrq85lv6d
   - &backup age14yvm0d4eu0m08tgwd5sada2yxcg0vt2pyhyn0lweppdpx5swyarsg3p6a6
 
 recipient_sets:
@@ -10,6 +10,7 @@ recipient_sets:
     - *host_io
     - *host_ganymedes
     - *host_nymphe
+    - *host_aphrodite
     - *backup
 
 creation_rules:
