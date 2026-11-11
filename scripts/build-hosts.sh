@@ -15,6 +15,8 @@ hosts whose toplevel is already present. With no arguments, does every host.
 
 Environment:
   ATTIC_TOKEN      token for the private cache (narinfo checks; attic push uses its login)
+  CACHIX_AUTH_TOKEN  when set, what was built also goes to the public cachix cache
+  CACHIX_CACHE     cachix cache name           (default: celestial)
   ATTIC_CACHE      cache name for attic push   (default: celestial)
   ATTIC_CACHE_URL  binary cache endpoint       (default: https://attic.artesia.cloud/\$ATTIC_CACHE)
   PUSH             set to 0 to build only      (default: 1)
@@ -75,6 +77,14 @@ for host in "${hosts[@]}"; do
       echo "    push failed" >&2
       failed+=("$host")
       continue
+    fi
+    # Second copy on cachix: reachable without the lab network or a token, so
+    # an install or a switch away from home does not compile. cachix leaves
+    # out what cache.nixos.org already has. Not fatal, attic is the real one.
+    if [ -n "${CACHIX_AUTH_TOKEN:-}" ]; then
+      echo "==> $host: pushing to cachix"
+      nix run --inputs-from "$REPO_ROOT" nixpkgs#cachix -- push "${CACHIX_CACHE:-celestial}" "$out" \
+        || echo "    cachix push failed, carrying on" >&2
     fi
   fi
 

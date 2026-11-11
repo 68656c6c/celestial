@@ -85,4 +85,5 @@ jobs:
       - name: Build and push ${{ matrix.host }}
         env:
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
         run: ./scripts/build-hosts.sh "${{ matrix.host }}"
