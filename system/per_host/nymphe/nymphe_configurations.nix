@@ -24,6 +24,8 @@
   host.fastboot.enable = true;
   host.gpu = "intel";
   hardware.bluetooth.enable = true;
+  # camera-stream: OBS on another machine pulls the SRT feed
+  networking.firewall.allowedUDPPorts = [ 9000 ];
   # lisgd reads the touchscreen next to sway
   users.users.artesia.extraGroups = [ "input" ];
 
@@ -34,6 +36,25 @@
       # so lisgd reads the touch device itself and runs a sway command per
       # stroke. Edge strokes only, so apps keep their own swipes. Format:
       # fingers, direction (UD = top to bottom), start edge, distance, on release.
+      # Webcam and default microphone as an SRT listener for OBS elsewhere:
+      # Media Source, "local file" off, input srt://<nymphe>:9000?mode=caller.
+      # The microphone is whatever PipeWire has as default source, so plugging
+      # one in and picking it in pwvucontrol is enough. ffmpeg exits when the
+      # caller leaves; the unit restarts it and waits for the next one.
+      cameraStream = pkgs.writeShellApplication {
+        name = "camera-stream";
+        runtimeInputs = [ pkgs.ffmpeg ];
+        text = ''
+          exec ffmpeg -hide_banner -loglevel warning \
+            -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30 -i "''${CAMERA_DEVICE:-/dev/video0}" \
+            -f pulse -i default \
+            -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -g 60 \
+            -b:v 3M -maxrate 3M -bufsize 6M \
+            -c:a aac -b:a 128k -ar 48000 \
+            -f mpegts "srt://0.0.0.0:9000?mode=listener&latency=200000&pkt_size=1316"
+        '';
+      };
+
       touchGestures = pkgs.writeShellApplication {
         name = "touch-gestures";
         runtimeInputs = [
@@ -78,7 +99,17 @@
       home.packages = [
         pkgs.squeekboard
         touchGestures
+        cameraStream
       ];
+      # Off until started from the waybar camera button
+      systemd.user.services.camera-stream = {
+        Unit.Description = "Webcam and microphone over SRT";
+        Service = {
+          ExecStart = lib.getExe cameraStream;
+          Restart = "always";
+          RestartSec = 1;
+        };
+      };
       dconf.settings = {
         # On-screen layout only; the physical keyboard stays on sway's xkb setting.
         "org/gnome/desktop/input-sources".sources = [

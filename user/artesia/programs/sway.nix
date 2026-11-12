@@ -53,6 +53,28 @@ let
   # Waybar button: rotate the built-in screen a quarter turn clockwise per
   # click, right click back to normal. Touch follows the output, so the
   # touchscreen stays aligned. No sensor is involved: whatever is picked stays.
+  # Waybar button for the camera-stream user service (hosts that define it,
+  # nymphe today). Prints nothing elsewhere, which hides the module.
+  swayCamera = pkgs.writeShellApplication {
+    name = "sway-camera";
+    text = ''
+      unit=camera-stream.service
+      systemctl --user cat "$unit" >/dev/null 2>&1 || exit 0
+      if [ "''${1:-}" = toggle ]; then
+        if systemctl --user is-active --quiet "$unit"; then
+          systemctl --user stop "$unit"
+        else
+          systemctl --user start "$unit"
+        fi
+      fi
+      if systemctl --user is-active --quiet "$unit"; then
+        echo '{"text": "󰄀 live", "tooltip": "camera and microphone on srt port 9000, click to stop", "class": "on"}'
+      else
+        echo '{"text": "󰄀", "tooltip": "camera stream off, click to start", "class": "off"}'
+      fi
+    '';
+  };
+
   swayRotate = pkgs.writeShellApplication {
     name = "sway-rotate";
     runtimeInputs = [ pkgs.jq ];
@@ -237,6 +259,7 @@ lib.mkIf osConfig.programs.sway.enable {
         "tray"
         "custom/keyboard"
         "custom/rotate"
+        "custom/camera"
         "wireplumber"
         "backlight"
         "custom/nightlight"
@@ -262,6 +285,13 @@ lib.mkIf osConfig.programs.sway.enable {
         return-type = "json";
         interval = "once";
         on-click = "${lib.getExe swayKeyboard} toggle";
+      };
+
+      "custom/camera" = {
+        exec = lib.getExe swayCamera;
+        return-type = "json";
+        interval = 5;
+        on-click = "${lib.getExe swayCamera} toggle";
       };
 
       "custom/rotate" = {
@@ -367,6 +397,7 @@ lib.mkIf osConfig.programs.sway.enable {
       #tray,
       #custom-keyboard,
       #custom-rotate,
+      #custom-camera,
       #wireplumber,
       #backlight,
       #custom-nightlight,
@@ -377,6 +408,10 @@ lib.mkIf osConfig.programs.sway.enable {
 
       #custom-keyboard.off {
         color: #ffb347;
+      }
+
+      #custom-camera.on {
+        color: #ff5555;
       }
 
       #custom-rotate.rotated {
