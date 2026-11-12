@@ -45,8 +45,21 @@
         name = "camera-stream";
         runtimeInputs = [ pkgs.ffmpeg ];
         text = ''
+          # An external webcam wins over the built-in one, whose module drops
+          # off the USB bus as soon as it starts streaming.
+          dev="''${CAMERA_DEVICE:-}"
+          if [ -z "$dev" ]; then
+            for d in /dev/v4l/by-id/*-video-index0; do
+              [ -e "$d" ] || continue
+              case "$d" in *Integrated*) continue ;; esac
+              dev="$d"
+              break
+            done
+          fi
+          dev="''${dev:-/dev/video0}"
+          echo "camera: $dev"
           exec ffmpeg -hide_banner -loglevel warning \
-            -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30 -i "''${CAMERA_DEVICE:-/dev/video0}" \
+            -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30 -i "$dev" \
             -f pulse -i default \
             -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -g 60 \
             -b:v 3M -maxrate 3M -bufsize 6M \
@@ -103,11 +116,15 @@
       ];
       # Off until started from the waybar camera button
       systemd.user.services.camera-stream = {
-        Unit.Description = "Webcam and microphone over SRT";
+        Unit = {
+          Description = "Webcam and microphone over SRT";
+          # keep retrying: a camera that is slow to appear must not kill the toggle
+          StartLimitIntervalSec = 0;
+        };
         Service = {
           ExecStart = lib.getExe cameraStream;
           Restart = "always";
-          RestartSec = 1;
+          RestartSec = 3;
         };
       };
       dconf.settings = {
