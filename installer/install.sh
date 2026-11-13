@@ -34,6 +34,15 @@ shell() { say "dropping to a shell, celestial-install $repo_url starts over"; ex
 
 mkdir -p "$stick" "$keys"
 chmod 700 "$keys"
+
+# Everything on screen also goes to a log, and a failing step stays on screen
+# until enter: the service hands tty1 to a login prompt afterwards, which
+# would wipe the one line that says what went wrong.
+log=/run/celestial/install.log
+term="$(tty 2>/dev/null || echo /dev/tty1)"
+exec > >(tee -a "$log") 2>&1
+# shellcheck disable=SC2154  # rc is set inside the trap
+trap 'rc=$?; trap - ERR; printf "\n!! failed with exit %s at line %s: %s\n   log: %s\n" "$rc" "$LINENO" "$BASH_COMMAND" "$log"; read -r -p "enter for a shell " _ || true' ERR
 if [ -e "/dev/disk/by-label/$keys_label" ] && ! mountpoint -q "$stick"; then
   mount -o ro "/dev/disk/by-label/$keys_label" "$stick"
   say "found the $keys_label stick"
@@ -101,7 +110,8 @@ until online; do
   fi
   tries=0
   echo "no network yet. Plug in ethernet, or press enter to pick a wifi network."
-  if read -r -t 30; then nmtui connect || true; fi
+  # shellcheck disable=SC2094  # a terminal, not a file
+  if read -r -t 30; then nmtui connect < "$term" > "$term" 2>&1 || true; fi
 done
 
 # 2. repo
