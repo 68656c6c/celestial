@@ -16,6 +16,8 @@
     btop # processes, cpu, memory
     ncdu # what is using the disk
     fastfetch # system summary in the terminal
+    pciutils # lspci
+    usbutils # lsusb
     p7zip
     anki-bin
     libreoffice-fresh
