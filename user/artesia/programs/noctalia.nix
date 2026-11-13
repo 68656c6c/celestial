@@ -128,6 +128,10 @@ let
       };
     };
 
+    # With face unlock, enter on an empty password starts the check: the lock
+    # screen only asks PAM once something is submitted, and howdy answers first.
+    lockscreen.allow_empty_password = osConfig.services.howdy.enable;
+
     lockscreen_widgets = {
       enabled = false;
       schema_version = 2;
