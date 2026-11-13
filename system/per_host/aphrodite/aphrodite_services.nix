@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   services = {
@@ -11,6 +11,13 @@
       settings.video.device_path = "/dev/v4l/by-path/pci-0000:00:14.0-usb-0:9:1.2-video-index0";
     };
     linux-enable-ir-emitter.enable = true;
+
+    # Mullvad daemon and its app (mullvad-vpn is the GUI build, plain
+    # `mullvad` would be the command line only). Log in once from the app.
+    mullvad-vpn = {
+      enable = true;
+      package = pkgs.mullvad-vpn;
+    };
 
     # Firmware updates from HP: fwupdmgr refresh && fwupdmgr update
     fwupd.enable = true;
