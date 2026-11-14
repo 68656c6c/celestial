@@ -64,6 +64,7 @@
     attic-client
     qimgv
     pwvucontrol
+    wdisplays
     pangolin-cli
     bottles
     pantheon.pantheon-agent-polkit
