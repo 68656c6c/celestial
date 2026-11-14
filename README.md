@@ -4,7 +4,7 @@ My NixOS stack: one flake, home-manager, niri with noctalia, or sway, four machi
 
 ## Folder structure
 ```
-  diy-modules     - custom options (host facts, disk layout, gpu, laptop and fastboot switches)
+  diy-modules     - custom options (host facts, disk layout, gpu, laptop, fastboot and bootsplash switches)
   diy-packages    - software not in nixpkgs, used as pkgs.diy.<name>
   disko           - the one disk layout every host uses (ESP, root, optional swap)
   docs            - how the repo fits together
