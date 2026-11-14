@@ -140,9 +140,10 @@ lib.mkIf osConfig.programs.niri.enable {
 
   xdg.configFile."niri/config.kdl".text = ''
     spawn-at-startup "noctalia"
-    // Bare mpv and browser picture-in-picture windows stick on their own;
-    // everything else through Mod+P.
-    spawn-at-startup "niri-float-sticky" "-app-id" "^mpv$" "-title" "^Picture-in-Picture$"
+    // Nothing sticks on its own, only what Mod+P marks. No -app-id or -title
+    // filter: the daemon only ever moves windows that pass it, a manual mark
+    // on any other window is silently ignored.
+    spawn-at-startup "niri-float-sticky" "-disable-auto-stick"
     spawn-at-startup "niri-autofloat"
     spawn-at-startup "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit"
 
