@@ -56,6 +56,14 @@
 
   xdg.autostart.enable = true;
 
+  # Zen reads native messaging manifests from ~/.mozilla, like Firefox, but
+  # keeps its profile in ~/.config/zen. Bitwarden only writes its browser
+  # integration manifest when ~/.mozilla exists, so without this the extension
+  # can never reach the desktop app for biometric unlock.
+  systemd.user.tmpfiles.rules = [
+    "d %h/.mozilla/native-messaging-hosts 0755 - - -"
+  ];
+
   xdg.portal = {
     enable = lib.mkDefault true;
     config = {
