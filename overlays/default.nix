@@ -16,4 +16,5 @@ final: _prev: {
   pangolin-cli = unstable.pangolin-cli;
   ghostty = unstable.ghostty;
   ghostty-bin = unstable.ghostty-bin;
+  openmw = unstable.openmw;
 }
