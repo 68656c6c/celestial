@@ -20,10 +20,14 @@
       # never reaches it and NixOS's EDITOR=nano wins (sops, git, ...)
       EDITOR = "hx";
       VISUAL = "hx";
-      NIXOS_OZONE_WL = 1;
-      WLR_NO_HARDWARE_CURSORS = 1;
-      NH_OS_FLAKE = "${config.home.homeDirectory}/.dotfiles";
-      XCURSOR_SIZE = osConfig.host.cursor.size;
+      # the same values the other shells get, by name: the whole set cannot be
+      # taken over, some entries use sh expansions
+      inherit (config.home.sessionVariables)
+        NIXOS_OZONE_WL
+        WLR_NO_HARDWARE_CURSORS
+        NH_OS_FLAKE
+        XCURSOR_SIZE
+        ;
       SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";
       QT_QPA_PLATFORM = "wayland";
       QT_QPA_PLATFORMTHEME = "qt6ct";

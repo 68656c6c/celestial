@@ -12,7 +12,7 @@
         defaultBranch = "main";
       };
       alias = {
-        a = "add *";
+        a = "add -A"; # `add *` leaves out dotfiles and deletions
         c = "commit -m";
         pl = "pull";
         ph = "push";

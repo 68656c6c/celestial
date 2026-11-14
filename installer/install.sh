@@ -144,8 +144,18 @@ if [ -z "$host" ]; then
     fi
   fi
 fi
+# Still unknown, but the install on this disk was one of the hosts: a
+# reinstall of a machine whose host.dmi was never filled in.
+from_old=0
+if [ -z "$host" ] && [ -n "$old_host" ] && jq -e --arg h "$old_host" 'has($h)' /run/celestial/hosts.json >/dev/null; then
+  host="$old_host"
+  from_old=1
+fi
 if [ "$new_from_stick" = 1 ]; then
   say "new host $host for this machine ($product), named by the key on the stick"
+elif [ "$from_old" = 1 ]; then
+  say "this machine is $host, going by the install on its disk"
+  echo "to have it recognised by itself next time: host.dmi = [ \"$product\" ];"
 elif [ -n "$host" ]; then
   say "this machine is $host ($product)"
 else

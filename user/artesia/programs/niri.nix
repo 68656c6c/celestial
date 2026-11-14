@@ -9,19 +9,7 @@
 let
   cursorSize = toString osConfig.host.cursor.size;
 
-  # 143.973 -> "143.973", 60.0 -> "60.000"
-  fmtRefresh =
-    r:
-    let
-      whole = builtins.floor r;
-      milli = builtins.floor ((r - whole) * 1000 + 0.5);
-    in
-    if milli == 1000 then
-      "${toString (whole + 1)}.000"
-    else
-      "${toString whole}.${lib.fixedWidthNumber 3 milli}";
-
-  resolution = m: "${toString m.width}x${toString m.height}";
+  inherit (import ../lib/monitors.nix { inherit lib; }) fmtRefresh resolution;
 
   outputs = lib.concatMapStringsSep "\n" (m: ''
     output "${m.output}" {
@@ -79,12 +67,6 @@ let
     '';
   };
 
-  # Mod+P: picture-in-picture mode for the focused window. Tiled -> a 960x540
-  # float in the bottom-right corner that follows the active workspace (the
-  # niri-float-sticky daemon moves it on every workspace switch). Floating ->
-  # back into the tiling. A window on another workspace only gets a frame
-  # callback about once a second, so a film streamed to Discord from a hidden
-  # workspace would arrive at 1 fps; keeping it visible keeps the full rate.
   # Shift+Print: pick a region on any monitor, annotate it in satty. niri's own
   # screenshot UI (Print) covers the plain case; flameshot cannot, its portal
   # path in niri only handles a single output.
@@ -103,6 +85,12 @@ let
     '';
   };
 
+  # Mod+P: picture-in-picture mode for the focused window. Tiled -> a 960x540
+  # float in the bottom-right corner that follows the active workspace (the
+  # niri-float-sticky daemon moves it on every workspace switch). Floating ->
+  # back into the tiling. A window on another workspace only gets a frame
+  # callback about once a second, so a film streamed to Discord from a hidden
+  # workspace would arrive at 1 fps; keeping it visible keeps the full rate.
   niriPip = pkgs.writeShellApplication {
     name = "niri-pip";
     runtimeInputs = [

@@ -32,10 +32,6 @@
   home-manager.users.artesia =
     { lib, pkgs, ... }:
     let
-      # Touchscreen gestures for tablet mode. sway only binds touchpad gestures,
-      # so lisgd reads the touch device itself and runs a sway command per
-      # stroke. Edge strokes only, so apps keep their own swipes. Format:
-      # fingers, direction (UD = top to bottom), start edge, distance, on release.
       # Webcam and default microphone as an SRT listener for OBS elsewhere:
       # Media Source, "local file" off, input srt://<nymphe>:9000?mode=caller.
       # The microphone is whatever PipeWire has as default source, so plugging
@@ -68,6 +64,10 @@
         '';
       };
 
+      # Touchscreen gestures for tablet mode. sway only binds touchpad gestures,
+      # so lisgd reads the touch device itself and runs a sway command per
+      # stroke. Edge strokes only, so apps keep their own swipes. Format:
+      # fingers, direction (UD = top to bottom), start edge, distance, on release.
       touchGestures = pkgs.writeShellApplication {
         name = "touch-gestures";
         runtimeInputs = [

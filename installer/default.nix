@@ -20,6 +20,7 @@ let
       age
       coreutils
       curl
+      deadnix
       gawk
       git
       gnugrep

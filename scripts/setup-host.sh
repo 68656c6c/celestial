@@ -73,7 +73,10 @@ mkdir -p "$HOST_DIR"
 HARDWARE_FILE="$HOST_DIR/hardware-configuration.$HOSTNAME.nix"
 as_root nixos-generate-config --no-filesystems --show-hardware-config >"$HARDWARE_FILE.new"
 mv "$HARDWARE_FILE.new" "$HARDWARE_FILE"
-# same formatting as `nix fmt`, so an unchanged machine gives no diff
+# What `nix flake check` wants: no unused arguments (the generator always
+# writes `pkgs`) and the formatting of `nix fmt`, so an unchanged machine
+# gives no diff and a new one does not turn CI red.
+if command -v deadnix >/dev/null; then deadnix --edit --no-lambda-arg "$HARDWARE_FILE" >/dev/null; fi
 if command -v nixfmt >/dev/null; then nixfmt "$HARDWARE_FILE"; fi
 
 echo "==> Age key..."

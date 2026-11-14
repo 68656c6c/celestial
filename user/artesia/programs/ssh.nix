@@ -10,12 +10,12 @@
         HostName = "git.artesia.cloud";
         User = "git";
         Port = 222;
-        IdentityFile = "~/.ssh/id_rsa";
       };
+      # No IdentityFile anywhere: the keys live in Bitwarden, its agent
+      # (SSH_AUTH_SOCK, see nushell.nix) offers them.
       "github.com" = {
         HostName = "github.com";
         User = "git";
-        IdentityFile = "~/.ssh/id_rsa";
       };
       "moxmq1" = {
         HostName = "moxmq1.artesia.cloud";

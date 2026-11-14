@@ -9,19 +9,7 @@
 let
   mod = "Mod4";
 
-  # 143.973 -> "143.973", 60.0 -> "60.000"
-  fmtRefresh =
-    r:
-    let
-      whole = builtins.floor r;
-      milli = builtins.floor ((r - whole) * 1000 + 0.5);
-    in
-    if milli == 1000 then
-      "${toString (whole + 1)}.000"
-    else
-      "${toString whole}.${lib.fixedWidthNumber 3 milli}";
-
-  resolution = m: "${toString m.width}x${toString m.height}";
+  inherit (import ../lib/monitors.nix { inherit lib; }) fmtRefresh resolution;
 
   internalKeyboard = "1:1:AT_Translated_Set_2_keyboard";
 
@@ -50,9 +38,6 @@ let
     '';
   };
 
-  # Waybar button: rotate the built-in screen a quarter turn clockwise per
-  # click, right click back to normal. Touch follows the output, so the
-  # touchscreen stays aligned. No sensor is involved: whatever is picked stays.
   # Waybar button for the camera-stream user service (hosts that define it,
   # nymphe today). Prints nothing elsewhere, which hides the module.
   swayCamera = pkgs.writeShellApplication {
@@ -75,6 +60,9 @@ let
     '';
   };
 
+  # Waybar button: rotate the built-in screen a quarter turn clockwise per
+  # click, right click back to normal. Touch follows the output, so the
+  # touchscreen stays aligned. No sensor is involved: whatever is picked stays.
   swayRotate = pkgs.writeShellApplication {
     name = "sway-rotate";
     runtimeInputs = [ pkgs.jq ];

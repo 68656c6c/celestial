@@ -8,15 +8,18 @@ export def deploy [message: string] {
   print "Linting Nix files..."
   nix flake check
 
-  print "Staging and committing..."
+  # Staged first: a flake only sees files git knows about.
+  print "Staging..."
   git add .
-  git commit -m $message
 
-  print "Pushing..."
-  git push
-
+  # Switch before the commit, so what reaches main has built and activated
+  # here. A failed switch stops the deploy with nothing committed.
   print "Switching..."
   nh os switch
+
+  print "Committing and pushing..."
+  git commit -m $message
+  git push
 
   print "Done."
 }
