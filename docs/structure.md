@@ -1,30 +1,12 @@
 # Structure
 
-This repo is the complete configuration for my Linux machines. Each machine runs NixOS, a Linux distribution where the whole system is described in code: installed software, services, users, desktop settings and dotfiles. Applying the repo to a machine builds that description and switches to it, so every machine can be rebuilt from scratch to the same state, and every change is a git commit that can be rolled back.
+How the repo fits together and where a change goes. The procedures (installing, the key stick, Secure Boot) are in the [README](../README.md); the detail of each module is in the comments next to it.
 
-## Terms used in this document
-
-| Term | What it is |
-|---|---|
-| Nix | The package manager and configuration language everything here is written in. Files end in `.nix`. |
-| nixpkgs | The official Nix package collection. "Stable" is the twice-yearly release (26.05 here), "unstable" is the rolling branch with newer versions. |
-| Module | A `.nix` file that sets configuration values, or defines new settings other files can set. NixOS merges all modules into one system configuration. |
-| Flake | The entry point of a Nix project (`flake.nix`). Declares external dependencies with pinned versions (`flake.lock`) and what the project builds. |
-| home-manager | A Nix tool for the user's own settings and dotfiles (shell, editor, terminal), as opposed to system-wide settings. |
-| Overlay | A rule that changes the package set, for example "use the unstable version of this app" or "add these extra packages". |
-| sops / age | Encryption for secrets stored in git. Each machine has its own private key and can only decrypt the files it is allowed to. |
-| attic | A self-hosted binary cache. Machines download finished builds from it instead of compiling locally. |
-| GitHub Actions | The CI that builds every machine on every push, on GitHub's own runners. |
-| Pangolin | A self-hosted tunnel that publishes lab services on the internet. Attic is reachable through it. |
-| Wayland compositor | The component that draws windows and handles input on a modern Linux desktop. niri (scrolling columns) and sway (classic tiling) are the two used here. |
-| noctalia | The desktop shell on top of niri: status bar, app launcher, notifications, lock screen, wallpaper rotation. |
-| Tailscale | A mesh VPN. The daemon runs on every machine, joining the network is a manual step. |
-| disko | Declarative disk partitioning. Describes the disk layout in Nix and can format a disk from that description. |
-| Chaotic Nyx | A third-party Nix package set with a binary cache. Used for the CachyOS kernel on io. |
+Four things here are not stock NixOS: **attic** is the self-hosted binary cache, **Pangolin** the self-hosted tunnel that publishes it (and other lab services), **noctalia** the desktop shell on top of niri, and **Chaotic Nyx** the third-party package set io takes its CachyOS kernel from.
 
 ## How a machine is built
 
-`flake.nix` treats every folder under `system/per_host/` as a machine and builds each with the same recipe (`mkHost`). Every machine gets the same shared layers; the only things that differ are its hardware file and its own folder.
+`flake.nix` treats every folder under `system/per_host/` as a host and builds each with `mkHost`. Every host gets the same shared layers; only its hardware file and its own folder differ.
 
 ```mermaid
 flowchart TD
@@ -68,80 +50,34 @@ flowchart TD
     diymods -.->|"read by"| programs
 ```
 
-`diy-modules/` and `user/artesia/programs/` load every `.nix` file in their folder automatically, so adding a file is enough. `system/` and `system/per_host/<name>/` list their files explicitly.
+`diy-modules/` and `user/artesia/programs/` import every `.nix` file in their folder, so adding a file is enough. `system/` and `system/per_host/<name>/` list their files explicitly.
 
-## What each layer is for
+## Layers
 
-The short version: the shared layers describe what every machine has, the per-machine layer describes what makes one machine different, and the custom modules define the settings the per-machine layer fills in.
+**`system/`** is the baseline every host gets, split by kind: `configurations`, `packages`, `programs`, `services`.
 
-### system/: the baseline
+**`system/per_host/<name>/`** is what makes one host different, in the same four files, plus its generated `hardware-configuration.<name>.nix` (kernel modules and microcode only; disks come from `host.disk`). It can override the baseline and the user layer, as nymphe does for its terminal.
 
-What every machine gets regardless of hardware: boot loader, networking and firewall, timezone and language, the `artesia` user account, audio, Bluetooth, the login screen, Steam, fonts, Tailscale, automatic cleanup of old builds, the sops key location and the address of the binary cache.
-
-It is split into four files by kind so it is always clear where something lives: `configurations` (general system settings), `packages` (installed software), `programs` (applications that need system integration, such as Steam or a compositor) and `services` (background daemons).
-
-### system/per_host/\<name\>/: per machine
-
-The baseline cannot know what hardware a machine has or what it is used for, so each machine has its own folder with the same four-file split. This is where a desktop and a laptop diverge:
-
-| Machine | Type | Compositor | What makes it different |
+| Host | Type | Compositor | In short |
 |---|---|---|---|
-| io | desktop | niri | NVIDIA graphics card with a driver tweak to limit video memory use, three monitors, Sunshine (a remote desktop and game streaming server) reachable on its LAN address, a USB label printer, virtual machine tools, 3D and image editing software, the CachyOS LTS kernel from Chaotic Nyx, ext4 root, a 3 second boot menu for its Windows entry |
-| ganymedes | laptop | niri and sway | single built-in screen, laptop power management, fixed public DNS servers, an HD-audio pin patch for its Acer Predator speaker wiring (headphone jack sense off, right pair and subwoofers enabled) and a pinned 4.0 + microphone audio profile, Intel for the desktop with the GTX 970M on PRIME offload |
-| nymphe | laptop | sway only | built to run on very little: no xwayland, foot instead of ghostty, waybar and fuzzel instead of noctalia, no Discord presence in the background, screen scaled to 125%, smaller cursor, laptop power management, an on-screen keyboard (squeekboard) that pops up on text fields once the waybar keyboard button has cut the internal keyboard, because the Flex does not report its fold to the OS, and touchscreen edge swipes through lisgd: one finger down from the top closes the window, in from the left or right edge switches workspace, two fingers carry the window along, two fingers down from the top float it, up from the bottom fullscreen it, one finger up from the bottom shows the keyboard. A waybar camera button starts and stops `camera-stream`, the webcam and default microphone as an SRT listener on UDP 9000 for OBS on another machine |
-| aphrodite | laptop | niri | single built-in screen, Intel graphics, laptop power management, encrypted disk unlocked by the TPM, Secure Boot, face unlock on the IR camera (howdy) for sudo and the lock screen, Mullvad VPN and Mullvad Browser, firmware updates through fwupd |
+| io | desktop | niri | NVIDIA, three monitors, CachyOS LTS kernel, Sunshine, label printer, VM and media tools, ext4, dual boot with Windows |
+| ganymedes | laptop | niri and sway | Intel with the GTX 970M on PRIME offload, patched speaker wiring |
+| nymphe | laptop | sway | the light one: no xwayland, foot, tablet mode with on-screen keyboard and touch gestures, webcam stream for OBS |
+| aphrodite | laptop | niri | encrypted disk on the TPM, Secure Boot, face unlock, Mullvad, boot animation, Pangolin client |
 
-A per-machine file can also override the baseline. nymphe, for example, swaps its user's terminal and turns off a few user services, without touching the shared files.
+**`diy-modules/`** defines the `host.*` options the per-host files fill in. Machine facts (`host.monitors`, `host.cursor`, `host.dmi`, `host.disk`, `host.gpu`) are stated once per host and read back elsewhere: the niri and sway configs write their output blocks from `host.monitors`, disko takes its layout from `host.disk`, the installer finds the host by `host.dmi`. Feature switches (`host.laptop`, `host.fastboot`, `host.secureboot`, `host.bootsplash`) bundle several settings behind one option. `host_pangolin.nix` has no option: a host connects once `secrets.yaml` holds an entry named `pangolin-<hostname>`.
 
-Each folder also holds `hardware-configuration.<name>.nix`. It is generated by `nixos-generate-config --no-filesystems` on every install and only describes kernel modules and CPU microcode; disks and mounts come from `host.disk` and disko. It gets regenerated, not edited by hand.
+**`imports/`** loads the third-party modules (home-manager, sops-nix, disko, lanzaboote, noctalia) and `diy-modules/`.
 
-### diy-modules/: custom settings
+**`overlays/`** swaps selected packages for their unstable version, system-wide, and provides `pkgs.diy` from **`diy-packages/`** (software nixpkgs lacks). For an app only one file uses, write `unstable.<name>` there instead.
 
-NixOS comes with thousands of settings, but none for facts like "this laptop has one 1080p screen at 125% scale". Without a place to record that, every application that cares about screens would need its own per-machine copy of it, or the shared files would fill up with "if machine is X" checks. These modules add the missing settings. There are two kinds:
+**`user/artesia/`** is the home-manager layer, the same on every host: one file per application under `programs/`. `niri.nix` and `sway.nix` only apply where the host enables that compositor.
 
-**Machine facts** (`host.monitors`, `host.cursor`, `host.dmi`, `host.disk`, `host.gpu`) do nothing by themselves. They give each machine a single, validated place to state a fact, and the user configuration reads it back. This is the main link between the per-machine layer and the user layer. `host.disk` (btrfs or ext4, swap and ESP size) feeds `disko/layout.nix`, the single disk layout every machine uses: an ESP, the root and, unless `host.disk.swapSize` is null, a swap partition, mounted by GPT partition label so the hardware files no longer carry filesystems. `host.dmi` is how the installer recognises a machine. `host.gpu` (intel, amd or nvidia) picks the graphics drivers and hardware video decode: the Intel media drivers on the Intel laptops, the NVIDIA stack on io, and the matching `LIBVA_DRIVER_NAME` so browsers and mpv decode video on the GPU. ganymedes is Intel for the desktop with its GTX 970M reachable through `nvidia-offload <command>` (PRIME offload; Maxwell cannot power the card down under the proprietary driver, so it idles at a few watts).
+**`disko/layout.nix`** is the one disk layout: ESP, root, optional swap, mounted by GPT partition label.
 
-**Pangolin client.** `diy-modules/host_pangolin.nix` has no option to set. A host connects to Pangolin at boot from the day `secrets.yaml` holds an entry named `pangolin-<hostname>` with three lines (`PANGOLIN_ENDPOINT`, `PANGOLIN_ID`, `PANGOLIN_SECRET`, from a machine client made in the Pangolin dashboard). It is the unit `pangolin service install` would write into `/etc`, declared instead, and it retries forever when the network or the server is not there yet.
+**`installer/`** builds the ISO. It carries no configuration: it clones this repo, reads `lib.hostFacts` and runs `scripts/setup-host.sh`.
 
-**Feature switches** (`host.laptop`, `host.fastboot`, `host.secureboot`, `host.bootsplash`) bundle several related settings behind one on/off switch. Turning on `host.laptop` enables TLP for battery life, zram swap, and makes the weekly store cleanup and optimisation wait for mains power. TLP's `tlp-pd` provides the power-profiles-daemon interface, so the power profile widgets in noctalia and waybar keep working and the real power-profiles-daemon is turned off. `host.laptop.thermald` is on by default and off on AMD machines. `host.fastboot` trades the classic boot path for the newer one: nixos-init instead of the perl activation script, an immutable `/etc` built in the initrd, userborn for user accounts, no boot menu delay and the boot partition mounted on demand. Every host runs it; io keeps a 3 second boot menu for its Windows entry. `host.secureboot` swaps systemd-boot for lanzaboote, which signs the boot files with the machine's own keys; together with `host.disk.encrypt` (root in LUKS, bound to the TPM and the Secure Boot state by `scripts/secure-host.sh`) it is what aphrodite runs. `host.bootsplash` puts a Plymouth animation over the boot text (`circle_hud` from adi1090x-plymouth-themes by default, `host.bootsplash.theme` picks another) and quietens the kernel and systemd output underneath it; Esc switches between animation and text during boot. Only aphrodite has it on.
-
-An example from start to finish: io's per-machine file lists three monitors. The niri config in `user/artesia/programs/` reads that list and writes one `output` block per monitor with its mode, position and scale. nymphe lists one monitor and gets one block. The niri file is the same on both.
-
-### imports/: third-party modules
-
-Modules written by other projects: home-manager (user configuration), sops-nix (secret decryption), disko (disk layout) and the noctalia desktop shell module. It also loads `diy-modules/`. Kept apart from `system/` because these files define new settings, while `system/` only fills settings in.
-
-### diy-packages/: software not in nixpkgs
-
-Applications that the official package collection does not have, or not in a usable form: two custom mouse cursor themes, the Helium and Zen web browsers, and a CUPS driver for the Citizen label printer built from the vendor's source tarball. The overlay exposes them as `pkgs.diy.<name>`, for example io's printer setup uses `pkgs.diy.cups-citizen-ctzcls`. `scripts/update-appimages.sh` bumps the two browsers to their latest release.
-
-### overlays/: newer versions of selected apps
-
-The machines run the stable package collection, which only gets security and bug fixes between releases. For a few applications that move fast or where newer features matter, this overlay swaps in the version from the unstable branch instead. Because it replaces the package for the whole system, every place that refers to it gets the newer version, with no changes needed elsewhere. The same overlay is where `pkgs.diy` comes from, and it exposes `niri-float-sticky`, a flake input, as a normal package.
-
-Currently swapped: the nushell shell, atuin (shell history sync), flameshot (screenshots), hyprpicker (colour picker), the noctalia desktop shell, the Bitwarden password manager, two AI coding assistants (Claude Code and opencode) and the Pangolin tunnel client.
-
-For a single application that only one config file uses, refer to it as `unstable.<name>` in that file instead of adding it here.
-
-### user/artesia/: the user's own settings
-
-Everything home-manager manages for the `artesia` user: one file per application under `programs/` (shell, text editor, terminal, compositors, git, SSH), the Spotify theming module under `imports/`, and the mouse cursor theme, GTK theme and desktop portals in `user_artesia_configuration.nix`. This layer is the same on every machine. Machine-specific values come in through the custom settings above, or through an override in the machine's own folder.
-
-The two compositor files are gated on the host: `niri.nix` only applies where the machine enables `programs.niri`, `sway.nix` only where it enables `programs.sway`. niri starts noctalia; sway brings its own waybar, fuzzel, mako and swaylock. Both know the same keys (Super+Q terminal, Super+E files, Super+C close, Super+Space launcher, Super+L lock, Super+V float, Super+M quit, media and brightness keys, Print for a screenshot). sway adds touchpad gestures: three fingers left and right switch workspace, up toggles fullscreen, down toggles floating, four fingers carry the window to the next or previous workspace, a pinch closes it. Screenshots differ: niri uses its own screenshot UI on Print (region across any monitor, clipboard and `~/Pictures/Screenshots`) and Shift+Print for grim, slurp and satty when the shot needs annotating; sway uses flameshot through the wlr portal and floats its capture window over the whole screen. flameshot only runs where sway is enabled, because niri's portal screenshot path handles a single output and io has three.
-
-niri has no sticky windows (a floating window belongs to its workspace) and it stops sending frame callbacks to windows on other workspaces, so a hidden film redraws about once a second and a Discord stream of it arrives at that rate. The way round both is to keep the window on screen: Super+P puts the focused window in picture-in-picture mode, a 960x540 float in the bottom-right corner that the `niri-float-sticky` daemon (a flake input) carries along on every workspace switch; Super+P again tiles it back. Bare mpv and browser picture-in-picture windows stick on their own. The window a screencast is targeting gets a thin red border. Bitwarden popouts (unlock, passkey picker) float centred instead of taking a column; Firefox sets the title after the window appears, so a small watcher on the niri event stream floats them when the title arrives.
-
-### Performance choices
-
-Every machine runs the `scx_lavd` sched_ext scheduler (built for interactive and gaming loads) and `ananicy-cpp` with the CachyOS rules, which renices compilers, Steam and browsers below the compositor. io additionally runs the CachyOS LTS kernel from Chaotic Nyx, prebuilt from their cache; the NVIDIA 580 modules for it are built locally since the cache only carries the current NVIDIA branch. `host.fastboot` is on everywhere (io keeps a 3 second boot menu for the Windows entry) and home-manager activates as a user service at login rather than during the switch. The machines no longer push to the cache; CI does, so `attic-watch-store` and the push in `deploy.nu` are gone, and the weekly store optimisation replaced the daily one.
-
-### installer/: the stick
-
-`nix build .#installer-iso` produces a bootable image; CI builds it on every change to the installer or the lock and publishes it as the rolling `installer` GitHub release (the tag moves to the commit it was built from, the ISO and its sha256 replace the previous ones). The image carries no copy of the configuration: on boot it gets network (ethernet, a wifi profile from the key stick, or the `nmtui` menu), clones this repo and reads `lib.hostFacts`, a flake output with each host's DMI names and disk layout. It finds the host whose `host.dmi` lists this machine's DMI product name, or asks for a name. Then it runs `scripts/setup-host.sh`, which regenerates the hardware file, puts an age key in place (from a stick labelled `CEL_KEYS` if one holds `keys/<host>.key`, otherwise freshly generated), lists that key in `.sops.yaml` and, for a name that has no folder yet, writes the per-host files from what the hardware reports: DMI name, GPU vendor, battery or not, connected screens. Only then does it show the internal disk it will wipe and wait 15 seconds for an abort, run disko with that host's `host.disk` values, run `nixos-install` and copy the repo to `~/.dotfiles` on the new system, generated files included.
-
-Every host's login password comes from `secrets.yaml` (`artesia-password`) once its key can decrypt that file. A freshly generated key cannot, so `setup-host.sh` asks for a password in that case and stores its hash next to the key (`/var/lib/sops-nix/password`); the configuration reads the hash from there for as long as `secrets.yaml` is not encrypted for the key listed for the host. `scripts/rekey.sh` on an enrolled machine re-encrypts the file for every listed key, and the next switch on the new host hands the password over to the secret. `scripts/key-stick.sh` avoids the detour: it copies a host's key to the stick before a reinstall, or creates and enrolls a key for a machine that does not exist yet. `scripts/test-installer.sh` runs the whole thing in a VM. Hosts installed before disko need `sudo nix shell nixpkgs#gptfdisk -c scripts/label-disk.sh` run once, before switching, so their partitions carry the labels the new mount table expects; switching first leaves the next boot waiting for `disk-main-root`, recoverable by booting the previous generation (hold Space for the menu on fastboot hosts) and labelling then.
-
-### Where does a change go?
+## Where does a change go?
 
 | Change | File |
 |---|---|
@@ -149,10 +85,10 @@ Every host's login password comes from `secrets.yaml` (`artesia-password`) once 
 | Something only one machine needs | `system/per_host/<name>/<name>_<kind>.nix` |
 | A new machine, or a reinstall | boot the installer stick; `scripts/setup-host.sh` for a machine that already runs NixOS |
 | The disk layout | `disko/layout.nix`, per-host knobs in `host.disk` |
-| A machine fact the user configuration needs | new setting in `diy-modules/host_*.nix`, set it per machine, read it in `user/` |
+| A machine fact the user configuration needs | new option in `diy-modules/host_*.nix`, set it per machine, read it in `user/` |
 | A feature some machines switch on, with several parts | feature switch in `diy-modules/`, like `host.laptop` |
 | An application's own settings | `user/artesia/programs/<application>.nix` |
-| Software the official collection lacks | `diy-packages/`, plus a line in its `default.nix` |
+| Software nixpkgs lacks | `diy-packages/`, plus a line in its `default.nix` |
 | A newer version of an app on every machine | `overlays/default.nix` |
 
 ## Secrets and delivery
@@ -167,7 +103,7 @@ flowchart LR
 
     setup["installer stick<br/>runs scripts/setup-host.sh"] -->|"hardware file, age key,<br/>per-host folder, key entries"| repo
 
-    deploy["scripts/deploy.nu<br/>nix fmt, nix flake check,<br/>commit, push"] --> main[("main branch on GitHub")]
+    deploy["scripts/deploy.nu<br/>nix fmt, nix flake check,<br/>switch, commit, push"] --> main[("main branch on GitHub")]
     deploy -->|"apply config"| local["current machine"]
 
     main -->|"on push"| ci["GitHub Actions: build-hosts.yml<br/>lint, then one job per machine"]
@@ -180,14 +116,10 @@ flowchart LR
     secrets -->|"decrypted when the config is applied<br/>with /var/lib/sops-nix/key"| hostsbox
 ```
 
-Secrets are stored encrypted in git. `.sops.yaml` lists each machine's public key; the single secrets file is readable by every machine, and a backup key can read everything so secrets survive a lost machine. Every machine keeps its private key at `/var/lib/sops-nix/key`. One secret is in use on every machine, the login password; the attic pull token (`attic-netrc`) is wired in automatically once it is added to the file.
+**Secrets.** One sops file, encrypted for every host's age key (`/var/lib/sops-nix/key`) and a backup key. A secret switches its own wiring on by being present in the file (`attic-netrc`, `pangolin-<hostname>`). A host whose key cannot read the file yet logs in with a password hash stored next to the key, until `scripts/rekey.sh` has run on an enrolled host.
 
-A normal change goes through `deploy.nu`: `nix fmt` formats, `nix flake check` runs deadnix and a format check, then commit, push and apply the new configuration to the current machine. The push triggers CI, which runs the same check, then builds each machine in its own job and uploads anything not yet cached. When another machine updates, it downloads those builds instead of compiling them itself.
+**Deploy.** `scripts/deploy.nu` formats, lints, switches the current machine and only then commits and pushes. CI builds every host on that push and fills the cache; the other machines download.
 
-Dependency updates are CI's job too. `update-flake.yml` runs every day at 05:00 UTC. On Mondays it runs `nix flake update` and `scripts/update-appimages.sh` together (branch `update/flake-lock`), on the other days only the browser script (branch `update/browsers`; the Helium and Zen browsers are not in nixpkgs, so their AppImage versions live in `diy-packages/`). Each pushes its result, runs the same build for every machine and only then opens a pull request listing what changed. Pull requests you open yourself get the same build, minus the push to the cache. If the build fails there is no pull request, only a red run. Merging the pull request is the whole upgrade; the machines download what CI already built.
+**Updates.** `update-flake.yml` runs daily: lock and browsers on Mondays, browsers only on other days. It builds every host first and opens a pull request only if that passes, so an open PR is known good and merging it is the whole upgrade.
 
-### How CI reaches the cache
-
-The machines are on the lab network, where `attic.artesia.cloud` resolves to the attic server directly. GitHub's runners are not, so the same name is also published through Pangolin as a public resource: no Pangolin login in front of it, because attic authenticates everything itself. The cache is private: reads and pushes both need an attic token. Nix cannot send bearer tokens, but attic accepts the token as an HTTP Basic password, so every machine will carry one line, `machine attic.artesia.cloud password <pull token>`, as the sops secret `attic-netrc`, wired into Nix's `netrc-file` (switched on by the presence of that entry in `secrets.yaml`, not there yet). CI writes the same line to `/etc/nix/netrc` on the runner and logs the attic client in with the push-capable token (`.github/actions/attic`). The installer pulls from attic when the key stick carries an `attic.netrc`, otherwise it builds what the public caches lack.
-
-Repository secret: `ATTIC_TOKEN`, an attic token with pull and push rights on the `celestial` cache. Optional repository variable `ATTIC_PUBLIC_URL` overrides the hostname.
+**Cache access.** `attic.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The Pangolin resource is public because attic authenticates everything itself: Nix sends the token as a Basic password from a netrc file, on the hosts (`attic-netrc`), on the CI runner and in the installer (`attic.netrc` on the key stick).
