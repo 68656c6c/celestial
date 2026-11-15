@@ -24,9 +24,13 @@ let
     text = ''
       if atuin status > /dev/null 2>&1; then exit 0; fi
       atuin login -u "''${ATUIN_USERNAME:?no username in the secret}"
-      # a daemon started before the login still encrypts with the key it
-      # made for itself, and nothing else can read those records
+      # Until this login atuin used a key it made for itself: a running daemon
+      # still holds it, and what was recorded with it is unreadable for every
+      # other host. Drop those records and write them again from the local
+      # history, before anything is uploaded.
       systemctl --user try-restart atuin-daemon.service
+      atuin store purge
+      atuin history init-store
       atuin sync
     '';
   };
