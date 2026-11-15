@@ -30,7 +30,9 @@ keys_label=CEL_KEYS
 
 say() { printf '\n==> %s\n' "$*"; }
 die() { printf '\n!! %s\n' "$*" >&2; exit 1; }
-shell() { say "dropping to a shell, celestial-install $repo_url starts over"; exec bash -l; }
+# The terminal itself, not the tee below: a shell on a pipe is not interactive.
+# shellcheck disable=SC2094  # a terminal, not a file
+shell() { say "dropping to a shell, celestial-install $repo_url starts over"; exec bash -l < "$term" > "$term" 2>&1; }
 
 mkdir -p "$stick" "$keys"
 chmod 700 "$keys"
@@ -43,6 +45,7 @@ term="$(tty 2>/dev/null || echo /dev/tty1)"
 exec > >(tee -a "$log") 2>&1
 # shellcheck disable=SC2154  # rc is set inside the trap
 trap 'rc=$?; trap - ERR; printf "\n!! failed with exit %s at line %s: %s\n   log: %s\n" "$rc" "$LINENO" "$BASH_COMMAND" "$log"; read -r -p "enter for a shell " _ || true' ERR
+udevadm settle --timeout=10 || true
 if [ -e "/dev/disk/by-label/$keys_label" ] && ! mountpoint -q "$stick"; then
   mount -o ro "/dev/disk/by-label/$keys_label" "$stick"
   say "found the $keys_label stick"
@@ -61,7 +64,7 @@ if [ -e "$old_root" ]; then
     old_dev=""
     say "an encrypted install is on this disk"
     echo "Its disk passphrase lets the reinstall keep its key and wifi. Empty skips that."
-    while read -r -s -p "    disk passphrase of the existing install: " old_pass && [ -n "$old_pass" ]; do
+    while IFS= read -r -s -p "    disk passphrase of the existing install: " old_pass && [ -n "$old_pass" ]; do
       echo
       if printf '%s' "$old_pass" | cryptsetup open --readonly --key-file - "$old_root" celestial-old; then
         old_dev=/dev/mapper/celestial-old
@@ -171,6 +174,12 @@ else
 fi
 
 # 4. hardware file, key, password, per-host folder
+# A key staged by an earlier, aborted run is kept for the same host only.
+if [ "$(cat /run/celestial/staged-host 2>/dev/null || true)" != "$host" ]; then
+  rm -rf "$keys"
+  install -d -m 700 "$keys"
+fi
+echo "$host" > /run/celestial/staged-host
 if [ -f "$stick/keys/$host.key" ]; then
   install -m 600 "$stick/keys/$host.key" "$keys/key"
   say "age key for $host taken from the stick"
@@ -188,6 +197,11 @@ esp_size="$(jq -r .disk.espSize /run/celestial/host.json)"
 encrypt="$(jq -r .disk.encrypt /run/celestial/host.json)"
 secureboot="$(jq -r .secureboot /run/celestial/host.json)"
 
+# The whole system, not only the facts above: a host that does not evaluate
+# must stop here, while the old install is still on the disk.
+say "checking that $host evaluates"
+nix eval --raw "$repo#nixosConfigurations.$host.config.system.build.toplevel.drvPath" > /dev/null
+
 # An encrypted disk needs its recovery passphrase now. The TPM takes over the
 # daily unlocking later (scripts/secure-host.sh), this one is for the first
 # boots and for the day the TPM refuses.
@@ -199,8 +213,8 @@ if [ "$encrypt" = true ]; then
   else
     say "$host has an encrypted disk. Choose its recovery passphrase and keep it somewhere safe."
     while :; do
-      read -r -s -p "    disk passphrase: " first; echo
-      read -r -s -p "    once more: " second; echo
+      IFS= read -r -s -p "    disk passphrase: " first; echo
+      IFS= read -r -s -p "    once more: " second; echo
       if [ -n "$first" ] && [ "$first" = "$second" ]; then break; fi
       echo "    empty or not the same, try again"
     done
@@ -211,10 +225,17 @@ if [ "$encrypt" = true ]; then
   luks_args=(--arg encrypt true --argstr passwordFile /run/celestial/luks)
 fi
 
-# 5. disk: largest internal disk. Not the installer medium, nothing on USB.
+# 5. disk: the one holding the existing install, else the largest internal
+#    disk. Not the installer medium, nothing on USB.
 iso_part="$(findmnt -no SOURCE /iso 2>/dev/null || true)"
 iso_disk="$([ -n "$iso_part" ] && lsblk -no PKNAME "$iso_part" 2>/dev/null || true)"
-disk="$(lsblk -dbno NAME,SIZE,RM,TYPE,TRAN \
+disk="$([ -e "$old_root" ] && lsblk -dno PKNAME "$old_root" 2>/dev/null || true)"
+if [ -n "$disk" ] && ! lsblk -dno NAME,RM,TRAN "/dev/$disk" \
+  | awk -v skip="$iso_disk" '$2 == 0 && $3 != "usb" && $1 != skip { ok = 1 } END { exit !ok }'; then
+  echo "the install found on /dev/$disk is on a removable or USB disk, not the target"
+  disk=""
+fi
+[ -n "$disk" ] || disk="$(lsblk -dbno NAME,SIZE,RM,TYPE,TRAN \
   | awk -v skip="$iso_disk" '$4 == "disk" && $3 == 0 && $5 != "usb" && $1 != skip && $1 !~ /^zram/ { print $2, $1 }' \
   | sort -rn | head -1 | awk '{ print $2 }')"
 [ -n "$disk" ] || die "no internal disk found"

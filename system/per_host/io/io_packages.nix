@@ -28,5 +28,6 @@
     lprint
     android-tools
     edl
+    openmw
   ];
 }

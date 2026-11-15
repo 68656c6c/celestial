@@ -23,10 +23,10 @@ See [docs/structure.md](docs/structure.md) for the long version.
 ## Daily use
 ```
 nix fmt            # format every .nix file
-nix flake check    # deadnix + nixfmt --check, CI runs this before building
+nix flake check    # deadnix, nixfmt --check, shellcheck, actionlint; CI runs this before building
 nh os switch       # apply to the current machine
 ```
-`scripts/deploy.nu` does all of that, then commits and pushes once the switch went through. CI builds and caches; the other machines only download.
+`deploy "message"` in nushell (defined in `scripts/deploy.nu`) does all of that, then commits with that message and pushes once the switch went through. CI builds and caches; the other machines only download.
 
 ## CI
 GitHub Actions builds every host on each push to `main` and pushes the closures to attic through Pangolin (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
@@ -80,6 +80,8 @@ After the install, `scripts/secure-host.sh` finishes the job; it looks at the ma
 3. scripts/secure-host.sh binds the disk to the TPM, sealed to the Secure Boot state. From here it unlocks by itself
 ```
 The passphrase stays valid. If a firmware update makes the disk ask for it again, `scripts/secure-host.sh --again` binds the TPM anew.
+
+Bound like this the disk unlocks for whoever switches the machine on, so the encryption covers a removed disk and the login screen is the rest. `scripts/secure-host.sh --pin` binds it with a PIN that is asked at every boot (`--no-pin` goes back); for a laptop that leaves the house that is the setting to have.
 
 ### Trying it first
 `scripts/test-installer.sh` builds the image and boots it in a VM with an empty disk, installing the current commit. With a DMI product name as argument (`scripts/test-installer.sh "Predator G9-791"`) the VM poses as that machine.

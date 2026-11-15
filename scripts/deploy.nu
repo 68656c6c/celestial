@@ -2,13 +2,16 @@ export def deploy [message: string] {
   let repo_dir = $"($env.HOME)/.dotfiles"
   cd $repo_dir
 
+  # A flake only sees files git knows about, so new files are made known
+  # before anything looks at the tree.
+  git add --intent-to-add .
+
   print "Formatting Nix files..."
   nix fmt
 
   print "Linting Nix files..."
   nix flake check
 
-  # Staged first: a flake only sees files git knows about.
   print "Staging..."
   git add .
 
@@ -22,4 +25,9 @@ export def deploy [message: string] {
   git push
 
   print "Done."
+}
+
+# nu scripts/deploy.nu "message", for a shell that has not loaded the command
+def main [message: string] {
+  deploy $message
 }

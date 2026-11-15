@@ -25,7 +25,7 @@ in
   config = lib.mkIf (cfg != null) {
     hardware.graphics = {
       enable = true;
-      enable32Bit = true;
+      enable32Bit = config.host.gaming.enable;
       extraPackages = lib.optionals (cfg == "intel") (
         with pkgs;
         [
@@ -34,7 +34,7 @@ in
           libvdpau-va-gl
         ]
       );
-      extraPackages32 = lib.optionals (cfg == "intel") (
+      extraPackages32 = lib.optionals (cfg == "intel" && config.host.gaming.enable) (
         with pkgs.driversi686Linux;
         [
           intel-media-driver

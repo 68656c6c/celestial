@@ -1,6 +1,7 @@
 {
   config,
   osConfig,
+  pkgs,
   ...
 }:
 
@@ -49,7 +50,10 @@
         isolation = false;
       };
     };
+    # loaded under another name: a module cannot export a command named after itself
     extraConfig = ''
+      use ${pkgs.writeText "celestial.nu" (builtins.readFile ../../../scripts/deploy.nu)} *
+
       def nos [...args] {
         nh os switch ...$args
       }

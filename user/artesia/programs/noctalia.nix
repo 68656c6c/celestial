@@ -42,7 +42,7 @@ let
     nightlight.temperature_night = 3100;
 
     shell = {
-      avatar_path = "${config.home.homeDirectory}/Pictures/20260415_193158.jpg";
+      avatar_path = "${config.xdg.userDirs.pictures}/20260415_193158.jpg";
       font_family = "Atkinson Hyperlegible Next";
       panel = {
         clipboard_placement = "attached";

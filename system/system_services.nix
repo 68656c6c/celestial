@@ -35,6 +35,8 @@
       };
     };
     gnome.gnome-keyring.enable = true;
+    # the keys live in Bitwarden; this agent would claim SSH_AUTH_SOCK
+    gnome.gcr-ssh-agent.enable = false;
     flatpak.enable = true;
     # Daemon up on every host, never connected on its own: `tailscale up` is a manual step
     tailscale = {
@@ -50,10 +52,12 @@
     pipewire = {
       enable = true;
       alsa.enable = true;
-      alsa.support32Bit = true;
       pulse.enable = true;
     };
   };
+
+  # Session-wide, so launcher-started apps and git signing reach the keys too
+  environment.sessionVariables.SSH_AUTH_SOCK = "$HOME/.bitwarden-ssh-agent.sock";
 
   # Flatpak asserts on portals. The compositors bring their own; this keeps a
   # host that has not picked one yet evaluating.

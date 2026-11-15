@@ -81,7 +81,7 @@ let
     text = ''
       region="$(slurp)" || exit 0
       grim -g "$region" - | satty --filename - --copy-command wl-copy \
-        --output-filename "$HOME/Pictures/Screenshots/%Y%m%d-%H%M%S.png"
+        --output-filename "${config.xdg.userDirs.pictures}/screenshots/%Y%m%d-%H%M%S.png"
     '';
   };
 
@@ -138,6 +138,8 @@ lib.mkIf osConfig.programs.niri.enable {
     hotkey-overlay {
       skip-at-startup
     }
+
+    screenshot-path "${config.xdg.userDirs.pictures}/screenshots/%Y%m%d-%H%M%S.png"
 
     prefer-no-csd
 
@@ -222,7 +224,7 @@ lib.mkIf osConfig.programs.niri.enable {
       Mod+Q { spawn "ghostty" "+new-window"; }
       Mod+E { spawn "dolphin"; }
       Mod+C { close-window; }
-      Mod+M { quit skip-confirmation=true; }
+      Mod+M { quit; }
       Mod+V { toggle-window-floating; }
       Mod+F { maximize-column; }
       Mod+Shift+F { fullscreen-window; }

@@ -38,6 +38,24 @@ let
     '';
   };
 
+  # tablet mode gives the internal keyboard back first: a locked screen takes
+  # no on-screen keyboard
+  swayLock = pkgs.writeShellApplication {
+    name = "sway-lock";
+    runtimeInputs = [
+      osConfig.programs.sway.package
+      pkgs.swaylock
+      pkgs.dconf
+      pkgs.procps
+    ];
+    text = ''
+      swaymsg input '${internalKeyboard}' events enabled >/dev/null 2>&1 || true
+      dconf write /org/gnome/desktop/a11y/applications/screen-keyboard-enabled false || true
+      pkill -RTMIN+8 waybar || true
+      exec swaylock -f
+    '';
+  };
+
   # Waybar button for the camera-stream user service (hosts that define it,
   # nymphe today). Prints nothing elsewhere, which hides the module.
   swayCamera = pkgs.writeShellApplication {
@@ -132,18 +150,21 @@ lib.mkIf osConfig.programs.sway.enable {
       startup = [
         { command = "nm-applet --indicator"; }
         { command = lib.getExe pkgs.mako; }
+        {
+          command = "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit";
+        }
       ];
 
       keybindings = {
         "${mod}+q" = "exec ghostty +new-window";
         "${mod}+c" = "kill";
-        "${mod}+m" = "exec swaymsg exit";
+        "${mod}+m" = "exec swaynag -t warning -m 'Quit sway?' -B 'Quit' 'swaymsg exit'";
         "${mod}+e" = "exec dolphin";
         "${mod}+v" = "floating toggle";
         "${mod}+j" = "split toggle";
         "${mod}+f" = "fullscreen toggle";
         "${mod}+space" = "exec fuzzel";
-        "${mod}+l" = "exec swaylock -f";
+        "${mod}+l" = "exec ${lib.getExe swayLock}";
         "Print" = "exec flameshot gui";
 
         "${mod}+Left" = "focus left";
@@ -202,6 +223,16 @@ lib.mkIf osConfig.programs.sway.enable {
       # flameshot's capture overlay must float at the origin to cover the screen instead of tiling (flameshot docs)
       for_window [app_id="flameshot"] border pixel 0, floating enable, fullscreen disable, move absolute position 0 0
     '';
+  };
+
+  # no idle timer on purpose, only before sleep and on lock-session
+  services.swayidle = {
+    enable = true;
+    systemdTargets = [ "sway-session.target" ];
+    events = {
+      before-sleep = lib.getExe swayLock;
+      lock = lib.getExe swayLock;
+    };
   };
 
   programs.fuzzel = {
@@ -272,6 +303,7 @@ lib.mkIf osConfig.programs.sway.enable {
         exec = lib.getExe swayKeyboard;
         return-type = "json";
         interval = "once";
+        signal = 8; # sway-lock switches the keyboard back on
         on-click = "${lib.getExe swayKeyboard} toggle";
       };
 

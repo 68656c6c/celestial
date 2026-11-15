@@ -25,10 +25,7 @@
   };
 
   services = {
-    arrpc = {
-      enable = true;
-      systemdTarget = "graphical-session.target";
-    };
+    arrpc.enable = true;
   };
 
   gtk = {
@@ -55,6 +52,25 @@
   };
 
   xdg.autostart.enable = true;
+
+  xdg.userDirs =
+    let
+      home = config.home.homeDirectory;
+    in
+    {
+      enable = true;
+      createDirectories = true;
+      desktop = "${home}/desktop";
+      documents = "${home}/documents";
+      download = "${home}/downloads";
+      music = "${home}/music";
+      pictures = "${home}/pictures";
+      projects = "${home}/projects";
+      setSessionVariables = false;
+      publicShare = "${home}/public";
+      templates = "${home}/templates";
+      videos = "${home}/videos";
+    };
 
   # Zen reads native messaging manifests from ~/.mozilla, like Firefox, but
   # keeps its profile in ~/.config/zen. Bitwarden only writes its browser

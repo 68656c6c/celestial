@@ -16,15 +16,27 @@
 }:
 
 let
+  btrfsOptions = [
+    "compress=zstd"
+    "noatime"
+  ];
+
   root =
     if layout == "btrfs" then
       {
         type = "btrfs";
         extraArgs = [ "-f" ];
         mountpoint = "/";
+        mountOptions = btrfsOptions;
         subvolumes = {
-          nix.mountpoint = "/nix";
-          home.mountpoint = "/home";
+          nix = {
+            mountpoint = "/nix";
+            mountOptions = btrfsOptions;
+          };
+          home = {
+            mountpoint = "/home";
+            mountOptions = btrfsOptions;
+          };
         };
       }
     else

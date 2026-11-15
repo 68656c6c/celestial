@@ -58,6 +58,13 @@ in
           ;
       }).disko.devices;
 
+    services.btrfs.autoScrub = lib.mkIf (cfg.layout == "btrfs") {
+      enable = true;
+      interval = "monthly";
+      fileSystems = [ "/" ];
+    };
+    host.laptop.onAC = lib.mkIf (cfg.layout == "btrfs") { "btrfs-scrub--" = "btrfs scrub"; };
+
     # crypttab options (the TPM unlock) need the systemd initrd
     boot.initrd.systemd.enable = lib.mkIf cfg.encrypt true;
 

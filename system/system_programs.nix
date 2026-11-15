@@ -21,11 +21,6 @@
     };
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
-    steam = {
-      enable = true;
-      package = pkgs.millennium-steam;
-      extest.enable = true; # steam input in wayland
-    };
     vscode = {
       enable = true;
       extensions = with pkgs.vscode-extensions; [

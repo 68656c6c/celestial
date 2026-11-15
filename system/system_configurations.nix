@@ -7,8 +7,9 @@
 
 let
   # sops leaves key names in clear, so the pull token wiring switches itself on
-  # once `attic-netrc` has been added to secrets.yaml
-  haveAtticNetrc = lib.hasInfix "attic-netrc:" (builtins.readFile ../secrets/secrets.yaml);
+  # once `attic-netrc` has been added to secrets.yaml and this host can read it
+  haveAtticNetrc =
+    haveHostKey && lib.hasInfix "attic-netrc:" (builtins.readFile ../secrets/secrets.yaml);
   # Use the secrets only when this host can really decrypt them: its key must
   # be in .sops.yaml AND secrets.yaml must have been re-encrypted for it
   # (sops updatekeys). A key that is only listed locks the user out, because
@@ -89,9 +90,10 @@ in
 
   environment = {
     shells = [ pkgs.nushell ]; # pkexec requires the user shell to be in /etc/shells
-    # Fix open with
-    etc."xdg/menus/applications.menu".source =
-      "${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu";
+    # Fix open with. Copied out, a link would pull all of Plasma into the closure.
+    etc."xdg/menus/applications.menu".source = pkgs.runCommandLocal "applications.menu" { } ''
+      cp ${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu $out
+    '';
     pathsToLink = [
       "/share/xdg-desktop-portal"
       "/share/applications"

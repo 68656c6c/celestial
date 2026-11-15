@@ -89,10 +89,7 @@ in
     systemd.services.celestial-install = {
       description = "NixOS install";
       wantedBy = [ "multi-user.target" ];
-      after = [
-        "NetworkManager.service"
-        "systemd-udev-settle.service"
-      ];
+      after = [ "NetworkManager.service" ];
       conflicts = [ "getty@tty1.service" ];
       unitConfig.OnFailure = "getty@tty1.service";
       # nix, nixos-install, nixos-generate-config, nmtui, systemctl

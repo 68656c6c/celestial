@@ -22,6 +22,9 @@ env:
   ATTIC_CACHE_URL: ${{ vars.ATTIC_PUBLIC_URL || 'https://attic.artesia.cloud' }}/celestial
   PUSH: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
+permissions:
+  contents: read
+
 concurrency:
   group: build-hosts-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
@@ -32,15 +35,15 @@ jobs:
     outputs:
       hosts: ${{ steps.hosts.outputs.hosts }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref || github.ref }}
 
-      - uses: DeterminateSystems/nix-installer-action@v23
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
           determinate: false
 
-      - name: Lint
+      - name: Lint and evaluate
         run: nix flake check --no-write-lock-file
 
       - name: List hosts
@@ -53,6 +56,7 @@ jobs:
   build:
     needs: prepare
     runs-on: ubuntu-latest
+    timeout-minutes: 240
     env:
       # Dependabot pull requests run without repository secrets: no attic then
       HAS_ATTIC: ${{ secrets.ATTIC_TOKEN != '' }}
@@ -64,11 +68,11 @@ jobs:
       # A hosted runner has ~14 GB free, a NixOS closure needs more.
       - uses: wimpysworld/nothing-but-nix@baf7355748bb5651f08b839669d6bb39051b2874 # 2026-06-19
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref || github.ref }}
 
-      - uses: DeterminateSystems/nix-installer-action@v23
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
           determinate: false
           extra-conf: |
@@ -86,4 +90,7 @@ jobs:
         env:
           ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        run: ./scripts/build-hosts.sh "${{ matrix.host }}"
+          # through the environment, not pasted into the script: the name is a
+          # folder name from the checkout, which on a pull request is anyone's
+          HOST: ${{ matrix.host }}
+        run: ./scripts/build-hosts.sh "$HOST"

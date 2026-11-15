@@ -20,9 +20,13 @@
     lanzaboote = {
       url = "github:nix-community/lanzaboote/v1.2.0";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.pre-commit.follows = "";
     };
-    # CachyOS kernels, prebuilt against their own nixpkgs (no follows on purpose)
-    chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
+    # CachyOS kernels, prebuilt against their own nixpkgs (no nixpkgs follows on purpose)
+    chaotic = {
+      url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
+      inputs.home-manager.follows = "home-manager";
+    };
     millennium = {
       url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -106,6 +110,7 @@
                 };
                 users.artesia = import ./user/artesia;
                 backupFileExtension = "backup";
+                overwriteBackup = true;
               };
             }
           ];
@@ -131,9 +136,11 @@
         ];
       };
 
-      nixFiles = lib.fileset.toSource {
+      lintFiles = lib.fileset.toSource {
         root = ./.;
-        fileset = lib.fileset.fileFilter (file: file.hasExt "nix") ./.;
+        fileset = lib.fileset.fileFilter (
+          file: file.hasExt "nix" || file.hasExt "sh" || file.hasExt "yml"
+        ) ./.;
       };
     in
     {
@@ -154,12 +161,17 @@
             nativeBuildInputs = with pkgs; [
               deadnix
               nixfmt
+              shellcheck
+              actionlint
             ];
           }
           ''
-            cd ${nixFiles}
+            cd ${lintFiles}
             deadnix --fail --no-lambda-arg .
             find . -name '*.nix' -exec nixfmt --check {} +
+            # install.sh has no shebang, writeShellApplication supplies it
+            find . -name '*.sh' -exec shellcheck --shell=bash {} +
+            actionlint .github/workflows/*.yml
             touch $out
           '';
 

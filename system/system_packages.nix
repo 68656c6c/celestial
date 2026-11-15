@@ -22,17 +22,12 @@
     anki-bin
     libreoffice-fresh
     vesktop
-    arrpc
     gparted
     ntfsprogs
     ntfs3g
-    dosbox-x
-    heroic
     impression
     dig
     nmap
-    catppuccin-kvantum
-    gruvbox-kvantum
     nwg-look
     adw-gtk3
     rewaita
@@ -40,14 +35,12 @@
     hyprpicker
     glib
     networkmanagerapplet
-    gpu-screen-recorder
     gpu-screen-recorder-gtk
     nh
     nixfmt
     helix # for root: sudo -E sops edit ... keeps EDITOR=hx, secure_path has no user profile
     fortune
     zenity
-    xdg-desktop-portal-gtk
     cachix
     age
     sops
@@ -66,7 +59,6 @@
     pwvucontrol
     wdisplays
     pangolin-cli
-    bottles
     pantheon.pantheon-agent-polkit
     diy.helium
     diy.zen-browser

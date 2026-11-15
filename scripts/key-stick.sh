@@ -15,6 +15,7 @@ set -euo pipefail
 
 STICK="${1:?Usage: $0 <stick mountpoint> [host]}"
 HOST="${2:-$(hostname)}"
+[[ "$HOST" =~ ^[a-z][a-z0-9-]*$ ]] || { echo "not a hostname: $HOST" >&2; exit 1; }
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOPS_FILE="$REPO_ROOT/.sops.yaml"
 

@@ -11,11 +11,22 @@
 #   secure-host.sh --again     bind the TPM again, after a firmware update or
 #                              new Secure Boot keys made the disk ask for the
 #                              passphrase
+#   secure-host.sh --pin       bind it again with a PIN asked at boot; without
+#                              one the disk unlocks for whoever powers it on
+#   secure-host.sh --no-pin    bind it again without the PIN
 set -euo pipefail
 
 DISK=/dev/disk/by-partlabel/disk-main-root
 again=0
-[ "${1:-}" = "--again" ] && again=1
+pin=keep
+for arg in "$@"; do
+  case "$arg" in
+    --again) again=1 ;;
+    --pin) again=1; pin=1 ;;
+    --no-pin) again=1; pin=0 ;;
+    *) echo "Usage: $0 [--again|--pin|--no-pin]" >&2; exit 1 ;;
+  esac
+done
 
 status="$(sudo sbctl status 2>&1 || true)"
 echo "$status"
@@ -48,12 +59,29 @@ if ! sudo cryptsetup isLuks "$DISK" 2>/dev/null; then
   echo "The disk is not encrypted, nothing to bind to the TPM. Done."
   exit 0
 fi
-if [ "$again" = 0 ] && sudo cryptsetup luksDump "$DISK" | grep -q systemd-tpm2; then
+# into a variable first: grep -q hanging up early would fail the pipe
+luks_meta="$(sudo cryptsetup luksDump --dump-json-metadata "$DISK")"
+if [ "$again" = 0 ] && grep -q systemd-tpm2 <<<"$luks_meta"; then
   echo "The disk is already bound to the TPM. Done."
   echo "(secure-host.sh --again binds it anew if it started asking for the passphrase)"
   exit 0
 fi
-echo "==> Binding the disk to the TPM. It asks for the disk passphrase once."
-sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7 "$DISK"
+if [ "$pin" = keep ]; then
+  pin=0
+  if grep -qE '"tpm2-pin": *true' <<<"$luks_meta"; then pin=1; fi
+fi
+pin_args=()
+if [ "$pin" = 1 ]; then
+  pin_args=(--tpm2-with-pin=yes)
+  echo "==> Binding the disk to the TPM with a PIN. It asks for the disk passphrase once, then for the new PIN."
+else
+  echo "==> Binding the disk to the TPM. It asks for the disk passphrase once."
+fi
+sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7 "${pin_args[@]}" "$DISK"
 echo
-echo "Done. The next boot unlocks by itself; the passphrase stays valid as the way back in."
+if [ "$pin" = 1 ]; then
+  echo "Done. The next boot asks for the PIN; the passphrase stays valid as the way back in."
+else
+  echo "Done. The next boot unlocks by itself; the passphrase stays valid as the way back in."
+  echo "(secure-host.sh --pin adds a PIN, for a machine that leaves the house)"
+fi

@@ -16,7 +16,7 @@
       openFirewall = true;
       settings = {
         bind_address = "10.2.50.4";
-        origin_web_ui_allowed = "wan";
+        origin_web_ui_allowed = "lan";
         csrf_allowed_origins = "https://10.2.50.4:47990,https://io.cl2.artesia.cloud:47990";
       };
     };

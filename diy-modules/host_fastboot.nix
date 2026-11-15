@@ -14,17 +14,18 @@ in
   config = lib.mkIf cfg.enable {
     boot.loader.timeout = lib.mkDefault 0;
 
-    # Rust init and an immutable /etc assembled in the initrd instead of the
-    # perl activation script. /etc is read-only, so stateful files such as
-    # the sops key must live elsewhere (they do, /var/lib/sops-nix/key).
+    # Rust init and /etc as an overlay assembled in the initrd instead of the
+    # perl activation script. The overlay stays writable (overlay.mutable).
     system.nixos-init.enable = true;
     system.etc.overlay.enable = true;
     services.userborn.enable = true;
 
-    # Mount the ESP on first use instead of during boot
+    # Mount the ESP on use instead of during boot, and let go of it again:
+    # bootctl touches it two seconds in
     fileSystems."/boot".options = [
       "noauto"
       "x-systemd.automount"
+      "x-systemd.idle-timeout=1min"
     ];
   };
 }

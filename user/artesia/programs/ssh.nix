@@ -7,14 +7,12 @@
     enableDefaultConfig = false;
     settings = {
       "git.artesia.cloud" = {
-        HostName = "git.artesia.cloud";
         User = "git";
         Port = 222;
       };
       # No IdentityFile anywhere: the keys live in Bitwarden, its agent
-      # (SSH_AUTH_SOCK, see nushell.nix) offers them.
+      # (SSH_AUTH_SOCK, see system_services.nix) offers them.
       "github.com" = {
-        HostName = "github.com";
         User = "git";
       };
       "moxmq1" = {
@@ -40,18 +38,6 @@
       "moxmq6" = {
         HostName = "moxmq6.artesia.cloud";
         User = "root";
-      };
-      "*" = {
-        ForwardAgent = false;
-        AddKeysToAgent = "no";
-        Compression = false;
-        ServerAliveInterval = 0;
-        ServerAliveCountMax = 3;
-        HashKnownHosts = false;
-        UserKnownHostsFile = "~/.ssh/known_hosts";
-        ControlMaster = "no";
-        ControlPath = "~/.ssh/master-%r@%n:%p";
-        ControlPersist = "no";
       };
     };
   };

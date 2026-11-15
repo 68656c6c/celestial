@@ -37,7 +37,11 @@ esp="$(lsblk -no PATH,PARTTYPE "$disk" | awk 'tolower($2) == "c12a7328-f81f-11d2
 if [ -n "$esp" ]; then label "$esp" disk-main-ESP; else echo "skip ESP: none found on $disk" >&2; fi
 
 swap="$(swapon --show=NAME --noheadings | grep -v '^/dev/zram' | head -1 || true)"
-[ -n "$swap" ] && label "$swap" disk-main-swap
+if [ -b "$swap" ] && [ -n "$(lsblk -no PARTN "$swap")" ]; then
+  label "$swap" disk-main-swap
+elif [ -n "$swap" ]; then
+  echo "skip swap: $swap is not a plain partition" >&2
+fi
 
 partprobe 2>/dev/null || true
 udevadm settle

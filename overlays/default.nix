@@ -15,6 +15,5 @@ final: _prev: {
   claude-code = unstable.claude-code;
   pangolin-cli = unstable.pangolin-cli;
   ghostty = unstable.ghostty;
-  ghostty-bin = unstable.ghostty-bin;
   openmw = unstable.openmw;
 }

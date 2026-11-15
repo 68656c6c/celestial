@@ -3,8 +3,9 @@ name: update-flake
 # Scheduled bumps. Mondays: flake.lock and the AppImage browsers, on the
 # update/flake-lock branch. Every other day: only the browsers in
 # diy-packages, on update/browsers. Every host is built and cached before a
-# pull request exists, so an open PR is known good. No PR means the build
-# failed. The build is called from here on purpose: a push made with
+# pull request exists or moves: the commit is built on <branch>-candidate and
+# only then becomes the branch, so an open PR is known good. No PR means the
+# build failed. The build is called from here on purpose: a push made with
 # GITHUB_TOKEN never triggers other workflows.
 
 on:
@@ -26,6 +27,11 @@ permissions:
 concurrency:
   group: update-flake
   cancel-in-progress: false
+
+# bash by name, for pipefail: the updaters are piped into tee
+defaults:
+  run:
+    shell: bash
 
 jobs:
   update:
@@ -59,9 +65,9 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "updating: $what -> $branch"
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: DeterminateSystems/nix-installer-action@v23
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
           determinate: false
 
@@ -92,7 +98,7 @@ jobs:
             echo "SUMMARY_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Push the update branch
+      - name: Push the candidate branch
         if: steps.update.outputs.changed == 'true'
         env:
           BRANCH: ${{ steps.plan.outputs.branch }}
@@ -108,21 +114,23 @@ jobs:
           } > "$RUNNER_TEMP/commit.msg"
           git add flake.lock diy-packages
           git commit -F "$RUNNER_TEMP/commit.msg"
-          git push --force origin "$BRANCH"
+          git push --force origin "HEAD:refs/heads/$BRANCH-candidate"
 
   build:
     needs: update
     if: needs.update.outputs.changed == 'true'
     uses: ./.github/workflows/build-hosts.yml
     with:
-      ref: ${{ needs.update.outputs.branch }}
+      ref: ${{ needs.update.outputs.branch }}-candidate
     secrets: inherit
 
   pull-request:
     needs: [update, build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.update.outputs.branch }}-candidate
 
       - name: Open or refresh the pull request
         env:
@@ -131,6 +139,7 @@ jobs:
           TITLE: ${{ needs.update.outputs.title }}
           SUMMARY: ${{ needs.update.outputs.summary }}
         run: |
+          git push --force origin "HEAD:refs/heads/$BRANCH"
           # shellcheck disable=SC2016  # the backticks are markdown, not a command
           body="$(printf 'Every host built and is in the attic cache.\n\n```\n%s\n```\n' "$SUMMARY")"
           existing="$(gh pr list --head "$BRANCH" --base main --state open --json number --jq ".[0].number")"
@@ -140,3 +149,4 @@ jobs:
           else
             gh pr create --head "$BRANCH" --base main --title "$TITLE" --body "$body"
           fi
+          git push origin --delete "$BRANCH-candidate"

@@ -111,8 +111,8 @@ if [ "$ENROLLED" = false ] && ! as_root test -s "$KEY_DIR/password"; then
   echo "==> This key cannot read the secrets yet, so the login password is set here."
   [ -t 0 ] || { echo "no terminal to ask for a password on" >&2; exit 1; }
   while :; do
-    read -r -s -p "    password for artesia: " first; echo
-    read -r -s -p "    once more: " second; echo
+    IFS= read -r -s -p "    password for artesia: " first; echo
+    IFS= read -r -s -p "    once more: " second; echo
     if [ -n "$first" ] && [ "$first" = "$second" ]; then break; fi
     echo "    empty or not the same, try again"
   done
@@ -155,6 +155,7 @@ write_new "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
   $DMI_LINE
   $GPU_LINE
   host.fastboot.enable = true;
+  host.gaming.enable = true;
   networking.nameservers = [
     "1.1.1.1"
     "1.0.0.1"

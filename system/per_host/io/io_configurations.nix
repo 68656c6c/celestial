@@ -10,6 +10,7 @@
   host.disk.layout = "ext4";
   host.gpu = "nvidia";
   host.fastboot.enable = true;
+  host.gaming.enable = true;
   boot.loader.timeout = 3; # the Windows entry must stay reachable
 
   # CachyOS LTS kernel (BORE, sched_ext), prebuilt by Chaotic Nyx. The nvidia

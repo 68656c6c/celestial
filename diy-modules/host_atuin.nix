@@ -1,0 +1,55 @@
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+
+let
+  # On once secrets.yaml has an `atuin` entry, like host_pangolin.nix. One
+  # entry for all hosts, three lines:
+  #   ATUIN_USERNAME=...
+  #   ATUIN_PASSWORD=...
+  #   ATUIN_ENCRYPTION_KEY="the words `atuin key` prints on a logged-in host"
+  enabled = lib.hasInfix "\natuin:" (builtins.readFile ../secrets/secrets.yaml);
+
+  # atuin keeps its session in a database, so there is no file to hand it:
+  # the login itself has to run, once per host.
+  login = pkgs.writeShellApplication {
+    name = "atuin-login";
+    runtimeInputs = [
+      pkgs.atuin
+      config.systemd.package
+    ];
+    text = ''
+      if atuin status > /dev/null 2>&1; then exit 0; fi
+      atuin login -u "''${ATUIN_USERNAME:?no username in the secret}"
+      # a daemon started before the login still encrypts with the key it
+      # made for itself, and nothing else can read those records
+      systemctl --user try-restart atuin-daemon.service
+      atuin sync
+    '';
+  };
+in
+
+lib.mkIf enabled {
+  sops.secrets.atuin = {
+    sopsFile = ../secrets/secrets.yaml;
+    owner = "artesia";
+  };
+
+  systemd.user.services.atuin-login = {
+    description = "Log atuin in to the sync server";
+    wantedBy = [ "default.target" ];
+    unitConfig.ConditionUser = "artesia";
+    # no network yet, server down: try again
+    startLimitIntervalSec = 0;
+    serviceConfig = {
+      Type = "oneshot";
+      EnvironmentFile = config.sops.secrets.atuin.path;
+      ExecStart = lib.getExe login;
+      Restart = "on-failure";
+      RestartSec = 60;
+    };
+  };
+}

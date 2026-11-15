@@ -23,6 +23,7 @@
 
   host.laptop.enable = true;
   host.fastboot.enable = true;
+  host.gaming.enable = true;
   host.gpu = "intel";
 
   # GTX 970M next to the iGPU. The desktop renders on Intel, games get the
