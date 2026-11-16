@@ -1,12 +1,13 @@
 name: update-flake
 
-# Scheduled bumps. Mondays: flake.lock and the AppImage browsers, on the
-# update/flake-lock branch. Every other day: only the browsers in
-# diy-packages, on update/browsers. Every host is built and cached before a
-# pull request exists or moves: the commit is built on <branch>-candidate and
-# only then becomes the branch, so an open PR is known good. No PR means the
-# build failed. The build is called from here on purpose: a push made with
-# GITHUB_TOKEN never triggers other workflows.
+# Scheduled bumps. Mondays: flake.lock, the AppImage browsers and the VS Code
+# extension pins, on the update/flake-lock branch. Every other day: only the
+# browsers in diy-packages and the extension pins, on update/browsers. Every
+# host is built and cached before a pull request exists or moves: the commit
+# is built on <branch>-candidate and only then becomes the branch, so an open
+# PR is known good. No PR means the build failed. The build is called from
+# here on purpose: a push made with GITHUB_TOKEN never triggers other
+# workflows.
 
 on:
   schedule:
@@ -54,7 +55,7 @@ jobs:
             *) what="${WHAT:-all}" ;;
           esac
           if [ "$what" = browsers ]; then
-            branch=update/browsers; title="update browsers"
+            branch=update/browsers; title="update browsers and vscode extensions"
           else
             branch=update/flake-lock; title="update inputs"
           fi
@@ -86,6 +87,35 @@ jobs:
             ./scripts/update-appimages.sh 2>&1 | tee "$RUNNER_TEMP/appimages.log"
             grep -E " -> " "$RUNNER_TEMP/appimages.log" >> "$RUNNER_TEMP/summary.txt" || true
           fi
+          # The pins follow the nix-vscode-extensions input, which moves every
+          # day. On Mondays they are part of the full update and a failure
+          # stops it. On the other days the input is bumped alone, the lock is
+          # put back when no pinned extension changed, and a failure only
+          # costs the pins: the browsers still go out. Nothing is pinned while
+          # Monday's pull request is open, the two would conflict.
+          pins=diy-modules/vscode_marketplace.lock.json
+          refresh_pins() {
+            ./scripts/update-vscode-extensions.sh 2>&1 | tee "$RUNNER_TEMP/extensions.log"
+          }
+          if [ "$WHAT" != browsers ]; then
+            refresh_pins
+            grep -E " -> " "$RUNNER_TEMP/extensions.log" >> "$RUNNER_TEMP/summary.txt" || true
+          else
+            flake_pr="$(gh pr list --head update/flake-lock --base main --state open --json number --jq ".[0].number" || true)"
+            if [ -n "$flake_pr" ]; then
+              echo "vscode extensions: left to pull request #$flake_pr"
+            elif nix flake update nix-vscode-extensions 2>&1 | tee "$RUNNER_TEMP/update.log" && refresh_pins; then
+              if git diff --quiet -- "$pins"; then
+                git checkout -- flake.lock
+              else
+                grep -E "^(• Updated input|    '|  → )" "$RUNNER_TEMP/update.log" >> "$RUNNER_TEMP/summary.txt" || true
+                grep -E " -> " "$RUNNER_TEMP/extensions.log" >> "$RUNNER_TEMP/summary.txt" || true
+              fi
+            else
+              echo "::warning::vscode extension pins not refreshed, browsers only"
+              git checkout -- flake.lock "$pins"
+            fi
+          fi
           if git diff --quiet; then
             echo "everything is already current"
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -112,7 +142,7 @@ jobs:
             echo
             cat "$RUNNER_TEMP/summary.txt"
           } > "$RUNNER_TEMP/commit.msg"
-          git add flake.lock diy-packages
+          git add flake.lock diy-packages diy-modules/vscode_marketplace.lock.json
           git commit -F "$RUNNER_TEMP/commit.msg"
           git push --force origin "HEAD:refs/heads/$BRANCH-candidate"
 
@@ -144,7 +174,7 @@ jobs:
           body="$(printf 'Every host built and is in the attic cache.\n\n```\n%s\n```\n' "$SUMMARY")"
           existing="$(gh pr list --head "$BRANCH" --base main --state open --json number --jq ".[0].number")"
           if [ -n "$existing" ]; then
-            gh pr edit "$existing" --body "$body"
+            gh pr edit "$existing" --title "$TITLE" --body "$body"
             echo "updated pull request #$existing"
           else
             gh pr create --head "$BRANCH" --base main --title "$TITLE" --body "$body"

@@ -161,6 +161,11 @@
         secureboot = host.config.host.secureboot.enable;
       }) nixosConfigurations;
 
+      # The pin file scripts/update-vscode-extensions.sh writes. The extension
+      # list is the same on every host, so any of them will do.
+      lib.vscodeMarketplacePins =
+        nixosConfigurations.${lib.head hosts}.config.system.build.vscodeMarketplacePins;
+
       checks.${system}.lint =
         pkgs.runCommand "celestial-lint"
           {

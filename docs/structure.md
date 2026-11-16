@@ -89,7 +89,7 @@ flowchart TD
 | A feature some machines switch on, with several parts | feature switch in `diy-modules/`, like `host.laptop` |
 | An application's own settings | `user/artesia/programs/<application>.nix` |
 | Software nixpkgs lacks | `diy-packages/`, plus a line in its `default.nix` |
-| A VS Code extension | `system/system_programs.nix`, by Marketplace id |
+| A VS Code extension | its Marketplace id in `programs.vscode.marketplaceExtensions`, `system/system_programs.nix`; CI pins the version |
 | A newer version of an app on every machine | `overlays/default.nix` |
 
 ## Secrets and delivery
