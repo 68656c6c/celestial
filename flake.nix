@@ -40,6 +40,11 @@
       url = "github:probeldev/niri-float-sticky";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Every extension on the VS Code Marketplace, as pkgs.nix-vscode-extensions
+    nix-vscode-extensions = {
+      url = "github:nix-community/nix-vscode-extensions";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -64,6 +69,7 @@
           niri-float-sticky = inputs.niri-float-sticky.packages.${system}.default;
         })
         inputs.millennium.overlays.default
+        inputs.nix-vscode-extensions.overlays.default
       ];
 
       # Only for the flake's own outputs (packages, checks, formatter).

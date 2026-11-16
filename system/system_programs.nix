@@ -23,14 +23,31 @@
     kdeconnect.enable = true;
     vscode = {
       enable = true;
-      extensions = with pkgs.vscode-extensions; [
-        jnoortheen.nix-ide
-        ms-azuretools.vscode-docker
-        eamodio.gitlens
-        tamasfe.even-better-toml
-        ms-python.python
-        vscode-icons-team.vscode-icons
-      ];
+      # All from the Marketplace: <publisher>.<name> of the id, in lowercase. Only
+      # releases that run on the VS Code installed here; an extension with none
+      # is a missing attribute.
+      extensions =
+        with (pkgs.nix-vscode-extensions.forVSCodeVersion pkgs.vscode.version).vscode-marketplace-release;
+        [
+          jnoortheen.nix-ide
+          ms-azuretools.vscode-docker
+          eamodio.gitlens
+          tamasfe.even-better-toml
+          ms-python.python
+          vscode-icons-team.vscode-icons
+          thenuprojectcontributors.vscode-nushell-lang
+          mads-hartmann.bash-ide-vscode
+          rogalmic.bash-debug
+          redhat.ansible
+          redhat.vscode-yaml # ansible depends on it
+          hashicorp.terraform
+          esbenp.prettier-vscode
+          ms-vscode.powershell
+          bmuskalla.vscode-tldr
+          coder.coder-remote
+        ]
+        # coder connects through it; the Marketplace has no release for this VS Code
+        ++ [ pkgs.vscode-extensions.ms-vscode-remote.remote-ssh ];
     };
   };
 }

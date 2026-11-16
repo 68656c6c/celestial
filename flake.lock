@@ -197,6 +197,26 @@
         "type": "github"
       }
     },
+    "nix-vscode-extensions": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794721569,
+        "narHash": "sha256-avd9gIHk+RHyBpy4b2DrtXx9oQaLht4L5Ux6g50ro4U=",
+        "owner": "nix-community",
+        "repo": "nix-vscode-extensions",
+        "rev": "5a526e68f8c6f0fa89668ac26f2a7f6d708417df",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nix-vscode-extensions",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1794386569,
@@ -247,6 +267,7 @@
         "lanzaboote": "lanzaboote",
         "millennium": "millennium",
         "niri-float-sticky": "niri-float-sticky",
+        "nix-vscode-extensions": "nix-vscode-extensions",
         "nixpkgs": "nixpkgs_2",
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",
