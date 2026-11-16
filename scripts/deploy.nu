@@ -9,8 +9,10 @@ export def deploy [message: string] {
   print "Formatting Nix files..."
   nix fmt
 
+  # Only the lint: a full flake check evaluates every host, minutes on a
+  # laptop. CI runs it on the push.
   print "Linting Nix files..."
-  nix flake check
+  nix build --no-link .#checks.x86_64-linux.lint
 
   print "Staging..."
   git add .
