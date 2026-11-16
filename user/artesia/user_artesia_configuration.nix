@@ -25,7 +25,8 @@
   };
 
   services = {
-    arrpc.enable = true;
+    # Discord rich presence: polls the process list, not worth the CPU on battery
+    arrpc.enable = !osConfig.host.laptop.enable;
   };
 
   gtk = {

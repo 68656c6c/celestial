@@ -91,7 +91,6 @@
     in
     {
       home.stateVersion = "25.05";
-      services.arrpc.enable = lib.mkForce false;
       services.blueman-applet.enable = true;
       programs.ghostty.systemd.enable = lib.mkForce false;
       programs.foot = {
