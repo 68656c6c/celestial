@@ -23,6 +23,41 @@ in
     };
     environment.systemPackages = [ pkgs.sbctl ];
 
+    # lanzaboote ignores systemd-boot.memtest86, and an unsigned memtest will
+    # not start under Secure Boot. Its garbage collection leaves these paths
+    # alone. The stamp keeps the ESP unmounted at boot when nothing changed.
+    systemd.services.memtest-esp =
+      let
+        esp = config.boot.loader.efi.efiSysMountPoint;
+        src = pkgs.memtest86plus.efi;
+        entry = pkgs.writeText "memtest86.conf" ''
+          title Memtest86+
+          efi /EFI/memtest86/memtest.efi
+          sort-key o_memtest86
+        '';
+      in
+      {
+        description = "Signed Memtest86+ on the ESP";
+        wantedBy = [ "multi-user.target" ];
+        path = [ pkgs.sbsigntool ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          StateDirectory = "memtest-esp";
+        };
+        script = ''
+          stamp=/var/lib/memtest-esp/installed
+          [ "$(cat $stamp 2>/dev/null)" = "${src} ${entry}" ] && exit 0
+          install -d ${esp}/EFI/memtest86 ${esp}/loader/entries
+          sbsign \
+            --key ${config.boot.lanzaboote.privateKeyFile} \
+            --cert ${config.boot.lanzaboote.publicKeyFile} \
+            --output ${esp}/EFI/memtest86/memtest.efi ${src}
+          install -m 0644 ${entry} ${esp}/loader/entries/memtest86.conf
+          echo "${src} ${entry}" > $stamp
+        '';
+      };
+
     # Without keys the boot files cannot be signed and the switch dies halfway
     system.preSwitchChecks.securebootKeys = ''
       if [ ! -d /var/lib/sbctl/keys ]; then
