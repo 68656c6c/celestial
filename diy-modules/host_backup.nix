@@ -5,11 +5,11 @@
 }:
 
 let
-  # On for a host once secrets.yaml has a restic-<hostname> entry, like
+  # On for a host once secrets.yaml has a <hostname>-restic entry, like
   # host_pangolin.nix. The value is a restic environment file
   # (RESTIC_REPOSITORY, RESTIC_PASSWORD, backend keys). One entry per host:
   # separate repositories, though every host key can decrypt every entry.
-  secretName = "restic-${config.networking.hostName}";
+  secretName = "${config.networking.hostName}-restic";
   enabled = lib.hasInfix "${secretName}:" (builtins.readFile ../secrets/secrets.yaml);
 in
 

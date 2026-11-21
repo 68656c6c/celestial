@@ -7,12 +7,12 @@
 
 let
   # Switches itself on per machine: the day secrets.yaml gains an entry named
-  # pangolin-<hostname>, that host connects at boot. The value is three lines,
+  # <hostname>-pangolin, that host connects at boot. The value is three lines,
   # from a machine client made in the Pangolin dashboard:
   #   PANGOLIN_ENDPOINT=https://pangolin.example.org
   #   PANGOLIN_ID=...
   #   PANGOLIN_SECRET=...
-  secretName = "pangolin-${config.networking.hostName}";
+  secretName = "${config.networking.hostName}-pangolin";
   enabled = lib.hasInfix "${secretName}:" (builtins.readFile ../secrets/secrets.yaml);
 
   # `pangolin service install` writes a unit into /etc, which NixOS does not
