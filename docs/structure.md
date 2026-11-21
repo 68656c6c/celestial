@@ -63,7 +63,7 @@ flowchart TD
 | io | desktop | niri | NVIDIA, three monitors, CachyOS LTS kernel, Sunshine, label printer, VM and media tools, ext4, dual boot with Windows |
 | ganymedes | laptop | niri and sway | Intel with the GTX 970M on PRIME offload, patched speaker wiring |
 | nymphe | laptop | sway | the light one: no xwayland, no game launchers, foot, tablet mode with on-screen keyboard and touch gestures, webcam stream for OBS |
-| aphrodite | laptop | niri | encrypted disk on the TPM, Secure Boot, face unlock, Mullvad, boot animation, Pangolin client |
+| aphrodite | laptop | niri | encrypted disk on the TPM, Secure Boot, fingerprint unlock, Mullvad, boot animation, Pangolin client |
 
 **`diy-modules/`** defines the `host.*` options the per-host files fill in. Machine facts (`host.monitors`, `host.cursor`, `host.dmi`, `host.disk`, `host.gpu`) are stated once per host and read back elsewhere: the niri and sway configs write their output blocks from `host.monitors`, disko takes its layout from `host.disk`, the installer finds the host by `host.dmi`. Feature switches (`host.laptop`, `host.fastboot`, `host.secureboot`, `host.bootsplash`, `host.gaming`) bundle several settings behind one option. Three modules have no option and switch on by a secret being there: `host_pangolin.nix` connects the host once `secrets.yaml` holds `pangolin-<hostname>`, `host_backup.nix` backs up `/home/artesia` with restic every day once it holds `restic-<hostname>`, `host_atuin.nix` logs atuin in to the sync server once it holds `atuin`.
 
