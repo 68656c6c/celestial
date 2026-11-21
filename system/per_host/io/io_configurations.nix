@@ -18,6 +18,7 @@
   # nvidia branch.
   boot.kernelPackages =
     inputs.chaotic.unrestrictedPackages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_cachyos-lts;
+  boot.kernelParams = [ "overlay.index=off" ];
   nix.settings = {
     substituters = [ "https://nyx-cache.chaotic.cx/" ];
     trusted-public-keys = [ "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=" ];
