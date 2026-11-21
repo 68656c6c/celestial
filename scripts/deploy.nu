@@ -1,3 +1,13 @@
+export def cache-slow [] {
+  if (sys host | get hostname) != "io" { return }
+  print "Pushing the slow packages to the caches..."
+  try {
+    with-env { SLOW_ONLY: "1" } { ^$"($env.HOME)/.dotfiles/scripts/build-hosts.sh" }
+  } catch {
+    print "Cache push failed, carrying on."
+  }
+}
+
 export def deploy [message: string] {
   let repo_dir = $"($env.HOME)/.dotfiles"
   cd $repo_dir
@@ -21,6 +31,7 @@ export def deploy [message: string] {
   # here. A failed switch stops the deploy with nothing committed.
   print "Switching..."
   nh os switch
+  cache-slow
 
   print "Committing and pushing..."
   git commit -m $message
