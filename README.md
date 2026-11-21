@@ -33,7 +33,8 @@ GitHub Actions builds every host on each push to `main` and pushes the closures 
 
 | Repository setting | What it is |
 |---|---|
-| secret `ATTIC_TOKEN` | attic token with pull and push rights. The cache is private; attic checks every request itself, so the Pangolin resource in front of it is public |
+| secret `ATTIC_TOKEN` | attic token with pull and push rights. The cache is private and attic checks every request itself |
+| secrets `PANGOLIN_ENDPOINT`, `PANGOLIN_ID`, `PANGOLIN_SECRET`, optional | a Pangolin machine client for the runner, allowed to reach attic only. With them each build job joins Pangolin before it talks to attic, and the hosts build one at a time because one client cannot be connected twice; without them the Pangolin resource in front of attic has to be public |
 | secret `CACHIX_AUTH_TOKEN`, optional | push token for the public `celestial` cachix cache. With it, what CI builds also lands there, so an install or switch away from the lab network downloads instead of compiling |
 | variable `ATTIC_PUBLIC_URL`, optional | where CI reaches attic, default `https://attic.artesia.cloud` |
 

@@ -62,6 +62,7 @@ jobs:
       HAS_ATTIC: ${{ secrets.ATTIC_TOKEN != '' }}
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         host: ${{ fromJSON(needs.prepare.outputs.hosts) }}
     steps:
@@ -85,6 +86,9 @@ jobs:
           public-url: ${{ env.ATTIC_PUBLIC_URL }}
           cache: ${{ env.ATTIC_CACHE }}
           attic-token: ${{ secrets.ATTIC_TOKEN }}
+          pangolin-endpoint: ${{ secrets.PANGOLIN_ENDPOINT }}
+          pangolin-id: ${{ secrets.PANGOLIN_ID }}
+          pangolin-secret: ${{ secrets.PANGOLIN_SECRET }}
 
       - name: Build and push ${{ matrix.host }}
         env:

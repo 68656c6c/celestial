@@ -1,6 +1,8 @@
 name: attic
 description: >
-  Reach the private attic cache. The Pangolin resource is public and attic
+  Reach the private attic cache. With Pangolin credentials the runner first
+  joins Pangolin as a machine client and reaches attic over that tunnel;
+  without them the Pangolin resource has to be public. Either way attic
   authenticates everything itself: the nix daemon gets the token through
   /etc/nix/netrc (attic accepts it as a Basic password), the attic client
   through `attic login`.
@@ -15,10 +17,37 @@ inputs:
   attic-token:
     description: attic token with pull and push permission on the cache
     required: true
+  pangolin-endpoint:
+    description: URL of the Pangolin server, empty to reach attic without a tunnel
+    default: ""
+  pangolin-id:
+    description: ID of a Pangolin machine client that may reach attic
+    default: ""
+  pangolin-secret:
+    description: Secret of that machine client
+    default: ""
 
 runs:
   using: composite
   steps:
+    - name: Join Pangolin
+      if: inputs.pangolin-id != ''
+      shell: bash
+      env:
+        PANGOLIN_ENDPOINT: ${{ inputs.pangolin-endpoint }}
+        PANGOLIN_CLIENT_ID: ${{ inputs.pangolin-id }}
+        PANGOLIN_CLIENT_SECRET: ${{ inputs.pangolin-secret }}
+      run: |
+        pangolin="$(nix build --inputs-from . --no-link --print-out-paths unstable#pangolin-cli)/bin/pangolin"
+        printf 'PANGOLIN_ENDPOINT=%s\nPANGOLIN_CLIENT_ID=%s\nPANGOLIN_CLIENT_SECRET=%s\nHOME=/var/lib/pangolin\n' \
+          "$PANGOLIN_ENDPOINT" "$PANGOLIN_CLIENT_ID" "$PANGOLIN_CLIENT_SECRET" \
+          | sudo install -m 0600 /dev/stdin /run/pangolin.env
+        sudo mkdir -p /var/lib/pangolin
+        sudo systemd-run --unit pangolin-client \
+          --property EnvironmentFile=/run/pangolin.env \
+          --property Restart=always --property RestartSec=5 \
+          "$pangolin" up client --attach
+
     - name: Give the nix daemon the token
       shell: bash
       env:
@@ -35,13 +64,22 @@ runs:
         PUBLIC_URL: ${{ inputs.public-url }}
         CACHE: ${{ inputs.cache }}
         ATTIC_TOKEN: ${{ inputs.attic-token }}
+        TUNNEL: ${{ inputs.pangolin-id != '' }}
       run: |
-        if curl -fsS -o /dev/null -H "Authorization: Bearer $ATTIC_TOKEN" "$PUBLIC_URL/$CACHE/nix-cache-info"; then
-          echo "attic reachable at $PUBLIC_URL"
-          exit 0
+        tries=1
+        [ "$TUNNEL" = true ] && tries=30
+        for _ in $(seq "$tries"); do
+          if curl -fsS -m 10 -o /dev/null -H "Authorization: Bearer $ATTIC_TOKEN" "$PUBLIC_URL/$CACHE/nix-cache-info" 2>/dev/null; then
+            echo "attic reachable at $PUBLIC_URL"
+            exit 0
+          fi
+          [ "$tries" = 1 ] || sleep 3
+        done
+        echo "::error::$PUBLIC_URL/$CACHE/nix-cache-info did not answer with 200; 401 means the token has no pull right, 302 means the Pangolin resource still has authentication on, 404 from the proxy or a reset connection means Pangolin does not route to attic for this client" >&2
+        curl -sS -i -m 10 -H "Authorization: Bearer $ATTIC_TOKEN" "$PUBLIC_URL/$CACHE/nix-cache-info" | head -15 >&2 || true
+        if [ "$TUNNEL" = true ]; then
+          sudo journalctl -u pangolin-client -n 40 --no-pager >&2 || true
         fi
-        echo "::error::$PUBLIC_URL/$CACHE/nix-cache-info did not answer with 200; 401 means the token has no pull right, 302 means the Pangolin resource still has authentication on" >&2
-        curl -sS -i -H "Authorization: Bearer $ATTIC_TOKEN" "$PUBLIC_URL/$CACHE/nix-cache-info" | head -15 >&2 || true
         exit 1
 
     - name: Install attic-client from the flake's nixpkgs
