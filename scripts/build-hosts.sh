@@ -59,6 +59,12 @@ in_cache() {
   has_narinfo "$CACHE_URL" "$1" "${auth[@]}"
 }
 
+HAVE_ATTIC=1
+if [ "$DO_PUSH" = 1 ] && ! curl -sS -o /dev/null -m 10 "$CACHE_URL/nix-cache-info" 2>/dev/null; then
+  echo "attic not reachable at $CACHE_URL, slow packages go to cachix only" >&2
+  HAVE_ATTIC=0
+fi
+
 push_cachix() {
   nix run --inputs-from "$REPO_ROOT" nixpkgs#cachix -- push "$CACHIX_NAME" "$@" \
     || echo "    cachix push failed, carrying on" >&2
@@ -79,7 +85,9 @@ push_slow() {
     need_cachix=0
     for out in "${outs[@]}"; do
       has_narinfo https://cache.nixos.org "$out" && continue
-      in_cache "$out" || need_attic=1
+      if [ "$HAVE_ATTIC" = 1 ] && ! in_cache "$out"; then
+        need_attic=1
+      fi
       if [ "$HAVE_CACHIX" = 1 ] && ! has_narinfo "https://$CACHIX_NAME.cachix.org" "$out"; then
         need_cachix=1
       fi
