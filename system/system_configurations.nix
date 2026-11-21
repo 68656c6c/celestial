@@ -39,6 +39,19 @@ in
     };
   };
 
+  environment.sessionVariables.SOPS_AGE_KEY_CMD = lib.getExe (
+    pkgs.writeShellApplication {
+      name = "sops-age-key";
+      text = ''
+        key=${config.sops.age.keyFile}
+        if [ -r "$key" ]; then
+          exec cat "$key"
+        fi
+        exec /run/wrappers/bin/sudo cat "$key"
+      '';
+    }
+  );
+
   boot = {
     loader = {
       efi.canTouchEfiVariables = true;

@@ -32,7 +32,7 @@
       SSH_AUTH_SOCK = "${config.home.homeDirectory}/.bitwarden-ssh-agent.sock";
       QT_QPA_PLATFORM = "wayland";
       QT_QPA_PLATFORMTHEME = "qt6ct";
-      SOPS_AGE_KEY_FILE = osConfig.sops.age.keyFile;
+      inherit (osConfig.environment.sessionVariables) SOPS_AGE_KEY_CMD;
     };
     settings = {
       show_banner = false;
