@@ -103,7 +103,7 @@ let
       win="$(niri msg --json focused-window)"
       [ "$win" = "null" ] && exit 0
       if [ "$(jq -r .is_floating <<<"$win")" = "true" ]; then
-        niri-float-sticky -ipc unset_sticky
+        niri-float-sticky -ipc unset_sticky || true
         niri msg action toggle-window-floating
         exit 0
       fi
@@ -135,7 +135,6 @@ lib.mkIf osConfig.programs.niri.enable {
     // on any other window is silently ignored.
     spawn-at-startup "niri-float-sticky" "-disable-auto-stick"
     spawn-at-startup "niri-autofloat"
-    spawn-at-startup "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit"
 
     hotkey-overlay {
       skip-at-startup
@@ -228,12 +227,9 @@ lib.mkIf osConfig.programs.niri.enable {
       open-floating true
     }
 
-    // Its tray menu is an ordinary window, three menus wide and transparent
-    // but for the menu at one end, and Wayland does not let it place
-    // itself. Put that menu above the tray, without a ring around the rest:
-    // the window is 946x644 with the menu in a top corner, the right one
-    // on a single screen and the left one with several, so most
-    // of it hangs below the screen.
+    // Its tray menu is a 946x644 window, transparent but for the menu in a
+    // top corner: the right one on a single screen, the left one with
+    // several. Put that menu above the tray, without a ring around the rest.
     window-rule {
       match app-id="^Pangolin-client$" title="^pangolin-client$"
       default-floating-position x=${pangolinMenuX} y=-233 relative-to="bottom-right"
