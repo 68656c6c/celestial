@@ -39,7 +39,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     outputs:
-      changed: ${{ steps.update.outputs.changed }}
+      changed: ${{ steps.push.outputs.changed }}
       summary: ${{ steps.update.outputs.summary }}
       branch: ${{ steps.plan.outputs.branch }}
       title: ${{ steps.plan.outputs.title }}
@@ -135,8 +135,10 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Push the candidate branch
+        id: push
         if: steps.update.outputs.changed == 'true'
         env:
+          GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.plan.outputs.branch }}
           TITLE: ${{ steps.plan.outputs.title }}
         run: |
@@ -150,7 +152,15 @@ jobs:
           } > "$RUNNER_TEMP/commit.msg"
           git add flake.lock diy-packages diy-modules/vscode_marketplace.lock.json
           git commit -F "$RUNNER_TEMP/commit.msg"
+          if git fetch --depth 1 origin "$BRANCH" 2>/dev/null \
+            && [ "$(git rev-parse 'FETCH_HEAD^{tree}')" = "$(git rev-parse 'HEAD^{tree}')" ] \
+            && [ -n "$(gh pr list --head "$BRANCH" --base main --state open --json number --jq ".[0].number")" ]; then
+            echo "the open pull request already holds this update"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           git push --force origin "HEAD:refs/heads/$BRANCH-candidate"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
   build:
     needs: update

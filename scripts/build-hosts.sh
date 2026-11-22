@@ -36,7 +36,12 @@ EOF
 has_narinfo() {
   local url="$1" hash="${2#/nix/store/}"
   hash="${hash%%-*}"
-  [ "$(curl -sS -o /dev/null -w '%{http_code}' "$url/$hash.narinfo")" = "200" ]
+  local code
+  code="$(
+    curl -sS --retry 3 --retry-all-errors --connect-timeout 10 -m 30 \
+      -o /dev/null -w '%{http_code}' "$url/$hash.narinfo"
+  )" || return 1
+  [ "$code" = "200" ]
 }
 
 in_cache() {
@@ -87,10 +92,10 @@ for host in "${hosts[@]}"; do
 
   if [ "$DO_PUSH" = 1 ]; then
     echo "==> $host: pushing"
+    attic_ok=1
     if ! attic push "$CACHE_NAME" "$out"; then
       echo "    push failed" >&2
-      failed+=("$host")
-      continue
+      attic_ok=0
     fi
     # Second copy on cachix: reachable without the lab network or a token, so
     # an install or a switch away from home does not compile. cachix leaves
@@ -98,6 +103,10 @@ for host in "${hosts[@]}"; do
     if [ "$HAVE_CACHIX" = 1 ]; then
       echo "==> $host: pushing to cachix"
       push_cachix "$out"
+    fi
+    if [ "$attic_ok" = 0 ]; then
+      failed+=("$host")
+      continue
     fi
   fi
 

@@ -78,7 +78,9 @@ runs:
 
     - name: Install attic-client from the flake's nixpkgs
       shell: bash
-      run: echo "$(nix build --inputs-from . --no-link --print-out-paths nixpkgs#attic-client)/bin" >> "$GITHUB_PATH"
+      run: |
+        out="$(nix build --inputs-from . --no-link --print-out-paths nixpkgs#attic-client)"
+        echo "$out/bin" >> "$GITHUB_PATH"
 
     - name: Log in to attic
       shell: bash
