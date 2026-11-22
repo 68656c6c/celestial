@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CACHE_NAME="${ATTIC_CACHE:-celestial}"
-CACHE_URL="${ATTIC_CACHE_URL:-https://attic.artesia.cloud/$CACHE_NAME}"
+CACHE_URL="${ATTIC_CACHE_URL:-https://attic.cl2.artesia.cloud/$CACHE_NAME}"
 DO_PUSH="${PUSH:-1}"
 CACHIX_NAME="${CACHIX_CACHE:-celestial}"
 SLOW_PACKAGES="${SLOW_PACKAGES:-nlohmann_json millennium stremio lzbt-systemd}"
@@ -37,7 +37,7 @@ Environment:
   SLOW_ONLY        set to 1 to stop after the slow packages (default: 0)
   CACHIX_CACHE     cachix cache name           (default: celestial)
   ATTIC_CACHE      cache name for attic push   (default: celestial)
-  ATTIC_CACHE_URL  binary cache endpoint       (default: https://attic.artesia.cloud/\$ATTIC_CACHE)
+  ATTIC_CACHE_URL  binary cache endpoint       (default: https://attic.cl2.artesia.cloud/\$ATTIC_CACHE)
   PUSH             set to 0 to build only      (default: 1)
   SLOW_PACKAGES    package names pushed first  (default: $SLOW_PACKAGES)
 EOF

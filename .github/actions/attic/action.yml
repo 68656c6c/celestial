@@ -10,7 +10,7 @@ description: >
 inputs:
   public-url:
     description: URL of the attic server
-    default: https://attic.artesia.cloud
+    default: https://attic.cl2.artesia.cloud
   cache:
     description: Cache name
     default: celestial

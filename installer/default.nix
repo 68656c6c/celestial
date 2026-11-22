@@ -75,7 +75,7 @@ in
         "https://nyx-cache.chaotic.cx/"
       ];
       trusted-public-keys = [
-        "celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g="
+        "celestial:Ii3291OUFcJwNBkfMT3+oZn4V7yC+5XswXiWdoJ7peM="
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
         "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk="
       ];

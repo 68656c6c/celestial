@@ -33,7 +33,7 @@ in
       sopsFile = ../secrets/secrets.yaml;
       neededForUsers = true;
     };
-    # "machine attic.artesia.cloud / password <pull token>": the cache is private
+    # "machine attic.cl2.artesia.cloud / password <pull token>": the cache is private
     secrets.attic-netrc = lib.mkIf haveAtticNetrc {
       sopsFile = ../secrets/secrets.yaml;
     };
@@ -152,11 +152,11 @@ in
       ];
       substituters = [
         "https://celestial.cachix.org"
-        "https://attic.artesia.cloud/celestial"
+        "https://attic.cl2.artesia.cloud/celestial"
       ];
       trusted-public-keys = [
         "celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk="
-        "celestial:Pu6qm2/CCY/lcC9FVyXRNGBuXa8QzAGOQzA9BSIx51g="
+        "celestial:Ii3291OUFcJwNBkfMT3+oZn4V7yC+5XswXiWdoJ7peM="
       ];
       # a broken cache entry costs a local build, not a failed switch,
       # and an unreachable cache costs seconds, not minutes

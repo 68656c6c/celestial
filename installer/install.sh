@@ -274,7 +274,7 @@ cache_args=()
 if [ -f "$stick/attic.netrc" ]; then
   install -m 600 "$stick/attic.netrc" /etc/nix/netrc
   systemctl restart nix-daemon
-  cache_args=(--option extra-substituters https://attic.artesia.cloud/celestial)
+  cache_args=(--option extra-substituters https://attic.cl2.artesia.cloud/celestial)
   say "attic pull token taken from the stick"
 fi
 

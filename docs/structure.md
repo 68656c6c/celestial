@@ -108,7 +108,7 @@ flowchart LR
     deploy -->|"apply config"| local["current machine"]
 
     main -->|"on push"| ci["GitHub Actions: build-hosts.yml<br/>lint, then one job per machine"]
-    ci -->|"attic token"| pangolin["Pangolin<br/>attic.artesia.cloud"]
+    ci -->|"attic token"| pangolin["Pangolin<br/>attic.cl2.artesia.cloud"]
     pangolin --> attic[("attic binary cache")]
     upd["GitHub Actions: update-flake.yml<br/>daily 05:00"] -->|"Mondays: lock + browsers,<br/>other days: browsers,<br/>then build-hosts.yml"| ci
     upd -->|"pull request with the new lock"| main
@@ -123,4 +123,4 @@ flowchart LR
 
 **Updates.** `update-flake.yml` runs daily: lock and browsers on Mondays, browsers only on other days. It builds every host first and opens a pull request only if that passes, so an open PR is known good and merging it is the whole upgrade.
 
-**Cache access.** `attic.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The Pangolin resource is public because attic authenticates everything itself: Nix sends the token as a Basic password from a netrc file, on the hosts (`attic-netrc`), on the CI runner and in the installer (`attic.netrc` on the key stick). When the resource is private instead, a host reaches it through its Pangolin client and the CI runner joins Pangolin as a machine client of its own (`PANGOLIN_*` secrets) before it talks to attic.
+**Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The Pangolin resource is public because attic authenticates everything itself: Nix sends the token as a Basic password from a netrc file, on the hosts (`attic-netrc`), on the CI runner and in the installer (`attic.netrc` on the key stick). When the resource is private instead, a host reaches it through its Pangolin client and the CI runner joins Pangolin as a machine client of its own (`PANGOLIN_*` secrets) before it talks to attic.
