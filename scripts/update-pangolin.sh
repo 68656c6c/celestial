@@ -61,6 +61,7 @@ restore() {
   write_pin "$current" "$current_hash" "$current_vendor"
 }
 trap restore ERR
+trap 'restore; exit 130' INT TERM
 
 prefetch="$(nix_cmd store prefetch-file --unpack --json "https://github.com/$REPO/archive/refs/tags/$latest.tar.gz")"
 hash="$(printf '%s' "$prefetch" | json_field hash)"
@@ -82,5 +83,5 @@ if [ -z "$vendor" ]; then
 fi
 
 write_pin "$latest" "$hash" "$vendor"
-trap - ERR
+trap - ERR INT TERM
 echo "pangolin-cli: $current -> $latest"

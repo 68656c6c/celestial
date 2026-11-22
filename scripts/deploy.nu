@@ -23,7 +23,9 @@ export def deploy [message: string] {
   nh os switch
 
   print "Committing and pushing..."
-  git commit -m $message
+  if (git diff --cached --quiet | complete).exit_code != 0 {
+    git commit -m $message
+  }
   git push
 
   print "Done."

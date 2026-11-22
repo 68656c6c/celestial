@@ -35,7 +35,8 @@ if [ "$BOOT" = iso ]; then
 
   truncate -s 512M "$VM_DIR/stick.img"
   mkfs.vfat -n CEL_KEYS "$VM_DIR/stick.img" >/dev/null
-  git -C "$REPO_ROOT" bundle create -q "$VM_DIR/celestial.bundle" HEAD "$(git -C "$REPO_ROOT" branch --show-current)"
+  branch="$(git -C "$REPO_ROOT" branch --show-current)"
+  git -C "$REPO_ROOT" bundle create -q "$VM_DIR/celestial.bundle" HEAD ${branch:+"$branch"}
   mcopy -i "$VM_DIR/stick.img" "$VM_DIR/celestial.bundle" ::
   if [ -n "${STICK_DIR:-}" ]; then mcopy -s -i "$VM_DIR/stick.img" "$STICK_DIR"/* ::; fi
 
@@ -45,7 +46,7 @@ fi
 [ -z "$PRODUCT" ] || args+=(-smbios "type=1,product=$PRODUCT")
 
 # A TPM 2.0, like the real machines have, for hosts with an encrypted disk
-swtpm socket --tpm2 --tpmstate "dir=$VM_DIR/tpm" --ctrl "type=unixio,path=$VM_DIR/tpm/sock" --daemon
+swtpm socket --tpm2 --tpmstate "dir=$VM_DIR/tpm" --ctrl "type=unixio,path=$VM_DIR/tpm/sock,terminate" --daemon
 args+=(-chardev "socket,id=chrtpm,path=$VM_DIR/tpm/sock" -tpmdev "emulator,id=tpm0,chardev=chrtpm" -device "tpm-tis,tpmdev=tpm0")
 
 # shellcheck disable=SC2086  # QEMU_ARGS is a list of words

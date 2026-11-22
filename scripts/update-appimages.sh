@@ -14,20 +14,23 @@ nix_cmd() {
 
 # update_pkg <name> <owner/repo> <nix file> <asset template> [tag prefix]
 # In the template {tag} is the release tag and {version} the tag without its
-# prefix. With a prefix, the newest release whose tag starts with it is taken:
-# for a repository that releases several things side by side.
+# prefix. With a prefix, the newest tag that is the prefix plus a plain
+# numeric version is taken, for a repository that releases several things.
 update_pkg() {
   local name="$1" repo="$2" nix_file="$3" asset_tpl="$4" prefix="${5:-}"
 
-  local release_json latest_tag endpoint="releases/latest"
-  [ -n "$prefix" ] && endpoint="releases?per_page=100"
+  local release_json latest_tag endpoint="releases/latest" tag_re='[^"]+'
+  if [ -n "$prefix" ]; then
+    endpoint="releases?per_page=100"
+    tag_re="${prefix}"'[0-9]+(\.[0-9]+)+(?=")'
+  fi
   local -a auth=()
   [ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ] && auth=(-H "Authorization: Bearer ${GH_TOKEN:-$GITHUB_TOKEN}")
   if ! release_json=$(curl -fsSL "${auth[@]}" "https://api.github.com/repos/${repo}/${endpoint}"); then
     echo "$name: could not reach the GitHub API" >&2
     return 1
   fi
-  latest_tag=$(printf '%s' "$release_json" | grep -oP "\"tag_name\"\\s*:\\s*\"\\K${prefix}[^\"]+" | head -1 || true)
+  latest_tag=$(printf '%s' "$release_json" | grep -oP "\"tag_name\"\\s*:\\s*\"\\K${tag_re}" | head -1 || true)
 
   if [ -z "$latest_tag" ]; then
     echo "$name: no release tag found" >&2
