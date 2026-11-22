@@ -10,10 +10,6 @@ SLOW_PACKAGES="${SLOW_PACKAGES:-nlohmann_json millennium stremio lzbt-systemd}"
 SLOW_ONLY="${SLOW_ONLY:-0}"
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-if [ -z "${ATTIC_TOKEN:-}" ] && [ -r "$CONFIG_HOME/attic/config.toml" ]; then
-  ATTIC_TOKEN="$(sed -n 's/^token *= *"\(.*\)"$/\1/p' "$CONFIG_HOME/attic/config.toml" | head -n 1)"
-fi
-
 HAVE_CACHIX=0
 if [ -n "${CACHIX_AUTH_TOKEN:-}" ] || [ -s "$CONFIG_HOME/cachix/cachix.dhall" ]; then
   HAVE_CACHIX=1
@@ -30,8 +26,6 @@ The slow packages of a host are built and pushed on their own first, to every
 cache that lacks them, so they are kept even when the rest of the host fails.
 
 Environment:
-  ATTIC_TOKEN      token for the private cache (narinfo checks; attic push uses its login),
-                   default: the first one in ~/.config/attic/config.toml
   CACHIX_AUTH_TOKEN  when set, or after \`cachix authtoken\`, what was built also goes
                    to the public cachix cache
   SLOW_ONLY        set to 1 to stop after the slow packages (default: 0)
@@ -48,15 +42,12 @@ EOF
 
 has_narinfo() {
   local url="$1" hash="${2#/nix/store/}"
-  shift 2
   hash="${hash%%-*}"
-  [ "$(curl -sS -o /dev/null -w '%{http_code}' "$@" "$url/$hash.narinfo")" = "200" ]
+  [ "$(curl -sS -o /dev/null -w '%{http_code}' "$url/$hash.narinfo")" = "200" ]
 }
 
 in_cache() {
-  local -a auth=()
-  [ -n "${ATTIC_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $ATTIC_TOKEN")
-  has_narinfo "$CACHE_URL" "$1" "${auth[@]}"
+  has_narinfo "$CACHE_URL" "$1"
 }
 
 HAVE_ATTIC=1

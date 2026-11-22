@@ -6,10 +6,6 @@
 }:
 
 let
-  # sops leaves key names in clear, so the pull token wiring switches itself on
-  # once `attic-netrc` has been added to secrets.yaml and this host can read it
-  haveAtticNetrc =
-    haveHostKey && lib.hasInfix "attic-netrc:" (builtins.readFile ../secrets/secrets.yaml);
   # Use the secrets only when this host can really decrypt them: its key must
   # be in .sops.yaml AND secrets.yaml must have been re-encrypted for it
   # (sops updatekeys). A key that is only listed locks the user out, because
@@ -32,10 +28,6 @@ in
     secrets.artesia-password = lib.mkIf haveHostKey {
       sopsFile = ../secrets/secrets.yaml;
       neededForUsers = true;
-    };
-    # "machine attic.cl2.artesia.cloud / password <pull token>": the cache is private
-    secrets.attic-netrc = lib.mkIf haveAtticNetrc {
-      sopsFile = ../secrets/secrets.yaml;
     };
   };
 
@@ -162,7 +154,6 @@ in
       # and an unreachable cache costs seconds, not minutes
       fallback = true;
       connect-timeout = 5;
-      netrc-file = lib.mkIf haveAtticNetrc config.sops.secrets.attic-netrc.path;
     };
   };
 }

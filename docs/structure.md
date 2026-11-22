@@ -108,7 +108,7 @@ flowchart LR
     deploy -->|"apply config"| local["current machine"]
 
     main -->|"on push"| ci["GitHub Actions: build-hosts.yml<br/>lint, then one job per machine"]
-    ci -->|"attic token"| pangolin["Pangolin<br/>attic.cl2.artesia.cloud"]
+    ci -->|"push token"| pangolin["Pangolin<br/>attic.cl2.artesia.cloud"]
     pangolin --> attic[("attic binary cache")]
     upd["GitHub Actions: update-flake.yml<br/>daily 05:00"] -->|"Mondays: lock + browsers,<br/>other days: browsers,<br/>then build-hosts.yml"| ci
     upd -->|"pull request with the new lock"| main
@@ -117,10 +117,10 @@ flowchart LR
     secrets -->|"decrypted when the config is applied<br/>with /var/lib/sops-nix/key"| hostsbox
 ```
 
-**Secrets.** One sops file, encrypted for every host's age key (`/var/lib/sops-nix/key`) and a backup key. A secret switches its own wiring on by being present in the file (`attic-netrc`, `<hostname>-pangolin`, `<hostname>-restic`, `atuin`). A host whose key cannot read the file yet logs in with a password hash stored next to the key, until `scripts/rekey.sh` has run on an enrolled host.
+**Secrets.** One sops file, encrypted for every host's age key (`/var/lib/sops-nix/key`) and a backup key. A secret switches its own wiring on by being present in the file (`<hostname>-pangolin`, `<hostname>-restic`, `atuin`). A host whose key cannot read the file yet logs in with a password hash stored next to the key, until `scripts/rekey.sh` has run on an enrolled host.
 
 **Deploy.** `deploy "message"` (`scripts/deploy.nu`) formats, lints, switches the current machine and only then commits and pushes. CI builds every host on that push and fills the cache; the other machines download.
 
 **Updates.** `update-flake.yml` runs daily: lock and browsers on Mondays, browsers only on other days. It builds every host first and opens a pull request only if that passes, so an open PR is known good and merging it is the whole upgrade.
 
-**Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The Pangolin resource is public because attic authenticates everything itself: Nix sends the token as a Basic password from a netrc file, on the hosts (`attic-netrc`), on the CI runner and in the installer (`attic.netrc` on the key stick). When the resource is private instead, a host reaches it through its Pangolin client and the CI runner joins Pangolin as a machine client of its own (`PANGOLIN_*` secrets) before it talks to attic.
+**Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The cache is public to read, so hosts and the installer pull without a token; only the push from CI needs one (`ATTIC_TOKEN`). The CI runner joins Pangolin as a machine client of its own (`PANGOLIN_*` secrets) before it talks to attic.

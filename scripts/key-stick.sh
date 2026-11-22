@@ -10,7 +10,7 @@
 #
 # <stick> is where the stick is mounted. Its filesystem must carry the label
 # CEL_KEYS (mkfs.vfat -n CEL_KEYS /dev/sdX1). Optional extras the
-# installer also reads from it: wifi/*.nmconnection, attic.netrc.
+# installer also reads from it: wifi/*.nmconnection.
 set -euo pipefail
 
 STICK="${1:?Usage: $0 <stick mountpoint> [host]}"

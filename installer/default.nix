@@ -67,11 +67,10 @@ in
         "flakes"
       ];
       # nixos-install reads this file, not the target's settings, so the
-      # CachyOS kernel for io has to be reachable from here too. attic is
-      # private: install.sh adds it when the stick brings the token, without
-      # one it would only cost retries.
+      # CachyOS kernel for io has to be reachable from here too.
       substituters = [
         "https://celestial.cachix.org"
+        "https://attic.cl2.artesia.cloud/celestial"
         "https://nyx-cache.chaotic.cx/"
       ];
       trusted-public-keys = [

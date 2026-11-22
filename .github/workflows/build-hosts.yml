@@ -92,7 +92,6 @@ jobs:
 
       - name: Build and push ${{ matrix.host }}
         env:
-          ATTIC_TOKEN: ${{ secrets.ATTIC_TOKEN }}
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
           # through the environment, not pasted into the script: the name is a
           # folder name from the checkout, which on a pull request is anyone's

@@ -18,7 +18,6 @@
 #   keys/<host>.key      age key for that host (scripts/key-stick.sh)
 #   keys/<host>.luks     disk passphrase, for a host with host.disk.encrypt
 #   wifi/*.nmconnection  NetworkManager profiles, for machines without ethernet
-#   attic.netrc          pull token for the private cache
 #   celestial.bundle     `git bundle create celestial.bundle HEAD main`, to install
 #                        commits that are not pushed
 
@@ -270,17 +269,10 @@ if [ "$secureboot" = true ]; then
   install -d -m 700 /mnt/var/lib/sbctl
   cp -a /var/lib/sbctl/. /mnt/var/lib/sbctl/
 fi
-cache_args=()
-if [ -f "$stick/attic.netrc" ]; then
-  install -m 600 "$stick/attic.netrc" /etc/nix/netrc
-  systemctl restart nix-daemon
-  cache_args=(--option extra-substituters https://attic.cl2.artesia.cloud/celestial)
-  say "attic pull token taken from the stick"
-fi
 
 # 6. install
 say "installing $host"
-nixos-install --flake "$repo#$host" --no-root-passwd --no-channel-copy "${cache_args[@]}"
+nixos-install --flake "$repo#$host" --no-root-passwd --no-channel-copy
 
 # The repo goes along, with whatever setup-host.sh wrote, ready to commit.
 # artesia is the first normal user, so 1000:users.

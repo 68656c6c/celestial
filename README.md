@@ -33,12 +33,12 @@ GitHub Actions builds every host on each push to `main` and pushes the closures 
 
 | Repository setting | What it is |
 |---|---|
-| secret `ATTIC_TOKEN` | attic token with pull and push rights. The cache is private and attic checks every request itself |
+| secret `ATTIC_TOKEN` | attic token with push rights. The cache is public to read, so only the push needs it |
 | secrets `PANGOLIN_ENDPOINT`, `PANGOLIN_ID`, `PANGOLIN_SECRET`, optional | a Pangolin machine client for the runner, allowed to reach attic only. With them each build job joins Pangolin before it talks to attic, and the hosts build one at a time because one client cannot be connected twice; without them the Pangolin resource in front of attic has to be public |
 | secret `CACHIX_AUTH_TOKEN`, optional | push token for the public `celestial` cachix cache. With it, what CI builds also lands there, so an install or switch away from the lab network downloads instead of compiling |
 | variable `ATTIC_PUBLIC_URL`, optional | where CI reaches attic, default `https://attic.cl2.artesia.cloud` |
 
-Hosts pull with the `attic-netrc` entry in `secrets/secrets.yaml` once it is added; until then they build what the public caches lack.
+Hosts pull from attic without a token, the cache is public to read.
 
 ## Installing a host
 New machine or reinstall, it is the same stick. Download `celestial-installer.iso` from the [installer release](https://github.com/68656c6c/celestial/releases/tag/installer) (the `.sha256` next to it is for checking the download), `dd` it to a stick and boot it. The installer clones this repo when it runs, so the stick does not go stale when hosts change; CI only rebuilds it when `installer/` or the lock changes.
@@ -68,7 +68,6 @@ Optional second stick, any filesystem labelled `CEL_KEYS` (`mkfs.vfat -n CEL_KEY
 | `keys/<host>.luks` | the disk passphrase of a host with `host.disk.encrypt` | a text file with the passphrase. Plain text next to the age key: whoever has the stick has the disk, so take it off again after the install |
 | `keys/<host>.key` | the host's age key | `scripts/key-stick.sh <mountpoint>` on that host before wiping it, or `scripts/key-stick.sh <mountpoint> <newhost>` on any enrolled host to make and enroll a key for a machine that does not exist yet (commit and push after) |
 | `wifi/*.nmconnection` | wifi without the menu | `sudo cp /etc/NetworkManager/system-connections/<name>.nmconnection` from a machine that knows the network |
-| `attic.netrc` | pull from the private cache during the install | one line, `machine attic.cl2.artesia.cloud password <pull token>` |
 | `celestial.bundle` | install commits that are not pushed | `git bundle create celestial.bundle HEAD main` |
 
 ### Encrypted disk and Secure Boot
