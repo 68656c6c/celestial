@@ -34,7 +34,7 @@ GitHub Actions builds every host on each push to `main` and pushes the closures 
 | Repository setting | What it is |
 |---|---|
 | secret `ATTIC_TOKEN` | attic token with push rights. The cache is public to read, so only the push needs it |
-| secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`, optional | a Tailscale OAuth client that owns `tag:ci`. With it each build job joins the tailnet as a short-lived `tag:ci` device and reaches the machine named `attic` there; the ACL lets `tag:ci` reach attic on 443 only. Without it attic has to be reachable from the internet |
+| secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`, optional | a Tailscale OAuth client that owns `tag:github-ci`. With it each build job joins the tailnet as a short-lived `tag:github-ci` device and reaches the machine named `attic` there; the ACL lets `tag:github-ci` reach attic on 443 only. Without it attic has to be reachable from the internet |
 | secret `CACHIX_AUTH_TOKEN`, optional | push token for the public `celestial` cachix cache. With it, what CI builds also lands there, so an install or switch away from the lab network downloads instead of compiling |
 | variable `ATTIC_PUBLIC_URL`, optional | where CI reaches attic, default `https://attic.cl2.artesia.cloud` |
 

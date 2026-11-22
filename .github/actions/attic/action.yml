@@ -24,7 +24,7 @@ inputs:
     default: ""
   tailscale-tags:
     description: Tags the runner joins with, the ones the OAuth client owns
-    default: tag:ci
+    default: tag:github-ci
   tailnet-host:
     description: Name of the attic machine on the tailnet
     default: attic

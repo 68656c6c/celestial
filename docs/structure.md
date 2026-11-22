@@ -123,4 +123,4 @@ flowchart LR
 
 **Updates.** `update-flake.yml` runs daily: lock and browsers on Mondays, browsers only on other days. It builds every host first and opens a pull request only if that passes, so an open PR is known good and merging it is the whole upgrade.
 
-**Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The cache is public to read, so hosts and the installer pull without a token; only the push from CI needs one (`ATTIC_TOKEN`). The CI runner joins the tailnet as a short-lived `tag:ci` device (`TS_OAUTH_*` secrets) and reaches attic there under the same name.
+**Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The cache is public to read, so hosts and the installer pull without a token; only the push from CI needs one (`ATTIC_TOKEN`). The CI runner joins the tailnet as a short-lived `tag:github-ci` device (`TS_OAUTH_*` secrets) and reaches attic there under the same name.
