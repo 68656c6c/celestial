@@ -4,5 +4,6 @@
   kasane-teto-cursor-linux = pkgs.callPackage ./kasane-teto-cursor-linux.nix { };
   cups-citizen-ctzcls = pkgs.callPackage ./cups-citizen-ctzcls.nix { };
   helium = pkgs.callPackage ./helium.nix { };
-  zen-browser = pkgs.callPackage ./zen-browser.nix { };
+  pangolin-client = pkgs.callPackage ./pangolin-client.nix { };
+  zen-browser =pkgs.callPackage ./zen-browser.nix { };
 }

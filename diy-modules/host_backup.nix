@@ -6,7 +6,7 @@
 
 let
   # On for a host once secrets.yaml has a <hostname>-restic entry, like
-  # host_pangolin.nix. The value is a restic environment file
+  # host_atuin.nix. The value is a restic environment file
   # (RESTIC_REPOSITORY, RESTIC_PASSWORD, backend keys). One entry per host:
   # separate repositories, though every host key can decrypt every entry.
   secretName = "${config.networking.hostName}-restic";

@@ -63,9 +63,9 @@ flowchart TD
 | io | desktop | niri | NVIDIA, three monitors, CachyOS LTS kernel, Sunshine, label printer, VM and media tools, ext4, dual boot with Windows |
 | ganymedes | laptop | niri and sway | Intel with the GTX 970M on PRIME offload, patched speaker wiring |
 | nymphe | laptop | sway | the light one: no xwayland, no game launchers, foot, tablet mode with on-screen keyboard and touch gestures, webcam stream for OBS |
-| aphrodite | laptop | niri | encrypted disk on the TPM, Secure Boot, fingerprint unlock, Mullvad, boot animation, Pangolin client |
+| aphrodite | laptop | niri | encrypted disk on the TPM, Secure Boot, fingerprint unlock, Mullvad, boot animation |
 
-**`diy-modules/`** defines the `host.*` options the per-host files fill in. Machine facts (`host.monitors`, `host.cursor`, `host.dmi`, `host.disk`, `host.gpu`) are stated once per host and read back elsewhere: the niri and sway configs write their output blocks from `host.monitors`, disko takes its layout from `host.disk`, the installer finds the host by `host.dmi`. Feature switches (`host.laptop`, `host.fastboot`, `host.secureboot`, `host.bootsplash`, `host.gaming`) bundle several settings behind one option. Three modules have no option and switch on by a secret being there: `host_pangolin.nix` connects the host once `secrets.yaml` holds `<hostname>-pangolin`, `host_backup.nix` backs up `/home/artesia` with restic every day once it holds `<hostname>-restic`, `host_atuin.nix` logs atuin in to the sync server once it holds `atuin`.
+**`diy-modules/`** defines the `host.*` options the per-host files fill in. Machine facts (`host.monitors`, `host.cursor`, `host.dmi`, `host.disk`, `host.gpu`) are stated once per host and read back elsewhere: the niri and sway configs write their output blocks from `host.monitors`, disko takes its layout from `host.disk`, the installer finds the host by `host.dmi`. Feature switches (`host.laptop`, `host.fastboot`, `host.secureboot`, `host.bootsplash`, `host.gaming`) bundle several settings behind one option. `pangolin_client.nix` has no option either and is on everywhere: the Pangolin tray app and the root daemon it talks to, signed in once per user and connected again at every login. Two modules have no option and switch on by a secret being there: `host_backup.nix` backs up `/home/artesia` with restic every day once it holds `<hostname>-restic`, `host_atuin.nix` logs atuin in to the sync server once it holds `atuin`.
 
 **`imports/`** loads the third-party modules (home-manager, sops-nix, disko, lanzaboote, noctalia) and `diy-modules/`.
 
@@ -117,7 +117,7 @@ flowchart LR
     secrets -->|"decrypted when the config is applied<br/>with /var/lib/sops-nix/key"| hostsbox
 ```
 
-**Secrets.** One sops file, encrypted for every host's age key (`/var/lib/sops-nix/key`) and a backup key. A secret switches its own wiring on by being present in the file (`<hostname>-pangolin`, `<hostname>-restic`, `atuin`). A host whose key cannot read the file yet logs in with a password hash stored next to the key, until `scripts/rekey.sh` has run on an enrolled host.
+**Secrets.** One sops file, encrypted for every host's age key (`/var/lib/sops-nix/key`) and a backup key. A secret switches its own wiring on by being present in the file (`<hostname>-restic`, `atuin`). A host whose key cannot read the file yet logs in with a password hash stored next to the key, until `scripts/rekey.sh` has run on an enrolled host.
 
 **Deploy.** `deploy "message"` (`scripts/deploy.nu`) formats, lints, switches the current machine and only then commits and pushes. CI builds every host on that push and fills the cache; the other machines download.
 

@@ -6,7 +6,7 @@
 }:
 
 let
-  # On once secrets.yaml has an `atuin` entry, like host_pangolin.nix. One
+  # On once secrets.yaml has an `atuin` entry, like host_backup.nix. One
   # entry for all hosts, three lines:
   #   ATUIN_USERNAME=...
   #   ATUIN_PASSWORD=...
