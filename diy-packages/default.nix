@@ -5,5 +5,5 @@
   cups-citizen-ctzcls = pkgs.callPackage ./cups-citizen-ctzcls.nix { };
   helium = pkgs.callPackage ./helium.nix { };
   pangolin-client = pkgs.callPackage ./pangolin-client.nix { };
-  zen-browser =pkgs.callPackage ./zen-browser.nix { };
+  zen-browser = pkgs.callPackage ./zen-browser.nix { };
 }
