@@ -56,7 +56,6 @@
 
       def nos [...args] {
         nh os switch ...$args
-        cache-slow
       }
 
       def nwhich [flag: string] {
