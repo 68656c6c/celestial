@@ -46,7 +46,7 @@ flowchart TD
     end
 
     mkHost --> hm
-    perhost -.->|"monitors, cursor size,<br/>laptop switch, compositor"| diymods
+    perhost -.->|"monitors, cursor size,<br/>laptop switch"| diymods
     diymods -.->|"read by"| programs
 ```
 
@@ -104,13 +104,13 @@ flowchart LR
 
     setup["installer stick<br/>runs scripts/setup-host.sh"] -->|"hardware file, age key,<br/>per-host folder, key entries"| repo
 
-    deploy["scripts/deploy.nu<br/>nix fmt, nix flake check,<br/>switch, commit, push"] --> main[("main branch on GitHub")]
+    deploy["scripts/deploy.nu<br/>nix fmt, lint,<br/>switch, commit, push"] --> main[("main branch on GitHub")]
     deploy -->|"apply config"| local["current machine"]
 
     main -->|"on push"| ci["GitHub Actions: build-hosts.yml<br/>lint, then one job per machine"]
     ci -->|"push token"| pangolin["tailnet<br/>attic.cl2.artesia.cloud"]
     pangolin --> attic[("attic binary cache")]
-    upd["GitHub Actions: update-flake.yml<br/>daily 05:00"] -->|"Mondays: lock + browsers,<br/>other days: browsers,<br/>then build-hosts.yml"| ci
+    upd["GitHub Actions: update-flake.yml<br/>daily 05:00"] -->|"Mondays: lock, browsers,<br/>Pangolin, VS Code pins,<br/>other days: all but the lock,<br/>then build-hosts.yml"| ci
     upd -->|"pull request with the new lock"| main
 
     attic -->|"download prebuilt, lab network"| hostsbox["io / ganymedes / nymphe / aphrodite"]
@@ -119,8 +119,8 @@ flowchart LR
 
 **Secrets.** One sops file, encrypted for every host's age key (`/var/lib/sops-nix/key`) and a backup key. A secret switches its own wiring on by being present in the file (`<hostname>-restic`, `atuin`). A host whose key cannot read the file yet logs in with a password hash stored next to the key, until `scripts/rekey.sh` has run on an enrolled host.
 
-**Deploy.** `deploy "message"` (`scripts/deploy.nu`) formats, lints, switches the current machine and only then commits and pushes. CI builds every host on that push and fills the cache; the other machines download.
+**Deploy.** `deploy "message"` (`scripts/deploy.nu`) formats, builds the lint check (`checks.x86_64-linux.lint`), switches the current machine and only then commits and pushes. CI runs the full `nix flake check` on that push, builds every host and fills the cache; the other machines download.
 
-**Updates.** `update-flake.yml` runs daily: lock and browsers on Mondays, browsers only on other days. It builds every host first and opens a pull request only if that passes, so an open PR is known good and merging it is the whole upgrade.
+**Updates.** `update-flake.yml` runs daily. On Mondays it bumps `flake.lock`, the two AppImage browsers, the Pangolin tray client and CLI, and the VS Code extension pins. On the other days it leaves the lock alone, apart from the `nix-vscode-extensions` input when a pinned extension moved, and bumps the rest. It builds every host first and opens a pull request only if that passes, so an open PR is known good and merging it is the whole upgrade.
 
 **Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The cache is public to read, so hosts and the installer pull without a token; only the push from CI needs one (`ATTIC_TOKEN`). The CI runner joins the tailnet as a short-lived `tag:github-ci` device (`TS_OAUTH_*` secrets) and reaches attic there under the same name.

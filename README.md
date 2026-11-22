@@ -29,7 +29,7 @@ nh os switch       # apply to the current machine
 `deploy "message"` in nushell (defined in `scripts/deploy.nu`) does all of that, then commits with that message and pushes once the switch went through. CI builds and caches; the other machines only download.
 
 ## CI
-GitHub Actions builds every host on each push to `main` and pushes the closures to attic over the tailnet (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers and the Pangolin CLI and tray client every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
+GitHub Actions builds every host on each push to `main` and pushes the closures to attic over the tailnet (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers , the Pangolin CLI and tray client and the VS Code extension pins every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
 
 | Repository setting | What it is |
 |---|---|
