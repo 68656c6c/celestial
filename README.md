@@ -29,12 +29,12 @@ nh os switch       # apply to the current machine
 `deploy "message"` in nushell (defined in `scripts/deploy.nu`) does all of that, then commits with that message and pushes once the switch went through. CI builds and caches; the other machines only download.
 
 ## CI
-GitHub Actions builds every host on each push to `main` and pushes the closures to attic through Pangolin (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
+GitHub Actions builds every host on each push to `main` and pushes the closures to attic over the tailnet (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
 
 | Repository setting | What it is |
 |---|---|
 | secret `ATTIC_TOKEN` | attic token with push rights. The cache is public to read, so only the push needs it |
-| secrets `PANGOLIN_ENDPOINT`, `PANGOLIN_ID`, `PANGOLIN_SECRET`, optional | a Pangolin machine client for the runner, allowed to reach attic only. With them each build job joins Pangolin before it talks to attic, and the hosts build one at a time because one client cannot be connected twice; without them the Pangolin resource in front of attic has to be public |
+| secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`, optional | a Tailscale OAuth client that owns `tag:ci`. With it each build job joins the tailnet as a short-lived `tag:ci` device and reaches the machine named `attic` there; the ACL lets `tag:ci` reach attic on 443 only. Without it attic has to be reachable from the internet |
 | secret `CACHIX_AUTH_TOKEN`, optional | push token for the public `celestial` cachix cache. With it, what CI builds also lands there, so an install or switch away from the lab network downloads instead of compiling |
 | variable `ATTIC_PUBLIC_URL`, optional | where CI reaches attic, default `https://attic.cl2.artesia.cloud` |
 

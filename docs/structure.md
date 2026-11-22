@@ -108,7 +108,7 @@ flowchart LR
     deploy -->|"apply config"| local["current machine"]
 
     main -->|"on push"| ci["GitHub Actions: build-hosts.yml<br/>lint, then one job per machine"]
-    ci -->|"push token"| pangolin["Pangolin<br/>attic.cl2.artesia.cloud"]
+    ci -->|"push token"| pangolin["tailnet<br/>attic.cl2.artesia.cloud"]
     pangolin --> attic[("attic binary cache")]
     upd["GitHub Actions: update-flake.yml<br/>daily 05:00"] -->|"Mondays: lock + browsers,<br/>other days: browsers,<br/>then build-hosts.yml"| ci
     upd -->|"pull request with the new lock"| main
@@ -123,4 +123,4 @@ flowchart LR
 
 **Updates.** `update-flake.yml` runs daily: lock and browsers on Mondays, browsers only on other days. It builds every host first and opens a pull request only if that passes, so an open PR is known good and merging it is the whole upgrade.
 
-**Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The cache is public to read, so hosts and the installer pull without a token; only the push from CI needs one (`ATTIC_TOKEN`). The CI runner joins Pangolin as a machine client of its own (`PANGOLIN_*` secrets) before it talks to attic.
+**Cache access.** `attic.cl2.artesia.cloud` resolves to attic directly on the lab network and goes through Pangolin from outside. The cache is public to read, so hosts and the installer pull without a token; only the push from CI needs one (`ATTIC_TOKEN`). The CI runner joins the tailnet as a short-lived `tag:ci` device (`TS_OAUTH_*` secrets) and reaches attic there under the same name.

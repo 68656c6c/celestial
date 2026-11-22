@@ -1,9 +1,10 @@
 name: attic
 description: >
-  Reach the attic cache. With Pangolin credentials the runner first joins
-  Pangolin as a machine client and reaches attic over that tunnel; without
-  them the Pangolin resource has to be public. The cache is public to read,
-  so only the push needs the token, through `attic login`.
+  Reach the attic cache. With a Tailscale OAuth client the runner first joins
+  the tailnet as a short-lived tagged device and reaches attic over it, under
+  its usual name so the certificate stays valid; without one attic has to be
+  reachable from the internet. The cache is public to read, so only the push
+  needs the token, through `attic login`.
 
 inputs:
   public-url:
@@ -15,46 +16,52 @@ inputs:
   attic-token:
     description: attic token with pull and push permission on the cache
     required: true
-  pangolin-endpoint:
-    description: URL of the Pangolin server, empty to reach attic without a tunnel
+  tailscale-client-id:
+    description: Tailscale OAuth client ID, empty to reach attic without the tailnet
     default: ""
-  pangolin-id:
-    description: ID of a Pangolin machine client that may reach attic
+  tailscale-secret:
+    description: Secret of that OAuth client
     default: ""
-  pangolin-secret:
-    description: Secret of that machine client
-    default: ""
+  tailscale-tags:
+    description: Tags the runner joins with, the ones the OAuth client owns
+    default: tag:ci
+  tailnet-host:
+    description: Name of the attic machine on the tailnet
+    default: attic
 
 runs:
   using: composite
   steps:
-    - name: Join Pangolin
-      if: inputs.pangolin-id != ''
+    - name: Join the tailnet
+      if: inputs.tailscale-client-id != ''
+      uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
+      with:
+        oauth-client-id: ${{ inputs.tailscale-client-id }}
+        oauth-secret: ${{ inputs.tailscale-secret }}
+        tags: ${{ inputs.tailscale-tags }}
+        ping: ${{ inputs.tailnet-host }}
+
+    - name: Point the attic name at the tailnet
+      if: inputs.tailscale-client-id != ''
       shell: bash
       env:
-        PANGOLIN_ENDPOINT: ${{ inputs.pangolin-endpoint }}
-        PANGOLIN_CLIENT_ID: ${{ inputs.pangolin-id }}
-        PANGOLIN_CLIENT_SECRET: ${{ inputs.pangolin-secret }}
+        PUBLIC_URL: ${{ inputs.public-url }}
+        TAILNET_HOST: ${{ inputs.tailnet-host }}
       run: |
-        pangolin="$(nix build --inputs-from . --no-link --print-out-paths unstable#pangolin-cli)/bin/pangolin"
-        printf 'PANGOLIN_ENDPOINT=%s\nPANGOLIN_CLIENT_ID=%s\nPANGOLIN_CLIENT_SECRET=%s\nHOME=/var/lib/pangolin\n' \
-          "$PANGOLIN_ENDPOINT" "$PANGOLIN_CLIENT_ID" "$PANGOLIN_CLIENT_SECRET" \
-          | sudo install -m 0600 /dev/stdin /run/pangolin.env
-        sudo mkdir -p /var/lib/pangolin
-        sudo systemd-run --unit pangolin-client \
-          --property EnvironmentFile=/run/pangolin.env \
-          --property Restart=always --property RestartSec=5 \
-          "$pangolin" up client --attach
+        host="${PUBLIC_URL#*://}"; host="${host%%/*}"
+        address="$(tailscale ip -4 "$TAILNET_HOST")"
+        echo "$address $host" | sudo tee -a /etc/hosts
 
     - name: Check the cache answers
       shell: bash
       env:
         PUBLIC_URL: ${{ inputs.public-url }}
         CACHE: ${{ inputs.cache }}
-        TUNNEL: ${{ inputs.pangolin-id != '' }}
+        TAILNET: ${{ inputs.tailscale-client-id != '' }}
+        TAILNET_HOST: ${{ inputs.tailnet-host }}
       run: |
         tries=1
-        [ "$TUNNEL" = true ] && tries=30
+        [ "$TAILNET" = true ] && tries=10
         for _ in $(seq "$tries"); do
           if curl -fsS -m 10 -o /dev/null "$PUBLIC_URL/$CACHE/nix-cache-info" 2>/dev/null; then
             echo "attic reachable at $PUBLIC_URL"
@@ -62,10 +69,10 @@ runs:
           fi
           [ "$tries" = 1 ] || sleep 3
         done
-        echo "::error::$PUBLIC_URL/$CACHE/nix-cache-info did not answer with 200; 401 means the cache is not public, 302 means the Pangolin resource still has authentication on, 404 from the proxy or a reset connection means Pangolin does not route to attic for this client" >&2
+        echo "::error::$PUBLIC_URL/$CACHE/nix-cache-info did not answer with 200; 401 means the cache is not public, no answer over the tailnet means the ACL does not let the runner's tag reach attic on 443 or attic's firewall drops it" >&2
         curl -sS -i -m 10 "$PUBLIC_URL/$CACHE/nix-cache-info" | head -15 >&2 || true
-        if [ "$TUNNEL" = true ]; then
-          sudo journalctl -u pangolin-client -n 40 --no-pager >&2 || true
+        if [ "$TAILNET" = true ]; then
+          tailscale ping -c 1 "$TAILNET_HOST" >&2 || true
         fi
         exit 1
 
