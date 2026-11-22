@@ -13,6 +13,8 @@ appimageTools.wrapType2 rec {
     sha256 = "sha256-8JDIESU/1ovH64lLmCoL4iHRcB937UtT9hRkma+LrgQ=";
   };
 
+  extraBwrapArgs = [ "--ro-bind-try /etc/egl /etc/egl" ];
+
   extraInstallCommands =
     let
       contents = appimageTools.extract { inherit pname version src; };
