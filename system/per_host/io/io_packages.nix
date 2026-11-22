@@ -5,12 +5,8 @@
 
 {
   environment.systemPackages = with pkgs; [
-    qemu
-    virt-manager
-    libvirt
     quickemu
     quickgui
-    swtpm
     openutau
     spice
     spice-gtk

@@ -11,7 +11,6 @@
   host.gpu = "nvidia";
   host.fastboot.enable = true;
   host.gaming.enable = true;
-  boot.loader.timeout = 3; # the Windows entry must stay reachable
 
   # CachyOS LTS kernel (BORE, sched_ext), prebuilt by Chaotic Nyx. The nvidia
   # 580 modules are built against it locally, the cache only has the current
@@ -78,12 +77,11 @@
       ];
     };
 
-  boot.loader.systemd-boot.extraEntries = {
-    "Windows11.conf" = ''
-      title Windows 11 Pro
-      efi /EFI/Microsoft/Boot/bootmgfw.efi
-    '';
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu.swtpm.enable = true;
   };
+  users.users.artesia.extraGroups = [ "libvirtd" ];
 
   # Release this machine was first installed with. Leave it alone.
   system.stateVersion = "25.05";
