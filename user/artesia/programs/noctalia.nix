@@ -17,10 +17,24 @@ let
   centerX = screenWidth / 2;
   centerY = screenHeight / 2;
 
+  loginBoxMonitors =
+    if primaryMonitor == null then
+      [
+        {
+          output = primaryOutput;
+          width = screenWidth;
+          height = screenHeight;
+        }
+      ]
+    else
+      osConfig.host.monitors;
+
+  loginBoxName = monitor: "lockscreen-login-box@${monitor.output}";
+
   stateDir = "${config.xdg.stateHome}/noctalia";
 
   settings = {
-    config_version = 14;
+    config_version = 20;
 
     bar.default = {
       font_family = "Atkinson Hyperlegible Next";
@@ -62,7 +76,6 @@ let
           "kcolorscheme"
           "niri"
           "qt"
-          "starship"
         ];
         community_ids = [
           "claude-code"
@@ -135,79 +148,88 @@ let
     lockscreen_widgets = {
       enabled = false;
       schema_version = 2;
-      widget_order = [ "lockscreen-login-box@${primaryOutput}" ];
+      widget_order = map loginBoxName loginBoxMonitors;
       grid = {
         cell_size = 16;
         major_interval = 4;
         visible = true;
       };
-      widget."lockscreen-login-box@${primaryOutput}" = {
-        type = "login_box";
-        output = primaryOutput;
-        cx = centerX * 1.0;
-        cy = (screenHeight - 182) * 1.0;
-        box_width = 810.0;
-        box_height = 196.0;
-        placement_width = screenWidth * 1.0;
-        placement_height = screenHeight * 1.0;
-        rotation = 0.0;
-        settings = {
-          background_color = "surface_variant";
-          background_opacity = 0.88;
-          background_radius = 12.0;
-          center_password_text = false;
-          input_opacity = 1.0;
-          input_radius = 6.0;
-          layout = "regular";
-          show_caps_lock = true;
-          show_keyboard_layout = true;
-          show_login_button = true;
-          show_media = true;
-          show_session_buttons = true;
-          show_unlock_hint = true;
-          show_weather = true;
-        };
-      };
+      widget = lib.listToAttrs (
+        map (monitor: {
+          name = loginBoxName monitor;
+          value = {
+            type = "login_box";
+            output = monitor.output;
+            cx = (monitor.width / 2) * 1.0;
+            cy = (monitor.height - 182) * 1.0;
+            box_width = 810.0;
+            box_height = 196.0;
+            placement_width = monitor.width * 1.0;
+            placement_height = monitor.height * 1.0;
+            rotation = 0.0;
+            settings = {
+              background_color = "surface_container";
+              background_opacity = 0.88;
+              background_radius = 12.0;
+              center_password_text = false;
+              input_opacity = 1.0;
+              input_radius = 6.0;
+              layout = "regular";
+              show_caps_lock = true;
+              show_keyboard_layout = true;
+              show_login_button = true;
+              show_media = true;
+              show_session_buttons = true;
+              show_unlock_hint = true;
+              show_weather = true;
+            };
+          };
+        }) loginBoxMonitors
+      );
     };
   };
 
   declaredJson = pkgs.writeText "noctalia-declared.json" (builtins.toJSON settings);
 in
 {
-  xdg.configFile."noctalia/plugins.json".text = builtins.toJSON {
-    version = 2;
-    sources = [
-      {
+  xdg.configFile."noctalia/plugins.json" = lib.mkIf osConfig.programs.noctalia.enable {
+    text = builtins.toJSON {
+      version = 2;
+      sources = [
+        {
+          enabled = true;
+          name = "Noctalia Plugins";
+          url = "https://github.com/noctalia-dev/noctalia-plugins";
+        }
+      ];
+      states.privacy-indicator = {
         enabled = true;
-        name = "Noctalia Plugins";
-        url = "https://github.com/noctalia-dev/noctalia-plugins";
-      }
-    ];
-    states.privacy-indicator = {
-      enabled = true;
-      sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
+        sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
+      };
     };
   };
 
-  home.activation.noctaliaSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    stateFile="${stateDir}/settings.toml"
-    tmpFile="$(${pkgs.coreutils}/bin/mktemp)"
+  home.activation.noctaliaSettings = lib.mkIf osConfig.programs.noctalia.enable (
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      stateFile="${stateDir}/settings.toml"
+      tmpFile="$(${pkgs.coreutils}/bin/mktemp)"
 
-    $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "${stateDir}"
+      $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "${stateDir}"
 
-    if [ -f "$stateFile" ]; then
-      live="$(${pkgs.yj}/bin/yj -tj < "$stateFile")"
-    else
-      live='{}'
-    fi
+      if [ -f "$stateFile" ]; then
+        live="$(${pkgs.yj}/bin/yj -tj < "$stateFile")"
+      else
+        live='{}'
+      fi
 
-    ${pkgs.coreutils}/bin/printf '%s\n%s\n' "$live" "$(< ${declaredJson})" \
-      | ${pkgs.jq}/bin/jq -s '.[0] * .[1]' \
-      | ${pkgs.yj}/bin/yj -jt > "$tmpFile"
+      ${pkgs.coreutils}/bin/printf '%s\n%s\n' "$live" "$(< ${declaredJson})" \
+        | ${pkgs.jq}/bin/jq -s '. as [$live, $declared] | $live * $declared | .config_version = ([$live.config_version // 0, $declared.config_version] | max)' \
+        | ${pkgs.yj}/bin/yj -jt > "$tmpFile"
 
-    $DRY_RUN_CMD ${pkgs.coreutils}/bin/install -m 0644 "$tmpFile" "$stateFile"
-    ${pkgs.coreutils}/bin/rm -f "$tmpFile"
-  '';
+      $DRY_RUN_CMD ${pkgs.coreutils}/bin/install -m 0644 "$tmpFile" "$stateFile"
+      ${pkgs.coreutils}/bin/rm -f "$tmpFile"
+    ''
+  );
 
   home.activation.noctaliaGtkStub = lib.hm.dag.entryAfter [ "writeBoundary" ] (
     lib.concatMapStrings
