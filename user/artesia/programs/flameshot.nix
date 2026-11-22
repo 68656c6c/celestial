@@ -12,4 +12,5 @@ lib.mkIf osConfig.programs.sway.enable {
       };
     };
   };
+  systemd.user.services.flameshot.Install.WantedBy = lib.mkOverride 60 [ "sway-session.target" ];
 }

@@ -149,6 +149,7 @@ lib.mkIf osConfig.programs.sway.enable {
 
       startup = [
         { command = "nm-applet --indicator"; }
+        { command = "pangolin-client --autostart"; }
         { command = lib.getExe pkgs.mako; }
         {
           command = "${pkgs.pantheon.pantheon-agent-polkit}/libexec/policykit-1-pantheon/io.elementary.desktop.agent-polkit";
