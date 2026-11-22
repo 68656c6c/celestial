@@ -50,8 +50,7 @@
   # detection on 0x21: both ports become selectable, no auto switch.
   # The BIOS only wires the left pair (0x14). 0x1b drives the right pair and
   # 0x17 (mono amp) the subwoofers; make them front / back / LFE of one group,
-  # the hdajackretask map every G9-79x owner ended up with. Shows up as a
-  # 5.1 output in PipeWire, pick that profile once.
+  # the hdajackretask map every G9-79x owner ended up with.
   # patch= is one entry per controller and the NVIDIA HDMI one probes first,
   # so list it twice; the [codec] line keeps it to the Realtek.
   boot.extraModprobeConfig = "options snd-hda-intel patch=hda-jack-retask.fw,hda-jack-retask.fw";
