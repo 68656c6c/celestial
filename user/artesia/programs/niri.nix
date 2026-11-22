@@ -220,6 +220,39 @@ lib.mkIf osConfig.programs.niri.enable {
       default-window-height { fixed 920; }
     }
 
+    // Pangolin's windows float instead of taking a column.
+    window-rule {
+      match app-id="^Pangolin-client$"
+      open-floating true
+    }
+
+    // Its tray menu is an ordinary window, three menus wide and transparent
+    // but for the menu at its right end, and Wayland does not let it place
+    // itself. Put that menu above the tray, without a ring around the rest:
+    // the window is 946x644 with the menu in its top right corner, so most
+    // of it hangs below the screen.
+    window-rule {
+      match app-id="^Pangolin-client$" title="^pangolin-client$"
+      default-floating-position x=387 y=635 relative-to="top-right"
+      focus-ring {
+        off
+      }
+      border {
+        off
+      }
+      shadow {
+        off
+      }
+    }
+
+    // Steam's notification toasts are small floating windows, which would
+    // open in the middle of the screen and take the focus.
+    window-rule {
+      match app-id="^steam$" title=r#"^notificationtoasts_\d+_desktop$"#
+      default-floating-position x=10 y=10 relative-to="bottom-right"
+      open-focused false
+    }
+
     binds {
       Mod+Q { spawn "ghostty" "+new-window"; }
       Mod+E { spawn "dolphin"; }
