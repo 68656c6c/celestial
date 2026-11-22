@@ -233,7 +233,7 @@ lib.mkIf osConfig.programs.niri.enable {
     // of it hangs below the screen.
     window-rule {
       match app-id="^Pangolin-client$" title="^pangolin-client$"
-      default-floating-position x=387 y=635 relative-to="top-right"
+      default-floating-position x=387 y=-233 relative-to="bottom-right"
       focus-ring {
         off
       }
