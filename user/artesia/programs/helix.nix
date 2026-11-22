@@ -1,10 +1,15 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  osConfig,
+  ...
+}:
 
 {
   programs.helix = {
     enable = true;
     settings = {
-      theme = "noctalia";
+      theme = lib.mkIf osConfig.programs.noctalia.enable "noctalia";
       editor.cursor-shape = {
         normal = "block";
         insert = "bar";
