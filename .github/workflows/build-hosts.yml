@@ -76,6 +76,8 @@ jobs:
         with:
           determinate: false
           extra-conf: |
+            fallback = true
+            download-attempts = 8
             extra-substituters = ${{ secrets.ATTIC_TOKEN != '' && env.ATTIC_CACHE_URL || '' }} https://celestial.cachix.org https://nyx-cache.chaotic.cx/
             extra-trusted-public-keys = celestial:Ii3291OUFcJwNBkfMT3+oZn4V7yC+5XswXiWdoJ7peM= celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk= nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=
 
