@@ -19,6 +19,8 @@ let
     }
   '') osConfig.host.monitors;
 
+  pangolinMenuX = if builtins.length osConfig.host.monitors > 1 then "-233" else "387";
+
   workspaceBinds = lib.concatMapStrings (
     i:
     let
@@ -227,13 +229,14 @@ lib.mkIf osConfig.programs.niri.enable {
     }
 
     // Its tray menu is an ordinary window, three menus wide and transparent
-    // but for the menu at its right end, and Wayland does not let it place
+    // but for the menu at one end, and Wayland does not let it place
     // itself. Put that menu above the tray, without a ring around the rest:
-    // the window is 946x644 with the menu in its top right corner, so most
+    // the window is 946x644 with the menu in a top corner, the right one
+    // on a single screen and the left one with several, so most
     // of it hangs below the screen.
     window-rule {
       match app-id="^Pangolin-client$" title="^pangolin-client$"
-      default-floating-position x=387 y=-233 relative-to="bottom-right"
+      default-floating-position x=${pangolinMenuX} y=-233 relative-to="bottom-right"
       focus-ring {
         off
       }
