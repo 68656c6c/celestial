@@ -1,4 +1,5 @@
 {
+  lib,
   ...
 }:
 {
@@ -15,30 +16,10 @@
       "github.com" = {
         User = "git";
       };
-      "moxmq1" = {
-        HostName = "moxmq1.artesia.cloud";
-        User = "root";
-      };
-      "moxmq2" = {
-        HostName = "moxmq2.artesia.cloud";
-        User = "root";
-      };
-      "moxmq3" = {
-        HostName = "moxmq3.artesia.cloud";
-        User = "root";
-      };
-      "moxmq4" = {
-        HostName = "moxmq4.artesia.cloud";
-        User = "root";
-      };
-      "moxmq5" = {
-        HostName = "moxmq5.artesia.cloud";
-        User = "root";
-      };
-      "moxmq6" = {
-        HostName = "moxmq6.artesia.cloud";
-        User = "root";
-      };
-    };
+    }
+    // lib.genAttrs (map (n: "moxmq${toString n}") (lib.range 1 6)) (host: {
+      HostName = "${host}.artesia.cloud";
+      User = "root";
+    });
   };
 }
