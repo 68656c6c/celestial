@@ -6,12 +6,17 @@
 }:
 
 let
-  # On once secrets.yaml has an `atuin` entry, like host_backup.nix. One
+  # On once secrets.yaml has an `atuin` entry this host can decrypt. One
   # entry for all hosts, three lines:
   #   ATUIN_USERNAME=...
   #   ATUIN_PASSWORD=...
   #   ATUIN_ENCRYPTION_KEY="the words `atuin key` prints on a logged-in host"
-  enabled = lib.hasInfix "\natuin:" (builtins.readFile ../secrets/secrets.yaml);
+  secrets = builtins.readFile ../secrets/secrets.yaml;
+  hostKey = builtins.match ".*&host_${config.networking.hostName} (age1[a-z0-9]+).*" (
+    builtins.readFile ../.sops.yaml
+  );
+  enabled =
+    lib.hasInfix "\natuin:" secrets && hostKey != null && lib.hasInfix (lib.head hostKey) secrets;
 
   # atuin keeps its session in a database, so there is no file to hand it:
   # the login itself has to run, once per host.
@@ -23,6 +28,7 @@ let
     ];
     text = ''
       if atuin status > /dev/null 2>&1; then exit 0; fi
+      atuin logout > /dev/null 2>&1 || true
       atuin login -u "''${ATUIN_USERNAME:?no username in the secret}"
       # Until this login atuin used a key it made for itself: a running daemon
       # still holds it, and what was recorded with it is unreadable for every

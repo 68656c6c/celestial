@@ -5,12 +5,16 @@
 }:
 
 let
-  # On for a host once secrets.yaml has a <hostname>-restic entry, like
-  # host_atuin.nix. The value is a restic environment file
-  # (RESTIC_REPOSITORY, RESTIC_PASSWORD, backend keys). One entry per host:
-  # separate repositories, though every host key can decrypt every entry.
+  # On once secrets.yaml has a <hostname>-restic entry this host can decrypt:
+  # a restic environment file (RESTIC_REPOSITORY, RESTIC_PASSWORD, backend
+  # keys), one per host.
   secretName = "${config.networking.hostName}-restic";
-  enabled = lib.hasInfix "${secretName}:" (builtins.readFile ../secrets/secrets.yaml);
+  secrets = builtins.readFile ../secrets/secrets.yaml;
+  hostKey = builtins.match ".*&host_${config.networking.hostName} (age1[a-z0-9]+).*" (
+    builtins.readFile ../.sops.yaml
+  );
+  enabled =
+    lib.hasInfix "${secretName}:" secrets && hostKey != null && lib.hasInfix (lib.head hostKey) secrets;
 in
 
 lib.mkIf enabled {
