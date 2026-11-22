@@ -25,7 +25,20 @@ final: prev: {
   bitwarden-desktop = unstable.bitwarden-desktop;
   opencode = unstable.opencode;
   claude-code = unstable.claude-code;
-  pangolin-cli = unstable.pangolin-cli;
+  pangolin-cli =
+    let
+      pin = final.lib.importJSON ../diy-packages/pangolin-cli.json;
+    in
+    unstable.pangolin-cli.overrideAttrs (old: {
+      inherit (pin) version vendorHash;
+      ldflags = final.lib.filter (flag: !final.lib.hasInfix "NewtVersionOverride" flag) old.ldflags;
+      src = final.fetchFromGitHub {
+        owner = "fosrl";
+        repo = "cli";
+        tag = pin.version;
+        inherit (pin) hash;
+      };
+    });
   ghostty = unstable.ghostty;
   openmw = unstable.openmw;
 }
