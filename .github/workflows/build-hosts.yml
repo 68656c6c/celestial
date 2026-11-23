@@ -7,7 +7,14 @@ name: build-hosts
 on:
   push:
     branches: [main]
+    # documentation can never be a build input
+    paths-ignore:
+      - "**.md"
+      - docs/**
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - docs/**
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -30,14 +37,16 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  prepare:
+  # Fails the run without holding the builds back: a formatting slip
+  # leaves every toplevel as it was, so what is built meanwhile is kept.
+  check:
     runs-on: ubuntu-latest
-    outputs:
-      hosts: ${{ steps.hosts.outputs.hosts }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
 
       - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
@@ -45,6 +54,21 @@ jobs:
 
       - name: Lint and evaluate
         run: nix flake check --no-write-lock-file
+
+  hosts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      hosts: ${{ steps.hosts.outputs.hosts }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
+
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+        with:
+          determinate: false
 
       - name: List hosts
         id: hosts
@@ -54,7 +78,7 @@ jobs:
           echo "building: $hosts"
 
   build:
-    needs: prepare
+    needs: hosts
     runs-on: ubuntu-latest
     timeout-minutes: 240
     env:
@@ -63,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        host: ${{ fromJSON(needs.prepare.outputs.hosts) }}
+        host: ${{ fromJSON(needs.hosts.outputs.hosts) }}
     steps:
       # A hosted runner has ~14 GB free, a NixOS closure needs more.
       - uses: wimpysworld/nothing-but-nix@b2574ec1cf1462bee0a34de0fb6ff11ad3c43cb2 # 2026-06-19
@@ -71,6 +95,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
 
       - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
@@ -78,11 +103,18 @@ jobs:
           extra-conf: |
             fallback = true
             download-attempts = 8
-            extra-substituters = ${{ secrets.ATTIC_TOKEN != '' && env.ATTIC_CACHE_URL || '' }} https://celestial.cachix.org https://nyx-cache.chaotic.cx/
+            connect-timeout = 10
+            stalled-download-timeout = 60
+            extra-substituters = https://celestial.cachix.org https://nyx-cache.chaotic.cx/
             extra-trusted-public-keys = celestial:Ii3291OUFcJwNBkfMT3+oZn4V7yC+5XswXiWdoJ7peM= celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk= nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=
 
+      # Not fatal here: without attic the host is still built and goes to
+      # cachix, and the script fails the job afterwards.
       - uses: ./.github/actions/attic
+        id: attic
         if: env.HAS_ATTIC == 'true'
+        continue-on-error: true
+        timeout-minutes: 10
         with:
           public-url: ${{ env.ATTIC_PUBLIC_URL }}
           cache: ${{ env.ATTIC_CACHE }}
@@ -93,6 +125,11 @@ jobs:
       - name: Build and push ${{ matrix.host }}
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          ATTIC_UP: ${{ steps.attic.outcome == 'success' }}
+          # attic serves downloads only once it answered, and after cachix:
+          # both hold what CI built, cachix is a CDN and attic sits behind
+          # the lab's uplink, which every job of the run shares
+          NIX_CONFIG: ${{ steps.attic.outcome == 'success' && format('extra-substituters = {0}?priority=45', env.ATTIC_CACHE_URL) || '' }}
           # through the environment, not pasted into the script: the name is a
           # folder name from the checkout, which on a pull request is anyone's
           HOST: ${{ matrix.host }}

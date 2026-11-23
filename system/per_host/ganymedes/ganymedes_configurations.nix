@@ -23,6 +23,7 @@
 
   host.laptop.enable = true;
   host.fastboot.enable = true;
+  host.upgrade.enable = true;
   host.gaming.enable = true;
   host.gpu = "intel";
 

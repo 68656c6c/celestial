@@ -10,6 +10,7 @@
   host.disk.layout = "ext4";
   host.gpu = "nvidia";
   host.fastboot.enable = true;
+  host.upgrade.enable = true;
   host.gaming.enable = true;
 
   # CachyOS LTS kernel (BORE, sched_ext), prebuilt by Chaotic Nyx. The nvidia

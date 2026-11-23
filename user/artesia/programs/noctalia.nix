@@ -65,7 +65,7 @@ let
     };
 
     theme = {
-      palette_source = "wallpaper";
+      source = "wallpaper";
       wallpaper_scheme = "vibrant";
       templates = {
         builtin_ids = [
@@ -76,7 +76,8 @@ let
           "kcolorscheme"
           "niri"
           "qt"
-        ];
+        ]
+        ++ lib.optional osConfig.programs.umbriel.enable "umbriel";
         community_ids = [
           "claude-code"
           "pywalfox-beta4"
@@ -192,23 +193,6 @@ let
   declaredJson = pkgs.writeText "noctalia-declared.json" (builtins.toJSON settings);
 in
 {
-  xdg.configFile."noctalia/plugins.json" = lib.mkIf osConfig.programs.noctalia.enable {
-    text = builtins.toJSON {
-      version = 2;
-      sources = [
-        {
-          enabled = true;
-          name = "Noctalia Plugins";
-          url = "https://github.com/noctalia-dev/noctalia-plugins";
-        }
-      ];
-      states.privacy-indicator = {
-        enabled = true;
-        sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-      };
-    };
-  };
-
   home.activation.noctaliaSettings = lib.mkIf osConfig.programs.noctalia.enable (
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       stateFile="${stateDir}/settings.toml"
@@ -223,7 +207,7 @@ in
       fi
 
       ${pkgs.coreutils}/bin/printf '%s\n%s\n' "$live" "$(< ${declaredJson})" \
-        | ${pkgs.jq}/bin/jq -s '. as [$live, $declared] | $live * $declared | .config_version = ([$live.config_version // 0, $declared.config_version] | max)' \
+        | ${pkgs.jq}/bin/jq -s '. as [$live, $declared] | $live * $declared | del(.theme.palette_source) | .config_version = ([$live.config_version // 0, $declared.config_version] | max)' \
         | ${pkgs.yj}/bin/yj -jt > "$tmpFile"
 
       $DRY_RUN_CMD ${pkgs.coreutils}/bin/install -m 0644 "$tmpFile" "$stateFile"

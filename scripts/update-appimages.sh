@@ -36,6 +36,11 @@ update_pkg() {
     echo "$name: no release tag found" >&2
     return 1
   fi
+  # The tag ends up in a URL, a sed expression and a Nix string.
+  if [[ ! "$latest_tag" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]]; then
+    echo "$name: release tag '$latest_tag' is not a plain version, refusing" >&2
+    return 1
+  fi
   local latest_version="${latest_tag#"$prefix"}"
 
   local current_version current_hash
@@ -61,6 +66,13 @@ update_pkg() {
   if [ "$latest_version" = "$current_version" ] && [ "$sri_hash" = "$current_hash" ] && [ "$FORCE" -eq 0 ]; then
     echo "$name: up to date ($current_version)"
     return 0
+  fi
+
+  # The same version with another hash: the file was replaced under an
+  # unchanged tag, by upstream or by someone else. Not taken without a look.
+  if [ "$latest_version" = "$current_version" ] && [ "$FORCE" -eq 0 ]; then
+    echo "$name: $current_version was replaced upstream, hash $current_hash -> $sri_hash; pin left alone, -f takes it" >&2
+    return 1
   fi
 
   echo "$name: $current_version -> $latest_version"

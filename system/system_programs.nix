@@ -5,8 +5,11 @@
     # visibility key); without it settings land in a memory backend and vanish
     dconf.enable = true;
     # Apparently because it can mess with login shell, but I kinda want to go back to just nushell, we'll see later
+    # Not for a bash that nushell or nix-shell started: /etc/bashrc runs before
+    # the rcfile of nix develop, and replacing the shell there loses its environment.
     bash.interactiveShellInit = ''
-      if ! [ "$TERM" = "dumb" ] && [ -z "$BASH_EXECUTION_STRING" ]; then
+      if ! [ "$TERM" = "dumb" ] && [ -z "$BASH_EXECUTION_STRING" ] && [ -z "$IN_NIX_SHELL" ] \
+        && [ "$(${pkgs.procps}/bin/ps -o comm= -p "$PPID")" != nu ]; then
         exec nu
       fi
     '';

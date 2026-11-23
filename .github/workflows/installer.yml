@@ -23,6 +23,7 @@ concurrency:
 jobs:
   iso:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: wimpysworld/nothing-but-nix@b2574ec1cf1462bee0a34de0fb6ff11ad3c43cb2 # 2026-06-19
 

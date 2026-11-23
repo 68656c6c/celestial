@@ -21,16 +21,257 @@ let
 
   pangolinMenuX = if builtins.length osConfig.host.monitors > 1 then "-233" else "387";
 
-  workspaceBinds = lib.concatMapStrings (
+  workspaceBinds = lib.concatMap (
     i:
     let
+      n = toString i;
       key = toString (lib.mod i 10);
     in
-    ''
-      Mod+${key} { focus-workspace ${toString i}; }
-      Mod+Shift+${key} { move-window-to-workspace ${toString i}; }
-    ''
+    [
+      (
+        {
+          key = "Mod+${key}";
+          action = "focus-workspace ${n}";
+        }
+        // lib.optionalAttrs (i == 1) { title = "Workspace 1 to 10, on keys 1 to 0"; }
+      )
+      (
+        {
+          key = "Mod+Shift+${key}";
+          action = "move-window-to-workspace ${n}";
+        }
+        // lib.optionalAttrs (i == 1) { title = "Move window to workspace 1 to 10"; }
+      )
+    ]
   ) (lib.range 1 10);
+
+  mediaKey = key: title: action: {
+    inherit key title action;
+    props = "allow-when-locked=true";
+    overlay = false;
+  };
+
+  playerKey =
+    key: title: action:
+    mediaKey key title action // { props = "allow-when-locked=true repeat=false"; };
+
+  # Every bind is written here once. niri's config, its hotkey overlay
+  # (Mod+Shift+Slash) and the searchable list in the noctalia launcher
+  # (Mod+Slash) are generated from this table. A bind without a title is
+  # listed nowhere; `overlay = false` keeps one out of niri's overlay, which
+  # is a single column that does not scroll.
+  bindGroups = [
+    {
+      group = "Applications";
+      binds = [
+        {
+          key = "Mod+Q";
+          title = "Terminal";
+          action = ''spawn "ghostty" "+new-window"'';
+        }
+        {
+          key = "Mod+E";
+          title = "File manager";
+          action = ''spawn "dolphin"'';
+        }
+        {
+          key = "Mod+Space";
+          title = "Application launcher";
+          action = ''spawn "noctalia" "msg" "panel-toggle" "launcher"'';
+        }
+        {
+          key = "Mod+Slash";
+          title = "Search hotkeys";
+          action = ''spawn "noctalia" "msg" "panel-toggle" "launcher" "/keys"'';
+        }
+        {
+          key = "Mod+Shift+Slash";
+          title = "Hotkey overlay";
+          action = "show-hotkey-overlay";
+        }
+      ];
+    }
+    {
+      group = "Windows";
+      binds = [
+        {
+          key = "Mod+C";
+          title = "Close window";
+          action = "close-window";
+        }
+        {
+          key = "Mod+V";
+          title = "Float or tile window";
+          action = "toggle-window-floating";
+        }
+        {
+          key = "Mod+F";
+          title = "Maximise column";
+          action = "maximize-column";
+        }
+        {
+          key = "Mod+Shift+F";
+          title = "Fullscreen window";
+          action = "fullscreen-window";
+        }
+        {
+          key = "Mod+R";
+          title = "Cycle column width: a third, half, two thirds";
+          action = "switch-preset-column-width";
+        }
+        {
+          key = "Mod+Comma";
+          title = "Move window into or out of the column on the left";
+          action = "consume-or-expel-window-left";
+        }
+        {
+          key = "Mod+Period";
+          title = "Move window into or out of the column on the right";
+          action = "consume-or-expel-window-right";
+        }
+        {
+          key = "Mod+P";
+          title = "Picture-in-picture: pin window to the corner, or put it back";
+          action = ''spawn "niri-pip"'';
+        }
+        {
+          key = "Mod+O";
+          title = "Overview";
+          action = "toggle-overview";
+        }
+      ];
+    }
+    {
+      group = "Focus and move";
+      binds = [
+        {
+          key = "Mod+Left";
+          title = "Focus column or monitor to the left";
+          action = "focus-column-or-monitor-left";
+        }
+        {
+          key = "Mod+Right";
+          title = "Focus column or monitor to the right";
+          action = "focus-column-or-monitor-right";
+        }
+        {
+          key = "Mod+Up";
+          title = "Focus window or monitor above";
+          action = "focus-window-or-monitor-up";
+        }
+        {
+          key = "Mod+Down";
+          title = "Focus window or monitor below";
+          action = "focus-window-or-monitor-down";
+        }
+        {
+          key = "Mod+Shift+Left";
+          title = "Move column left, or to the monitor on the left";
+          action = "move-column-left-or-to-monitor-left";
+        }
+        {
+          key = "Mod+Shift+Right";
+          title = "Move column right, or to the monitor on the right";
+          action = "move-column-right-or-to-monitor-right";
+        }
+        {
+          key = "Mod+Shift+Up";
+          title = "Move window up in its column";
+          action = "move-window-up";
+        }
+        {
+          key = "Mod+Shift+Down";
+          title = "Move window down in its column";
+          action = "move-window-down";
+        }
+      ];
+    }
+    {
+      group = "Workspaces";
+      binds = workspaceBinds ++ [
+        {
+          key = "Mod+WheelScrollDown";
+          title = "Next workspace";
+          action = "focus-workspace-down";
+          props = "cooldown-ms=150";
+        }
+        {
+          key = "Mod+WheelScrollUp";
+          title = "Previous workspace";
+          action = "focus-workspace-up";
+          props = "cooldown-ms=150";
+        }
+      ];
+    }
+    {
+      group = "Screen and session";
+      binds = [
+        {
+          key = "Print";
+          title = "Screenshot";
+          action = "screenshot";
+        }
+        {
+          key = "Shift+Print";
+          title = "Screenshot a region and annotate it";
+          action = ''spawn "niri-annotate"'';
+        }
+        {
+          key = "Mod+L";
+          title = "Lock the screen";
+          action = ''spawn "noctalia" "msg" "session" "lock"'';
+        }
+        {
+          key = "Mod+M";
+          title = "Quit niri";
+          action = "quit";
+        }
+      ];
+    }
+    {
+      group = "Media keys";
+      binds = [
+        (mediaKey "XF86AudioRaiseVolume" "Volume up"
+          ''spawn "wpctl" "set-volume" "-l" "1" "@DEFAULT_AUDIO_SINK@" "5%+"''
+        )
+        (mediaKey "XF86AudioLowerVolume" "Volume down"
+          ''spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"''
+        )
+        (mediaKey "XF86AudioMute" "Mute" ''spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"'')
+        (mediaKey "XF86AudioMicMute" "Mute the microphone"
+          ''spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"''
+        )
+        (mediaKey "XF86MonBrightnessUp" "Brightness up" ''spawn "brightnessctl" "-e4" "-n2" "set" "5%+"'')
+        (mediaKey "XF86MonBrightnessDown" "Brightness down"
+          ''spawn "brightnessctl" "-e4" "-n2" "set" "5%-"''
+        )
+        (playerKey "XF86AudioNext" "Next track" ''spawn "playerctl" "next"'')
+        (playerKey "XF86AudioPause" "Play or pause" ''spawn "playerctl" "play-pause"'')
+        (playerKey "XF86AudioPlay" "Play or pause" ''spawn "playerctl" "play-pause"'')
+        (playerKey "XF86AudioPrev" "Previous track" ''spawn "playerctl" "previous"'')
+      ];
+    }
+  ];
+
+  bindLine =
+    b:
+    lib.concatStringsSep " " (
+      [ b.key ]
+      ++ lib.optional (b ? props) b.props
+      ++ lib.optional (b ? title && b.overlay or true) "hotkey-overlay-title=${builtins.toJSON b.title}"
+      ++ [ "{ ${b.action}; }" ]
+    );
+
+  binds = lib.concatMapStringsSep "\n\n" (
+    g: lib.concatMapStringsSep "\n" (line: "  ${line}") ([ "// ${g.group}" ] ++ map bindLine g.binds)
+  ) bindGroups;
+
+  hotkeys = pkgs.writeText "niri-hotkeys.tsv" (
+    lib.concatMapStrings (
+      g:
+      lib.concatMapStrings (b: "${b.title}\t${b.key} · ${g.group}\n") (lib.filter (b: b ? title) g.binds)
+    ) bindGroups
+  );
 
   # Bitwarden popouts (unlock, passkey picker, ...) as an overlay instead of a
   # tiled column. Firefox-based browsers prefix extension windows with
@@ -138,6 +379,7 @@ lib.mkIf osConfig.programs.niri.enable {
 
     hotkey-overlay {
       skip-at-startup
+      hide-not-bound
     }
 
     screenshot-path "${config.xdg.userDirs.pictures}/screenshots/%Y%m%d-%H%M%S.png"
@@ -253,53 +495,22 @@ lib.mkIf osConfig.programs.niri.enable {
     }
 
     binds {
-      Mod+Q { spawn "ghostty" "+new-window"; }
-      Mod+E { spawn "dolphin"; }
-      Mod+C { close-window; }
-      Mod+M { quit; }
-      Mod+V { toggle-window-floating; }
-      Mod+F { maximize-column; }
-      Mod+Shift+F { fullscreen-window; }
-      Mod+R { switch-preset-column-width; }
-      Mod+Comma { consume-or-expel-window-left; }
-      Mod+Period { consume-or-expel-window-right; }
-      Mod+O { toggle-overview; }
-      Mod+P { spawn "niri-pip"; }
-      Mod+Shift+Slash { show-hotkey-overlay; }
-
-      Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
-      Mod+L { spawn "noctalia" "msg" "session" "lock"; }
-      Print { screenshot; }
-      Shift+Print { spawn "niri-annotate"; }
-
-      Mod+Left { focus-column-or-monitor-left; }
-      Mod+Right { focus-column-or-monitor-right; }
-      Mod+Up { focus-window-or-monitor-up; }
-      Mod+Down { focus-window-or-monitor-down; }
-
-      Mod+Shift+Left { move-column-left-or-to-monitor-left; }
-      Mod+Shift+Right { move-column-right-or-to-monitor-right; }
-      Mod+Shift+Up { move-window-up; }
-      Mod+Shift+Down { move-window-down; }
-
-    ${workspaceBinds}
-
-      Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
-      Mod+WheelScrollUp cooldown-ms=150 { focus-workspace-up; }
-
-      XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "-l" "1" "@DEFAULT_AUDIO_SINK@" "5%+"; }
-      XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
-      XF86AudioMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
-      XF86AudioMicMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
-      XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "-e4" "-n2" "set" "5%+"; }
-      XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "-e4" "-n2" "set" "5%-"; }
-
-      XF86AudioNext allow-when-locked=true repeat=false { spawn "playerctl" "next"; }
-      XF86AudioPause allow-when-locked=true repeat=false { spawn "playerctl" "play-pause"; }
-      XF86AudioPlay allow-when-locked=true repeat=false { spawn "playerctl" "play-pause"; }
-      XF86AudioPrev allow-when-locked=true repeat=false { spawn "playerctl" "previous"; }
+    ${binds}
     }
 
     include optional=true "noctalia.kdl"
   '';
+
+  xdg.configFile."noctalia/hotkeys.toml" = lib.mkIf osConfig.programs.noctalia.enable {
+    source = (pkgs.formats.toml { }).generate "noctalia-hotkeys.toml" {
+      shell.launcher.dmenu.entry.keys = {
+        command = "${pkgs.coreutils}/bin/cat ${hotkeys}";
+        # Without an exec, enter copies the row to the clipboard.
+        exec = "true";
+        glyph = "keyboard";
+        label = "Hotkeys";
+        prefix = "keys";
+      };
+    };
+  };
 }

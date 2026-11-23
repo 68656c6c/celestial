@@ -9,3 +9,9 @@ result-*
 **/.nixos-test-history
 
 .claude/
+
+# key material never belongs in a public tree
+*.key
+*.luks
+*.nmconnection
+*.bundle

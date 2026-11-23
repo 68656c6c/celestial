@@ -4,7 +4,7 @@ My NixOS stack: one flake, home-manager, niri with noctalia, or sway, four machi
 
 ## Folder structure
 ```
-  diy-modules     - custom options (host facts, disk layout, gpu, laptop, fastboot and bootsplash switches)
+  diy-modules     - custom options and modules (host facts, disk, gpu, laptop, fastboot, Secure Boot, bootsplash, gaming, following main; backup, atuin, Pangolin client, VS Code extensions)
   diy-packages    - software not in nixpkgs, used as pkgs.diy.<name>
   disko           - the one disk layout every host uses (ESP, root, optional swap)
   docs            - how the repo fits together
@@ -14,6 +14,7 @@ My NixOS stack: one flake, home-manager, niri with noctalia, or sway, four machi
   scripts         - install, key, deploy and update helpers
   secrets         - sops-encrypted, only readable by my machines
   system          - the shared baseline and one folder per host
+  tests           - NixOS VM tests, run by `nix flake check`
   user            - home-manager config for the artesia user
   wallpapers      - rotated by noctalia
 ```
@@ -23,25 +24,30 @@ See [docs/structure.md](docs/structure.md) for the long version.
 ## Daily use
 ```
 nix fmt            # format every .nix file
-nix flake check    # deadnix, nixfmt --check, shellcheck, actionlint; CI runs this before building
+nix flake check    # deadnix, nixfmt --check, shellcheck, actionlint, the VM test of host.upgrade; CI runs this next to the builds
 nh os switch       # apply to the current machine
 ```
-`deploy "message"` in nushell (defined in `scripts/deploy.nu`) does all of that, then commits with that message and pushes once the switch went through. CI builds and caches; the other machines only download.
+`deploy "message"` in nushell (defined in `scripts/deploy.nu`) pulls and rebases first, formats, runs the lint (not the host evaluation, CI does that), switches, then commits with that message and pushes. CI builds and caches.
+
+The other machines follow by themselves (`host.upgrade`, `diy-modules/host_upgrade.nix`): twice a day each looks at main, downloads the system CI built for it and makes it the boot default. Nothing is compiled there, what CI has not built is not taken, and a machine running a generation made by hand is left alone. `upgrade` does it now, also over a generation made by hand. The checkout does not follow: on such a machine `git pull` comes before any switch by hand, and `nos` refuses a checkout that is behind.
+
+Mod+Slash searches the hotkeys in the launcher, Mod+Shift+Slash shows niri's own overlay; both come from the bind table in `user/artesia/programs/niri.nix`.
 
 ## CI
-GitHub Actions builds every host on each push to `main` and pushes the closures to attic over the tailnet (`.github/workflows/build-hosts.yml`); pull requests are built without pushing. `update-flake.yml` bumps `flake.lock` every Monday and the two AppImage browsers , the Pangolin CLI and tray client and the VS Code extension pins every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
+GitHub Actions builds every host on each push to `main` and pushes the closures to attic over the tailnet, and the few packages that take long to build (`CACHIX_PACKAGES` in `scripts/build-hosts.sh`) to cachix, which is 5 GB (`.github/workflows/build-hosts.yml`); pull requests are built without pushing, and a push that only touches documentation builds nothing. With attic out of reach a host is still built, its slow packages go to cachix, and the run ends red. `update-flake.yml` bumps `flake.lock` every Monday (once more on Tuesday when Monday failed) and the two AppImage browsers, the Pangolin CLI and tray client and the VS Code extension pins every day, builds everything and opens a pull request per kind; merge it and the next switch is a download. Dependabot keeps the action pins current.
 
 | Repository setting | What it is |
 |---|---|
 | secret `ATTIC_TOKEN` | attic token with push rights. The cache is public to read, so only the push needs it |
 | secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`, optional | a Tailscale OAuth client that owns `tag:github-ci`. With it each build job joins the tailnet as a short-lived `tag:github-ci` device and reaches the machine named `attic` there; the ACL lets `tag:github-ci` reach attic on 443 only. Without it attic has to be reachable from the internet |
-| secret `CACHIX_AUTH_TOKEN`, optional | push token for the public `celestial` cachix cache. With it, what CI builds also lands there, so an install or switch away from the lab network downloads instead of compiling |
+| secret `CACHIX_AUTH_TOKEN` | push token for the public `celestial` cachix cache. With it the slow builds also land there, so an install or switch away from the lab downloads those and builds only the quick rest; the run warns when it is missing or a push fails |
+| setting "Allow GitHub Actions to create and approve pull requests" | Settings, Actions, General. `update-flake.yml` opens its pull requests with the workflow token |
 | variable `ATTIC_PUBLIC_URL`, optional | where CI reaches attic, default `https://attic.cl2.artesia.cloud` |
 
-Hosts pull from attic without a token, the cache is public to read.
+Hosts pull from attic without a token, the cache is public to read, but its name only answers on the lab network, over the tailnet or through the Pangolin client.
 
 ## Installing a host
-New machine or reinstall, it is the same stick. Download `celestial-installer.iso` from the [installer release](https://github.com/68656c6c/celestial/releases/tag/installer) (the `.sha256` next to it is for checking the download), `dd` it to a stick and boot it. The installer clones this repo when it runs, so the stick does not go stale when hosts change; CI only rebuilds it when `installer/` or the lock changes.
+New machine or reinstall, it is the same stick. Download `celestial-installer.iso` from the [installer release](https://github.com/68656c6c/celestial/releases/tag/installer) (the `.sha256` next to it is for checking the download), `dd` it to a stick and boot it. The installer clones this repo when it runs, so the stick does not go stale when hosts change; CI only rebuilds it when `installer/`, `flake.nix` or the lock changes.
 
 It asks everything before it touches the disk, then runs by itself:
 
@@ -58,6 +64,8 @@ new host:           cd ~/.dotfiles, commit, push
 any enrolled host:  git pull && scripts/rekey.sh, commit, push
 new host:           git pull && nh os switch
 ```
+Before that first commit sign in to Bitwarden and switch on its SSH agent (commits are signed with the key it holds and pushed over ssh), and sign in once in the Pangolin tray app.
+
 Then fill in what cannot be detected (screen scale and positions, extra packages) in `system/per_host/<hostname>/`, and `sudo tailscale up` if it should be on the tailnet. Hosts are discovered from the folders under `system/per_host/`, there is no list to maintain.
 
 ### The key stick
@@ -87,7 +95,7 @@ Bound like this the disk unlocks for whoever switches the machine on, so the enc
 `scripts/test-installer.sh` builds the image and boots it in a VM with an empty disk, installing the current commit. With a DMI product name as argument (`scripts/test-installer.sh "Predator G9-791"`) the VM poses as that machine.
 
 ### Converting a machine that already runs NixOS
-Clone the repo to `~/.dotfiles` and run `scripts/setup-host.sh <hostname>`, the same script the installer uses. It tells you what is left: `scripts/label-disk.sh` so the existing partitions carry the GPT labels the mount table expects (only labels are written; root, the ESP and the active swap partition, zram is skipped), then `nh os switch .#<hostname>`. Label before switching: otherwise the next boot waits for `disk-main-root`, and the way back is the previous generation (hold Space for the boot menu on fastboot hosts).
+Clone the repo to `~/.dotfiles` and run `scripts/setup-host.sh <hostname>`, the same script the installer uses. It tells you what is left: `scripts/label-disk.sh` so the existing partitions carry the GPT labels the mount table expects (only labels are written; root, the ESP and the active swap partition, zram is skipped), `host.disk.layout` set to what the root really is (`ext4`, or `btrfs` only with top-level `nix` and `home` subvolumes) and `host.disk.swapSize = null;` without a swap partition, then `nh os switch .#<hostname>`. Label before switching: otherwise the next boot waits for `disk-main-root`, and the way back is the previous generation (hold Space for the boot menu on fastboot hosts).
 
 Anyone could clone and use this, but my secrets have no use to you and the structure is whatever made sense to me at the time.
 

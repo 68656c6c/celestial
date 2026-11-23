@@ -7,6 +7,17 @@
 
   programs.git = {
     enable = true;
+    # only here: a pull in ~/.dotfiles lands on top of what CI and the other
+    # machines pushed, with local edits carried over
+    includes = [
+      {
+        condition = "gitdir:~/.dotfiles/";
+        contents = {
+          pull.rebase = true;
+          rebase.autoStash = true;
+        };
+      }
+    ];
     settings = {
       init = {
         defaultBranch = "main";

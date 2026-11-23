@@ -10,6 +10,7 @@
   host.secureboot.enable = true;
   host.gpu = "intel";
   host.fastboot.enable = true;
+  host.upgrade.enable = true;
   host.gaming.enable = true;
   host.bootsplash.enable = true;
   networking.nameservers = [

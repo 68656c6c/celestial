@@ -50,7 +50,7 @@ runs:
       run: |
         host="${PUBLIC_URL#*://}"; host="${host%%/*}"
         address="$(tailscale ip -4 "$TAILNET_HOST")"
-        echo "$address $host" | sudo tee -a /etc/hosts
+        echo "$address $host" | sudo tee -a /etc/hosts >/dev/null
 
     - name: Check the cache answers
       shell: bash
@@ -65,6 +65,11 @@ runs:
         for _ in $(seq "$tries"); do
           if curl -fsS -m 10 -o /dev/null "$PUBLIC_URL/$CACHE/nix-cache-info" 2>/dev/null; then
             echo "attic reachable at $PUBLIC_URL"
+            # Only whether the link is direct: the ping output names the lab's
+            # public address, and these logs are public.
+            if [ "$TAILNET" = true ] && ! tailscale ping -c 5 "$TAILNET_HOST" >/dev/null 2>&1; then
+              echo "::warning::no direct Tailscale path to attic after 5 pings (relayed or not answering): downloads and pushes will be slow"
+            fi
             exit 0
           fi
           [ "$tries" = 1 ] || sleep 3
@@ -72,7 +77,7 @@ runs:
         echo "::error::$PUBLIC_URL/$CACHE/nix-cache-info did not answer with 200; 401 means the cache is not public, no answer over the tailnet means the ACL does not let the runner's tag reach attic on 443 or attic's firewall drops it" >&2
         curl -sS -i -m 10 "$PUBLIC_URL/$CACHE/nix-cache-info" | head -15 >&2 || true
         if [ "$TAILNET" = true ]; then
-          tailscale ping -c 1 "$TAILNET_HOST" >&2 || true
+          tailscale ping -c 1 "$TAILNET_HOST" 2>&1 | sed -E 's/via [][0-9a-f.:]+[0-9]/via a direct address/' >&2 || true
         fi
         exit 1
 

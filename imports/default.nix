@@ -7,6 +7,7 @@
     inputs.disko.nixosModules.disko
     inputs.lanzaboote.nixosModules.lanzaboote
     "${inputs.unstable}/nixos/modules/programs/wayland/noctalia.nix"
+    "${inputs.unstable}/nixos/modules/programs/wayland/umbriel.nix"
     ../diy-modules
   ];
 }

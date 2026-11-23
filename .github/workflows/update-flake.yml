@@ -12,8 +12,8 @@ name: update-flake
 
 on:
   schedule:
-    - cron: "0 5 * * 1"
-    - cron: "0 5 * * 0,2-6"
+    - cron: "23 4 * * 1"
+    - cron: "23 4 * * 0,2-6"
   workflow_dispatch:
     inputs:
       what:
@@ -38,6 +38,7 @@ defaults:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       changed: ${{ steps.push.outputs.changed }}
       summary: ${{ steps.update.outputs.summary }}
@@ -52,7 +53,15 @@ jobs:
           WHAT: ${{ inputs.what }}
         run: |
           case "$EVENT" in
-            schedule) [ "$SCHEDULE" = "0 5 * * 0,2-6" ] && what=browsers || what=all ;;
+            schedule)
+              [ "$SCHEDULE" = "23 4 * * 0,2-6" ] && what=browsers || what=all
+              # Monday's candidate is only deleted once its pull request exists:
+              # still there on Tuesday means the lock bump failed, so Tuesday tries it again
+              if [ "$what" = browsers ] && [ "$(date -u +%u)" = 2 ] \
+                && git ls-remote --exit-code --heads "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" update/flake-lock-candidate >/dev/null 2>&1; then
+                what=all
+              fi
+              ;;
             *) what="${WHAT:-all}" ;;
           esac
           if [ "$what" = browsers ]; then
@@ -173,6 +182,7 @@ jobs:
   pull-request:
     needs: [update, build]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

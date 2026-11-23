@@ -97,7 +97,7 @@ in
   environment = {
     shells = [ pkgs.nushell ]; # pkexec requires the user shell to be in /etc/shells
     # Fix open with. Copied out, a link would pull all of Plasma into the closure.
-    etc."xdg/menus/applications.menu".source = pkgs.runCommandLocal "applications.menu" { } ''
+    etc."xdg/menus/applications.menu".source = pkgs.runCommand "applications.menu" { } ''
       cp ${pkgs.kdePackages.plasma-workspace}/etc/xdg/menus/plasma-applications.menu $out
     '';
     pathsToLink = [

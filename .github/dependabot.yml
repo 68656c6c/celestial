@@ -9,3 +9,7 @@ updates:
       day: monday
     commit-message:
       prefix: ci
+    # one pull request a week: each one builds all four hosts
+    groups:
+      actions:
+        patterns: ["*"]

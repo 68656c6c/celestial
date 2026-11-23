@@ -22,6 +22,7 @@
   # Off for travelling, back to 1 when the laptop lives on the charger again.
   services.tlp.settings.STOP_CHARGE_THRESH_BAT0 = 0;
   host.fastboot.enable = true;
+  host.upgrade.enable = true;
   host.gpu = "intel";
   hardware.bluetooth.enable = true;
   # camera-stream: OBS on another machine pulls the SRT feed

@@ -145,7 +145,7 @@
       lintFiles = lib.fileset.toSource {
         root = ./.;
         fileset = lib.fileset.fileFilter (
-          file: file.hasExt "nix" || file.hasExt "sh" || file.hasExt "yml"
+          file: file.hasExt "nix" || file.hasExt "sh" || file.hasExt "yml" || file.hasExt "nu"
         ) ./.;
       };
     in
@@ -166,25 +166,36 @@
       lib.vscodeMarketplacePins =
         nixosConfigurations.${lib.head hosts}.config.system.build.vscodeMarketplacePins;
 
-      checks.${system}.lint =
-        pkgs.runCommand "celestial-lint"
-          {
-            nativeBuildInputs = with pkgs; [
-              deadnix
-              nixfmt
-              shellcheck
-              actionlint
-            ];
-          }
-          ''
-            cd ${lintFiles}
-            deadnix --fail --no-lambda-arg .
-            find . -name '*.nix' -exec nixfmt --check {} +
-            # install.sh has no shebang, writeShellApplication supplies it
-            find . -name '*.sh' -exec shellcheck --shell=bash {} +
-            actionlint .github/workflows/*.yml
-            touch $out
-          '';
+      checks.${system} = {
+        lint =
+          pkgs.runCommand "celestial-lint"
+            {
+              nativeBuildInputs = with pkgs; [
+                deadnix
+                nixfmt
+                shellcheck
+                actionlint
+                nushell
+              ];
+            }
+            ''
+              cd ${lintFiles}
+              deadnix --fail --no-lambda-arg .
+              find . -name '*.nix' -exec nixfmt --check {} +
+              # install.sh has no shebang, writeShellApplication supplies it
+              find . -name '*.sh' -exec shellcheck --shell=bash {} +
+              actionlint .github/workflows/*.yml
+              # deploy.nu is loaded by every nushell session: it has to parse
+              export HOME=$TMPDIR
+              nu --no-config-file -c 'for f in (glob **/*.nu) { if not (nu-check $f) { print $"($f) does not parse"; exit 1 } }'
+              touch $out
+            '';
+
+        # host.upgrade end to end in a VM: nixos-rebuild, polkit, the states
+        upgrade = pkgs.testers.runNixOSTest (
+          import ./tests/upgrade.nix { module = ./diy-modules/host_upgrade.nix; }
+        );
+      };
 
       inherit nixosConfigurations;
     };

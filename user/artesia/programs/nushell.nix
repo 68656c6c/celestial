@@ -54,7 +54,17 @@
     extraConfig = ''
       use ${pkgs.writeText "celestial.nu" (builtins.readFile ../../../scripts/deploy.nu)} *
 
-      def nos [...args] {
+      # The system follows main by itself, the checkout does not: a switch
+      # from a checkout that is behind would put the machine back on an old main.
+      def --wrapped nos [...args] {
+        let repo = $"($env.HOME)/.dotfiles"
+        let fetched = (git -C $repo fetch --quiet origin main | complete)
+        if $fetched.exit_code == 0 {
+          let behind = (git -C $repo rev-list --count HEAD..origin/main | into int)
+          if $behind > 0 {
+            error make --unspanned { msg: $"($repo) is ($behind) commits behind origin/main: git pull first" }
+          }
+        }
         nh os switch ...$args
       }
 

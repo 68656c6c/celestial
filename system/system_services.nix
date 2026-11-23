@@ -14,6 +14,8 @@
       rulesProvider = pkgs.ananicy-rules-cachyos;
     };
     blueman.enable = true;
+    # Dolphin lists and mounts sticks through it; only fwupd pulled it in, on aphrodite
+    udisks2.enable = true;
     displayManager = {
       ly = {
         enable = true;

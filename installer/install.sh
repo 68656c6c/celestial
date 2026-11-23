@@ -179,7 +179,7 @@ if [ "$(cat /run/celestial/staged-host 2>/dev/null || true)" != "$host" ]; then
   install -d -m 700 "$keys"
 fi
 echo "$host" > /run/celestial/staged-host
-if [ -f "$stick/keys/$host.key" ]; then
+if [ -s "$stick/keys/$host.key" ]; then
   install -m 600 "$stick/keys/$host.key" "$keys/key"
   say "age key for $host taken from the stick"
 elif [ "$old_host" = "$host" ] && [ -s /run/celestial/old-keys/key ]; then

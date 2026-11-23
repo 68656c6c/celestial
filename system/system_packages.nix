@@ -5,7 +5,6 @@
 
 {
   environment.systemPackages = with pkgs; [
-    exfat
     exfatprogs
     dosfstools
     telegram-desktop
@@ -23,7 +22,6 @@
     libreoffice-fresh
     vesktop
     gparted
-    ntfsprogs
     ntfs3g
     impression
     dig

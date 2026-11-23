@@ -22,6 +22,8 @@ final: prev: {
   atuin = unstable.atuin;
   flameshot = unstable.flameshot;
   noctalia = unstable.noctalia;
+  umbriel = unstable.umbriel;
+  xdg-desktop-portal-umbriel = unstable.xdg-desktop-portal-umbriel;
   bitwarden-desktop = unstable.bitwarden-desktop;
   opencode = unstable.opencode;
   claude-code = unstable.claude-code;

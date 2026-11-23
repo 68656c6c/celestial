@@ -20,11 +20,16 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOPS_FILE="$REPO_ROOT/.sops.yaml"
 
 [ -d "$STICK" ] || { echo "$STICK is not a directory" >&2; exit 1; }
+if git -C "$STICK" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "$STICK is inside a git checkout, not writing a key there" >&2
+  exit 1
+fi
 mkdir -p "$STICK/keys"
 target="$STICK/keys/$HOST.key"
 
 if [ "$HOST" = "$(hostname)" ]; then
-  sudo cat /var/lib/sops-nix/key | install -m 600 /dev/stdin "$target"
+  key="$(sudo cat /var/lib/sops-nix/key)"
+  printf '%s\n' "$key" | install -m 600 /dev/stdin "$target"
   echo "this machine's key -> $target"
   exit 0
 fi
@@ -35,6 +40,7 @@ if grep -q "&host_$HOST " "$SOPS_FILE"; then
   exit 1
 fi
 
+rm -f "$target"
 age-keygen -o "$target" 2>/dev/null
 pubkey="$(age-keygen -y "$target")"
 sed -i "/^  - &backup /i\\  - &host_$HOST $pubkey" "$SOPS_FILE"

@@ -33,7 +33,7 @@ age_keygen() {
 }
 
 # What the hardware says about itself
-RELEASE="$(nixos-version 2>/dev/null | cut -d. -f1-2)"
+RELEASE="$(nixos-version 2>/dev/null | cut -d. -f1-2 || true)"
 : "${RELEASE:=26.05}"
 
 PRODUCT="$(sed 's/[[:space:]]*$//' /sys/class/dmi/id/product_name 2>/dev/null || true)"
@@ -84,6 +84,7 @@ as_root mkdir -p "$KEY_DIR"
 if as_root test -s "$KEY_DIR/key"; then
   echo "    keeping the existing key"
 else
+  as_root rm -f "$KEY_DIR/key" # age-keygen refuses to write over a file, an empty one too
   age_keygen -o "$KEY_DIR/key" 2>/dev/null
 fi
 as_root chmod 600 "$KEY_DIR/key"
@@ -116,7 +117,10 @@ if [ "$ENROLLED" = false ] && ! as_root test -s "$KEY_DIR/password"; then
     if [ -n "$first" ] && [ "$first" = "$second" ]; then break; fi
     echo "    empty or not the same, try again"
   done
-  printf '%s' "$first" | mkpasswd -m yescrypt -s | as_root tee "$KEY_DIR/password" >/dev/null
+  (
+    umask 077
+    printf '%s' "$first" | mkpasswd -m yescrypt -s | as_root tee "$KEY_DIR/password" >/dev/null
+  )
   as_root chmod 600 "$KEY_DIR/password"
   unset first second
 fi
@@ -155,6 +159,7 @@ write_new "$HOST_DIR/${HOSTNAME}_configurations.nix" << EOF
   $DMI_LINE
   $GPU_LINE
   host.fastboot.enable = true;
+  host.upgrade.enable = true;
   host.gaming.enable = true;
   networking.nameservers = [
     "1.1.1.1"
