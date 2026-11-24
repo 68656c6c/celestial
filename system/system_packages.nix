@@ -55,6 +55,7 @@
     attic-client
     qimgv
     pwvucontrol
+    blanket # background noise
     wdisplays
     pangolin-cli
     pantheon.pantheon-agent-polkit
