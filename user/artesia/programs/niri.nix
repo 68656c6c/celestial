@@ -212,6 +212,11 @@ let
           action = "screenshot";
         }
         {
+          key = "Mod+Shift+P";
+          title = "Screenshot";
+          action = "screenshot";
+        }
+        {
           key = "Shift+Print";
           title = "Screenshot a region and annotate it";
           action = ''spawn "niri-annotate"'';
