@@ -6,9 +6,10 @@ final: prev: {
 
   # nixpkgs electron cannot find libva, so calls and streams are decoded on the
   # CPU. Drop when NixOS/nixpkgs#569737 reaches the stable channel.
+  # Unstable because stable's 1.6.5 share picker crashes on current Discord.
   vesktop = final.symlinkJoin {
-    inherit (prev.vesktop) pname version meta;
-    paths = [ prev.vesktop ];
+    inherit (unstable.vesktop) pname version meta;
+    paths = [ unstable.vesktop ];
     nativeBuildInputs = [ final.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/vesktop \
