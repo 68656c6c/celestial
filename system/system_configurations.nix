@@ -116,6 +116,7 @@ in
     extraGroups = [
       "networkmanager"
       "wheel"
+      "ydotool"
     ];
   };
 

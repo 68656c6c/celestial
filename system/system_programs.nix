@@ -24,6 +24,8 @@
     };
     gpu-screen-recorder.enable = true;
     kdeconnect.enable = true;
+    # types the clipboard as keystrokes, into windows that take no paste
+    ydotool.enable = true;
     vscode = {
       enable = true;
       # By Marketplace id, lowercase. Versions are pinned in
