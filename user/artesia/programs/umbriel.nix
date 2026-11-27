@@ -177,6 +177,7 @@ let
     "Mod+Period" = "window-consume-or-expel-right"
     "Mod+O" = { action = "overview-toggle", repeat = false }
     "Mod+P" = { action = "spawn umbriel-pip", repeat = false }
+    "Mod+Shift+V" = { action = "spawn type-clipboard", repeat = false }
     "Mod+Shift+Slash" = { action = "cheatsheet-toggle", repeat = false }
 
     "Mod+Space" = "spawn noctalia msg panel-toggle launcher"

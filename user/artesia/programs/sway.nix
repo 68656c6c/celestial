@@ -162,6 +162,7 @@ lib.mkIf osConfig.programs.sway.enable {
         "${mod}+m" = "exec swaynag -t warning -m 'Quit sway?' -B 'Quit' 'swaymsg exit'";
         "${mod}+e" = "exec dolphin";
         "${mod}+v" = "floating toggle";
+        "${mod}+Shift+v" = "exec type-clipboard";
         "${mod}+j" = "split toggle";
         "${mod}+f" = "fullscreen toggle";
         "${mod}+space" = "exec fuzzel";

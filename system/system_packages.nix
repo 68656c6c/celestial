@@ -1,10 +1,36 @@
 {
+  config,
   pkgs,
   ...
 }:
 
+let
+  # Types the clipboard as keystrokes, for windows that take no paste (VM
+  # consoles, noVNC, fields that block it). The argument is the wait in
+  # seconds before typing: time to click into the window, or for a hotkey's
+  # modifiers to be let go. ydotool sends US-layout keycodes.
+  typeClipboard = pkgs.writeShellApplication {
+    name = "type-clipboard";
+    runtimeInputs = [
+      pkgs.wl-clipboard
+      pkgs.ydotool
+    ];
+    text = ''
+      # set at login only: a session older than the switch, or a hotkey from a
+      # compositor started without it, would look for a per-user socket
+      export YDOTOOL_SOCKET="''${YDOTOOL_SOCKET:-${
+        config.environment.variables.YDOTOOL_SOCKET or "/run/ydotoold/socket"
+      }}"
+      text="$(wl-paste -n)"
+      sleep "''${1:-0.3}"
+      ydotool type --key-delay 20 -- "$text"
+    '';
+  };
+in
 {
   environment.systemPackages = with pkgs; [
+    typeClipboard
+    wl-clipboard
     exfatprogs
     dosfstools
     telegram-desktop

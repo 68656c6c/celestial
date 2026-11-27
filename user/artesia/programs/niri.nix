@@ -130,6 +130,11 @@ let
           action = "consume-or-expel-window-right";
         }
         {
+          key = "Mod+Shift+V";
+          title = "Type the clipboard, for windows that take no paste";
+          action = ''spawn "type-clipboard"'';
+        }
+        {
           key = "Mod+P";
           title = "Picture-in-picture: pin window to the corner, or put it back";
           action = ''spawn "niri-pip"'';
@@ -218,6 +223,11 @@ let
         }
         {
           key = "Shift+Print";
+          title = "Screenshot a region and annotate it";
+          action = ''spawn "niri-annotate"'';
+        }
+        {
+          key = "Mod+Shift+S";
           title = "Screenshot a region and annotate it";
           action = ''spawn "niri-annotate"'';
         }

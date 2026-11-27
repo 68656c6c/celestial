@@ -68,6 +68,11 @@
         nh os switch ...$args
       }
 
+      # Types the clipboard into the window that has focus once the wait is over
+      def type-clipboard [wait: duration = 2sec] {
+        ^type-clipboard ($wait / 1sec)
+      }
+
       def nwhich [flag: string] {
         let result = (which $flag | get path);
         if ($result | is-empty) { $"($flag) not found" } else { $result | first | path expand }
