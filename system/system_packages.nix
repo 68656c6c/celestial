@@ -53,7 +53,6 @@
     claude-code
     stremio-linux-shell
     attic-client
-    opkssh
     qimgv
     pwvucontrol
     blanket # background noise
