@@ -61,6 +61,7 @@
     pantheon.pantheon-agent-polkit
     diy.helium
     diy.zen-browser
+    diy.sunnify
     qt6.qtwayland
     kdePackages.dolphin
     kdePackages.dolphin-plugins
