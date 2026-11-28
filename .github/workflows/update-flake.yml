@@ -1,9 +1,9 @@
 name: update-flake
 
 # Scheduled bumps. Mondays: flake.lock, the AppImage browsers, the Pangolin
-# client and the VS Code extension pins, on the update/flake-lock branch. Every
-# other day: only the browsers and the Pangolin client in diy-packages and the
-# extension pins, on update/browsers. Every
+# client, Claude Code and the VS Code extension pins, on the update/flake-lock
+# branch. Every other day: only the browsers, the Pangolin client and Claude
+# Code in diy-packages and the extension pins, on update/browsers. Every
 # host is built and cached before a pull request exists or moves: the commit
 # is built on <branch>-candidate and only then becomes the branch, so an open
 # PR is known good. No PR means the build failed. The build is called from
@@ -100,6 +100,11 @@ jobs:
               grep -E " -> " "$RUNNER_TEMP/pangolin.log" >> "$RUNNER_TEMP/summary.txt" || true
             else
               echo "::warning::pangolin-cli pin not moved, the rest still goes out"
+            fi
+            if ./scripts/update-claude-code.sh 2>&1 | tee "$RUNNER_TEMP/claude-code.log"; then
+              grep -E " -> " "$RUNNER_TEMP/claude-code.log" >> "$RUNNER_TEMP/summary.txt" || true
+            else
+              echo "::warning::claude-code pin not moved, the rest still goes out"
             fi
           fi
           # The pins follow the nix-vscode-extensions input, which moves every
