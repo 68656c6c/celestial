@@ -52,6 +52,13 @@ jobs:
         with:
           determinate: false
 
+      # flake inputs from the GitHub Actions cache, see the build job
+      - uses: DeterminateSystems/magic-nix-cache-action@84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7 # v15
+        with:
+          use-flakehub: false
+          diagnostic-endpoint: ""
+          diff-store: true
+
       - name: Lint and evaluate
         run: nix flake check --no-write-lock-file
 
@@ -69,6 +76,13 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
         with:
           determinate: false
+
+      # flake inputs from the GitHub Actions cache, see the build job
+      - uses: DeterminateSystems/magic-nix-cache-action@84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7 # v15
+        with:
+          use-flakehub: false
+          diagnostic-endpoint: ""
+          diff-store: true
 
       - name: List hosts
         id: hosts
@@ -107,6 +121,19 @@ jobs:
             stalled-download-timeout = 60
             extra-substituters = https://celestial.cachix.org https://nyx-cache.chaotic.cx/
             extra-trusted-public-keys = celestial:Ii3291OUFcJwNBkfMT3+oZn4V7yC+5XswXiWdoJ7peM= celestial.cachix.org-1:27CYgl28WMa6OGwoAK5WrTQVKmJIIhJYvOBpapp9ETk= nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk=
+
+      # Store paths in the GitHub Actions cache, which is close to the runner:
+      # flake inputs and what came from attic, cachix or nyx are fetched from
+      # there on the next run instead of over the lab uplink. Paths from
+      # cache.nixos.org are left out, that CDN is fast already. The cache holds
+      # 10 GB per repository, the oldest entries go first.
+      - uses: DeterminateSystems/magic-nix-cache-action@84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7 # v15
+        with:
+          use-flakehub: false
+          diagnostic-endpoint: ""
+          # every new path, not only what the job built: almost nothing is
+          # built, nearly everything is substituted
+          diff-store: true
 
       # Not fatal here: without attic the host is still built and goes to
       # cachix, and the script fails the job afterwards.
