@@ -27,7 +27,16 @@ final: prev: {
   xdg-desktop-portal-umbriel = unstable.xdg-desktop-portal-umbriel;
   bitwarden-desktop = unstable.bitwarden-desktop;
   opencode = unstable.opencode;
-  claude-code = unstable.claude-code;
+  # The release in diy-packages/claude-code.json, moved daily by
+  # scripts/update-claude-code.sh; unstable's own once it has caught up
+  claude-code =
+    let
+      manifest = final.lib.importJSON ../diy-packages/claude-code.json;
+    in
+    if final.lib.versionOlder manifest.version unstable.claude-code.version then
+      unstable.claude-code
+    else
+      unstable.claude-code.override { inherit manifest; };
   pangolin-cli =
     let
       pin = final.lib.importJSON ../diy-packages/pangolin-cli.json;
